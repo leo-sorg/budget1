@@ -59,9 +59,7 @@ final class Transaction {
     // Use nullify delete rules so that if the related Category or PaymentMethod
     // is deleted, existing transactions simply lose the reference instead of
     // crashing when their properties are accessed.
-    @Relationship(deleteRule: .nullify, inverse: \Category.transactions)
     var category: Category?
-    @Relationship(deleteRule: .nullify, inverse: \PaymentMethod.transactions)
     var paymentMethod: PaymentMethod?
     /// Stable ID used when syncing to Google Sheets (and future backends).
     var remoteID: String
