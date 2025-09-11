@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 
+@MainActor
 struct ManageView: View {
     @Environment(\.modelContext) private var context
 
@@ -151,7 +152,9 @@ struct ManageView: View {
             isIncome: newCategoryIsIncome
         )
 
-        context.insert(newCat)
+        withAnimation {
+            context.insert(newCat)
+        }
         do {
             try context.save()
 
@@ -185,7 +188,9 @@ struct ManageView: View {
         let next = (methods.map { $0.sortIndex }.max() ?? -1) + 1
         let newPM = PaymentMethod(name: name, sortIndex: next)
 
-        context.insert(newPM)
+        withAnimation {
+            context.insert(newPM)
+        }
         do {
             try context.save()
 
