@@ -174,7 +174,7 @@ struct InputView: View {
                 // DATE
                 Section("Date") {
                     DatePicker("When", selection: $date, displayedComponents: .date)
-                        .onChange(of: date) { dismissKeyboard() }
+                        .onChange(of: date) { _ in dismissKeyboard() }
                 }
 
                 // PAYMENT TYPE
