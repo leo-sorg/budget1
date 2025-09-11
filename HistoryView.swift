@@ -25,9 +25,19 @@ struct HistoryView: View {
                     // Monthly total section (current month)
                     Section("This month") {
                         HStack {
-                            Text("Total")
+                            Text("Income")
                             Spacer()
-                            Text(totalThisMonth as NSNumber, formatter: currencyFormatter)
+                            Text(incomeThisMonth as NSNumber, formatter: currencyFormatter)
+                        }
+                        HStack {
+                            Text("Expenses")
+                            Spacer()
+                            Text(expensesThisMonth as NSNumber, formatter: currencyFormatter)
+                        }
+                        HStack {
+                            Text("Net")
+                            Spacer()
+                            Text(netThisMonth as NSNumber, formatter: currencyFormatter)
                                 .fontWeight(.semibold)
                         }
                     }
@@ -76,14 +86,22 @@ struct HistoryView: View {
         try? context.save()
     }
 
-    private var totalThisMonth: Decimal {
+    private var thisMonthTransactions: [Transaction] {
         let cal = Calendar.current
         let startOfMonth = cal.date(from: cal.dateComponents([.year, .month], from: Date())) ?? Date()
         let startNext = cal.date(byAdding: .month, value: 1, to: startOfMonth) ?? Date()
-        return txs
-            .filter { $0.date >= startOfMonth && $0.date < startNext }
-            .reduce(0) { $0 + $1.amount }
+        return txs.filter { $0.date >= startOfMonth && $0.date < startNext }
     }
+
+    private var incomeThisMonth: Decimal {
+        thisMonthTransactions.reduce(0) { $0 + max($1.amount, 0) }
+    }
+
+    private var expensesThisMonth: Decimal {
+        thisMonthTransactions.reduce(0) { $0 + min($1.amount, 0) }
+    }
+
+    private var netThisMonth: Decimal { incomeThisMonth + expensesThisMonth }
 
     // Currency & date formatters
     private var currencyFormatter: NumberFormatter {
