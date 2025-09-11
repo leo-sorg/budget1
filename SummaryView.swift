@@ -35,11 +35,21 @@ struct SummaryView: View {
                     .pickerStyle(.menu)
                 }
 
-                Section(header: Text("Total")) {
+                Section(header: Text("Totals")) {
                     HStack {
-                        Text("\(shortMonthName(selectedMonth)) \(String(selectedYear))")
+                        Text("Income")
                         Spacer()
-                        Text(formatCurrency(totalForSelection))
+                        Text(formatCurrency(totalIncome))
+                    }
+                    HStack {
+                        Text("Expenses")
+                        Spacer()
+                        Text(formatCurrency(totalExpenses))
+                    }
+                    HStack {
+                        Text("Net")
+                        Spacer()
+                        Text(formatCurrency(netTotal))
                             .fontWeight(.semibold)
                     }
                 }
@@ -94,9 +104,15 @@ struct SummaryView: View {
         return txs.filter { $0.date >= start && $0.date < end }
     }
 
-    private var totalForSelection: Decimal {
-        filteredTxs.reduce(0) { $0 + $1.amount }
+    private var totalIncome: Decimal {
+        filteredTxs.reduce(0) { $0 + max($1.amount, 0) }
     }
+
+    private var totalExpenses: Decimal {
+        filteredTxs.reduce(0) { $0 + min($1.amount, 0) }
+    }
+
+    private var netTotal: Decimal { totalIncome + totalExpenses }
 
     private var byCategory: [String: Decimal] {
         var dict: [String: Decimal] = [:]

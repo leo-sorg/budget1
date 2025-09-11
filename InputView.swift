@@ -293,14 +293,18 @@ struct InputView: View {
                               paymentsOnly: Bool = false) {
         if !paymentsOnly && categories.isEmpty {
             let base = (categories.map { $0.sortIndex }.max() ?? -1) + 1
-            let seeds: [(String, String?)] = [
-                ("Food", "🍽️"), ("Transport", "🚕"),
-                ("Bills", "💡"), ("Shopping", "🛍️"),
-                ("Leisure", "🎬")
+            let seeds: [(String, String?, Bool)] = [
+                ("Food", "🍽️", false),
+                ("Transport", "🚕", false),
+                ("Bills", "💡", false),
+                ("Shopping", "🛍️", false),
+                ("Leisure", "🎬", false),
+                ("Salary", "💼", true),
+                ("Gifts", "🎁", true)
             ]
-            for (offset, pair) in seeds.enumerated() {
-                let (name, emoji) = pair
-                context.insert(Category(name: name, emoji: emoji, sortIndex: base + offset))
+            for (offset, seed) in seeds.enumerated() {
+                let (name, emoji, isIncome) = seed
+                context.insert(Category(name: name, emoji: emoji, sortIndex: base + offset, isIncome: isIncome))
             }
         }
         if !categoriesOnly && methods.isEmpty {
