@@ -139,7 +139,7 @@ struct InputView: View {
     @State private var selectedCategory: Category?
     @State private var selectedMethod: PaymentMethod?
     @State private var note = ""
-    @State private var showSavedCheck = false
+    @State private var showSavedToast = false
 
     var body: some View {
         NavigationStack {
@@ -210,7 +210,19 @@ struct InputView: View {
             .task {
                 if categories.isEmpty || methods.isEmpty { seedDefaults() }
             }
-            .alert("Saved ✔︎", isPresented: $showSavedCheck) { Button("OK", role: .cancel) { } }
+            .overlay(alignment: .top) {
+                if showSavedToast {
+                    Text("Saved ✔︎")
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.black.opacity(0.8))
+                        .foregroundStyle(.white)
+                        .cornerRadius(8)
+                        .padding(.top)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
+            }
+            .animation(.default, value: showSavedToast)
         }
     }
 
@@ -252,7 +264,10 @@ struct InputView: View {
         amountText = ""
         note = ""
         date = Date()
-        showSavedCheck = true
+        withAnimation { showSavedToast = true }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            withAnimation { showSavedToast = false }
+        }
 
         // Make sure the keyboard is down after save too
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
