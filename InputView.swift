@@ -67,6 +67,58 @@ struct MoneyTextField: UIViewRepresentable {
     }
 }
 
+// MARK: - Generic text field with Cancel / Done toolbar
+struct AccessoryTextField: UIViewRepresentable {
+    @Binding var text: String
+    var placeholder: String
+    var onCancel: () -> Void
+    var onDone: () -> Void
+
+    class Coordinator: NSObject, UITextFieldDelegate {
+        var parent: AccessoryTextField
+        init(_ parent: AccessoryTextField) { self.parent = parent }
+
+        @objc func editingChanged(_ tf: UITextField) {
+            parent.text = tf.text ?? ""
+        }
+
+        @objc func tapCancel(_ sender: UIBarButtonItem) {
+            parent.text = ""
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            parent.onCancel()
+        }
+
+        @objc func tapDone(_ sender: UIBarButtonItem) {
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            parent.onDone()
+        }
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
+    func makeUIView(context: Context) -> UITextField {
+        let tf = UITextField(frame: .zero)
+        tf.placeholder = placeholder
+        tf.delegate = context.coordinator
+        tf.borderStyle = .roundedRect
+        tf.addTarget(context.coordinator, action: #selector(Coordinator.editingChanged(_:)), for: .editingChanged)
+
+        let bar = UIToolbar()
+        bar.sizeToFit()
+        let cancel = UIBarButtonItem(title: "Cancel", style: .plain, target: context.coordinator, action: #selector(Coordinator.tapCancel(_:)))
+        let flex = UIBarButtonItem(systemItem: .flexibleSpace)
+        let done = UIBarButtonItem(title: "Done", style: .done, target: context.coordinator, action: #selector(Coordinator.tapDone(_:)))
+        bar.items = [cancel, flex, done]
+        tf.inputAccessoryView = bar
+
+        return tf
+    }
+
+    func updateUIView(_ uiView: UITextField, context: Context) {
+        if uiView.text != text { uiView.text = text }
+    }
+}
+
 // MARK: - Your main InputView
 struct InputView: View {
     @Environment(\.modelContext) private var context
@@ -137,7 +189,14 @@ struct InputView: View {
                 }
 
                 // NOTE
-                Section("Note") { TextField("Optional", text: $note) }
+                Section("Note") {
+                    AccessoryTextField(
+                        text: $note,
+                        placeholder: "Optional",
+                        onCancel: { /* nothing extra */ },
+                        onDone: { /* just collapse */ }
+                    )
+                }
 
                 // SAVE BUTTON
                 Section {
