@@ -152,13 +152,12 @@ struct ManageView: View {
             isIncome: newCategoryIsIncome
         )
 
-        withAnimation {
-            context.insert(newCat)
-        }
         do {
-            try context.save()
+            try withAnimation {
+                context.insert(newCat)
+                try context.save()
+            }
 
-            // 🔄 Push to Google Sheets
             SHEETS.postCategory(
                 remoteID: newCat.remoteID,
                 name: newCat.name,
@@ -188,13 +187,12 @@ struct ManageView: View {
         let next = (methods.map { $0.sortIndex }.max() ?? -1) + 1
         let newPM = PaymentMethod(name: name, sortIndex: next)
 
-        withAnimation {
-            context.insert(newPM)
-        }
         do {
-            try context.save()
+            try withAnimation {
+                context.insert(newPM)
+                try context.save()
+            }
 
-            // 🔄 Push to Google Sheets
             SHEETS.postPayment(
                 remoteID: newPM.remoteID,
                 name: newPM.name,
