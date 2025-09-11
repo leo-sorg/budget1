@@ -119,7 +119,7 @@ struct ManageView: View {
             }
             .navigationTitle("Manage")
             .toolbar { EditButton() } // enables drag handles
-            .task { await MainActor.run { normalizeSortIndicesIfNeeded() } }
+            .task { normalizeSortIndicesIfNeeded() }
             .alert("Oops", isPresented: Binding(
                 get: { alertMessage != nil },
                 set: { if !$0 { alertMessage = nil } }
