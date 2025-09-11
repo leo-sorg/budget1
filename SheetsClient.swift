@@ -25,13 +25,15 @@ struct SheetsClient {
     }
 
     func postCategory(remoteID: String, name: String, emoji: String?, sortIndex: Int,
+                      isIncome: Bool,
                       completion: @escaping (Response) -> Void = { _ in }) {
         let payload: [String: Any] = [
             "type": "category",
             "remoteID": remoteID,
             "name": name,
             "emoji": emoji ?? "",
-            "sortIndex": sortIndex
+            "sortIndex": sortIndex,
+            "isIncome": isIncome
         ]
         postJSON(payload, completion: completion)
     }

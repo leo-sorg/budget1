@@ -201,7 +201,7 @@ struct InputView: View {
                 // SAVE BUTTON
                 Section {
                     Button(action: save) {
-                        HStack { Spacer(); Text("Save expense").fontWeight(.semibold); Spacer() }
+                        HStack { Spacer(); Text("Save entry").fontWeight(.semibold); Spacer() }
                     }
                     .disabled(!canSave)
                 }
@@ -239,8 +239,10 @@ struct InputView: View {
     private func save() {
         guard let amount = amountDecimal else { return }
 
+        let signedAmount = (selectedCategory?.isIncome ?? false) ? amount : -amount
+
         let tx = Transaction(
-            amount: amount,
+            amount: signedAmount,
             date: date,
             note: note.isEmpty ? nil : note,
             category: selectedCategory,
@@ -253,7 +255,7 @@ struct InputView: View {
         // If you wired Google Sheets:
         SHEETS.postTransaction(
             remoteID: tx.remoteID,
-            amount: amount,
+            amount: signedAmount,
             date: date,
             categoryName: selectedCategory?.name,
             paymentName: selectedMethod?.name,
