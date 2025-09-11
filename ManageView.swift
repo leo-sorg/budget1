@@ -4,7 +4,7 @@ import SwiftData
 struct ManageView: View {
     @Environment(\.modelContext) private var context
 
-    // Order by sortIndex, then name as tie-breaker
+    // Order by sortIndex, then name
     @Query(sort: [
         SortDescriptor(\Category.sortIndex, order: .forward),
         SortDescriptor(\Category.name, order: .forward)
@@ -110,9 +110,7 @@ struct ManageView: View {
             }
             .navigationTitle("Manage")
             .toolbar { EditButton() } // enables drag handles
-            .task {
-                normalizeSortIndicesIfNeeded()
-            }
+            .task { normalizeSortIndicesIfNeeded() }
             .alert("Oops", isPresented: .constant(alertMessage != nil)) {
                 Button("OK") { alertMessage = nil }
             } message: {
@@ -134,9 +132,20 @@ struct ManageView: View {
         }
 
         let next = (categories.map { $0.sortIndex }.max() ?? -1) + 1
-        context.insert(Category(name: name, emoji: emoji.isEmpty ? nil : emoji, sortIndex: next))
+        let newCat = Category(name: name, emoji: emoji.isEmpty ? nil : emoji, sortIndex: next)
+
+        context.insert(newCat)
         do {
             try context.save()
+
+            // 🔄 Push to Google Sheets
+            SHEETS.postCategory(
+                remoteID: newCat.remoteID,
+                name: newCat.name,
+                emoji: newCat.emoji,
+                sortIndex: newCat.sortIndex
+            )
+
             newCategory = ""; newCategoryEmoji = ""
             focusedField = .catName
         } catch {
@@ -155,9 +164,19 @@ struct ManageView: View {
         }
 
         let next = (methods.map { $0.sortIndex }.max() ?? -1) + 1
-        context.insert(PaymentMethod(name: name, sortIndex: next))
+        let newPM = PaymentMethod(name: name, sortIndex: next)
+
+        context.insert(newPM)
         do {
             try context.save()
+
+            // 🔄 Push to Google Sheets
+            SHEETS.postPayment(
+                remoteID: newPM.remoteID,
+                name: newPM.name,
+                sortIndex: newPM.sortIndex
+            )
+
             newPayment = ""
             focusedField = .payment
         } catch {
@@ -192,7 +211,6 @@ struct ManageView: View {
         try? context.save()
     }
 
-    // Normalize after migrations (if all are 0)
     private func normalizeSortIndicesIfNeeded() {
         if !categories.isEmpty, Set(categories.map { $0.sortIndex }).count == 1 {
             renumberCategories()

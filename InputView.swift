@@ -1,10 +1,76 @@
 import SwiftUI
 import SwiftData
+import UIKit
 
+// MARK: - UIKit-powered money field with a guaranteed inputAccessoryView
+struct MoneyTextField: UIViewRepresentable {
+    @Binding var text: String
+    var placeholder: String
+    var onCancel: () -> Void
+    var onDone: () -> Void
+
+    class Coordinator: NSObject, UITextFieldDelegate {
+        var parent: MoneyTextField
+        init(_ parent: MoneyTextField) { self.parent = parent }
+
+        @objc func editingChanged(_ tf: UITextField) {
+            // Keep only digits, treat as cents, format as pt_BR currency
+            let digits = (tf.text ?? "").filter(\.isNumber)
+            let intVal = NSDecimalNumber(string: digits.isEmpty ? "0" : digits)
+            let value = intVal.dividing(by: 100)
+            let f = NumberFormatter()
+            f.numberStyle = .currency
+            f.locale = Locale(identifier: "pt_BR")
+            tf.text = f.string(from: value) ?? ""
+            parent.text = tf.text ?? ""
+        }
+
+        @objc func tapCancel(_ sender: UIBarButtonItem) {
+            parent.text = ""          // clear
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            parent.onCancel()
+        }
+
+        @objc func tapDone(_ sender: UIBarButtonItem) {
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            parent.onDone()
+        }
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
+    func makeUIView(context: Context) -> UITextField {
+        let tf = UITextField(frame: .zero)
+        tf.placeholder = placeholder
+        tf.keyboardType = .numberPad
+        tf.delegate = context.coordinator
+        tf.borderStyle = .roundedRect
+        tf.addTarget(context.coordinator, action: #selector(Coordinator.editingChanged(_:)), for: .editingChanged)
+
+        // Toolbar with Cancel / Done
+        let bar = UIToolbar()
+        bar.sizeToFit()
+        let cancel = UIBarButtonItem(title: "Cancel", style: .plain, target: context.coordinator, action: #selector(Coordinator.tapCancel(_:)))
+        let flex = UIBarButtonItem(systemItem: .flexibleSpace)
+        let done = UIBarButtonItem(title: "Done", style: .done, target: context.coordinator, action: #selector(Coordinator.tapDone(_:)))
+        bar.items = [cancel, flex, done]
+        tf.inputAccessoryView = bar
+
+        // Initial formatting (if any)
+        context.coordinator.editingChanged(tf)
+        return tf
+    }
+
+    func updateUIView(_ uiView: UITextField, context: Context) {
+        // Keep UIKit field in sync if SwiftUI state changes externally
+        if uiView.text != text { uiView.text = text }
+    }
+}
+
+// MARK: - Your main InputView
 struct InputView: View {
     @Environment(\.modelContext) private var context
 
-    // Order by sortIndex for both
     @Query(sort: [
         SortDescriptor(\Category.sortIndex, order: .forward),
         SortDescriptor(\Category.name, order: .forward)
@@ -16,7 +82,7 @@ struct InputView: View {
     ]) private var methods: [PaymentMethod]
 
     // Form state
-    @State private var amountText = ""   // auto-formatted with R$
+    @State private var amountText = ""   // formatted "R$ 0,00"
     @State private var date = Date()
     @State private var selectedCategory: Category?
     @State private var selectedMethod: PaymentMethod?
@@ -26,19 +92,22 @@ struct InputView: View {
     var body: some View {
         NavigationStack {
             Form {
+                // VALUE (now uses MoneyTextField)
                 Section("Value") {
-                    TextField("R$ 0,00", text: $amountText)
-                        .keyboardType(.numberPad)
-                        // iOS 17+ uses the two-parameter version:
-                        .onChange(of: amountText) { _, newValue in
-                            formatAsCurrency(newValue, showCurrencySymbol: true)
-                        }
+                    MoneyTextField(
+                        text: $amountText,
+                        placeholder: "R$ 0,00",
+                        onCancel: { /* nothing else to do */ },
+                        onDone: { /* just collapse; formatting already applied */ }
+                    )
                 }
 
+                // DATE
                 Section("Date") {
                     DatePicker("When", selection: $date, displayedComponents: .date)
                 }
 
+                // PAYMENT TYPE
                 Section("Payment type") {
                     if methods.isEmpty {
                         Button("Add default payment types") { seedDefaults(paymentsOnly: true) }
@@ -52,6 +121,7 @@ struct InputView: View {
                     }
                 }
 
+                // CATEGORY
                 Section("Category") {
                     if categories.isEmpty {
                         Button("Add default categories") { seedDefaults(categoriesOnly: true) }
@@ -66,8 +136,10 @@ struct InputView: View {
                     }
                 }
 
+                // NOTE
                 Section("Note") { TextField("Optional", text: $note) }
 
+                // SAVE BUTTON
                 Section {
                     Button(action: save) {
                         HStack { Spacer(); Text("Save expense").fontWeight(.semibold); Spacer() }
@@ -86,6 +158,7 @@ struct InputView: View {
     // MARK: - Validation
     private var canSave: Bool { amountDecimal != nil }
     private var amountDecimal: Decimal? {
+        // Parse "R$ 12,34" back to Decimal
         let digits = amountText.filter(\.isNumber)
         guard !digits.isEmpty, let intVal = Decimal(string: digits) else { return nil }
         return intVal / 100
@@ -94,14 +167,36 @@ struct InputView: View {
     // MARK: - Actions
     private func save() {
         guard let amount = amountDecimal else { return }
-        let tx = Transaction(amount: amount, date: date,
-                             note: note.isEmpty ? nil : note,
-                             category: selectedCategory,
-                             paymentMethod: selectedMethod)
+
+        let tx = Transaction(
+            amount: amount,
+            date: date,
+            note: note.isEmpty ? nil : note,
+            category: selectedCategory,
+            paymentMethod: selectedMethod
+        )
+
         context.insert(tx)
         try? context.save()
-        amountText = ""; note = ""; date = Date()
+
+        // If you wired Google Sheets:
+        SHEETS.postTransaction(
+            remoteID: tx.remoteID,
+            amount: amount,
+            date: date,
+            categoryName: selectedCategory?.name,
+            paymentName: selectedMethod?.name,
+            note: note.isEmpty ? nil : note
+        )
+
+        // Reset for next entry
+        amountText = ""
+        note = ""
+        date = Date()
         showSavedCheck = true
+
+        // Make sure the keyboard is down after save too
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 
     private func seedDefaults(categoriesOnly: Bool = false,
@@ -126,19 +221,5 @@ struct InputView: View {
             }
         }
         try? context.save()
-    }
-
-    // MARK: - Currency formatter
-    private func formatAsCurrency(_ newValue: String, showCurrencySymbol: Bool) {
-        let digits = newValue.filter(\.isNumber)
-        guard !digits.isEmpty else { amountText = ""; return }
-        let intValue = Decimal(string: digits) ?? 0
-        let value = intValue / 100
-        let f = NumberFormatter()
-        f.numberStyle = .currency
-        f.locale = Locale(identifier: "pt_BR")
-        if !showCurrencySymbol { f.currencySymbol = "" }
-        amountText = f.string(for: NSDecimalNumber(decimal: value))?
-            .trimmingCharacters(in: .whitespaces) ?? ""
     }
 }
