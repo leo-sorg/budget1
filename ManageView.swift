@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 
+@MainActor
 struct ManageView: View {
     @Environment(\.modelContext) private var context
 
@@ -118,8 +119,11 @@ struct ManageView: View {
             }
             .navigationTitle("Manage")
             .toolbar { EditButton() } // enables drag handles
-            .task { normalizeSortIndicesIfNeeded() }
-            .alert("Oops", isPresented: .constant(alertMessage != nil)) {
+            .task { await MainActor.run { normalizeSortIndicesIfNeeded() } }
+            .alert("Oops", isPresented: Binding(
+                get: { alertMessage != nil },
+                set: { if !$0 { alertMessage = nil } }
+            )) {
                 Button("OK") { alertMessage = nil }
             } message: {
                 Text(alertMessage ?? "")
@@ -129,6 +133,7 @@ struct ManageView: View {
 
     // MARK: - Add
 
+    @MainActor
     private func addCategory() {
         let name = trimmed(newCategory)
         let emoji = trimmed(newCategoryEmoji)
@@ -147,7 +152,9 @@ struct ManageView: View {
             isIncome: newCategoryIsIncome
         )
 
-        context.insert(newCat)
+        withAnimation {
+            context.insert(newCat)
+        }
         do {
             try context.save()
 
@@ -168,6 +175,7 @@ struct ManageView: View {
         }
     }
 
+    @MainActor
     private func addPayment() {
         let name = trimmed(newPayment)
         guard !name.isEmpty else { return }
@@ -180,7 +188,9 @@ struct ManageView: View {
         let next = (methods.map { $0.sortIndex }.max() ?? -1) + 1
         let newPM = PaymentMethod(name: name, sortIndex: next)
 
-        context.insert(newPM)
+        withAnimation {
+            context.insert(newPM)
+        }
         do {
             try context.save()
 
@@ -201,6 +211,7 @@ struct ManageView: View {
 
     // MARK: - Reorder handlers
 
+    @MainActor
     private func moveCategory(from source: IndexSet, to destination: Int) {
         var reordered = categories
         reordered.move(fromOffsets: source, toOffset: destination)
@@ -208,6 +219,7 @@ struct ManageView: View {
         try? context.save()
     }
 
+    @MainActor
     private func moveMethod(from source: IndexSet, to destination: Int) {
         var reordered = methods
         reordered.move(fromOffsets: source, toOffset: destination)
@@ -215,16 +227,19 @@ struct ManageView: View {
         try? context.save()
     }
 
+    @MainActor
     private func renumberCategories() {
         for (idx, c) in categories.enumerated() { c.sortIndex = idx }
         try? context.save()
     }
 
+    @MainActor
     private func renumberMethods() {
         for (idx, m) in methods.enumerated() { m.sortIndex = idx }
         try? context.save()
     }
 
+    @MainActor
     private func normalizeSortIndicesIfNeeded() {
         if !categories.isEmpty, Set(categories.map { $0.sortIndex }).count == 1 {
             renumberCategories()
