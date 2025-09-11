@@ -120,6 +120,7 @@ struct AccessoryTextField: UIViewRepresentable {
 }
 
 // MARK: - Your main InputView
+@MainActor
 struct InputView: View {
     @Environment(\.modelContext) private var context
 
@@ -140,6 +141,7 @@ struct InputView: View {
     @State private var selectedMethod: PaymentMethod?
     @State private var note = ""
     @State private var showSavedToast = false
+    @State private var alertMessage: String?
 
     var body: some View {
         NavigationStack {
@@ -223,6 +225,14 @@ struct InputView: View {
                 }
             }
             .animation(.default, value: showSavedToast)
+            .alert("Oops", isPresented: Binding(
+                get: { alertMessage != nil },
+                set: { if !$0 { alertMessage = nil } }
+            )) {
+                Button("OK") { alertMessage = nil }
+            } message: {
+                Text(alertMessage ?? "")
+            }
         }
     }
 
@@ -249,30 +259,34 @@ struct InputView: View {
             paymentMethod: selectedMethod
         )
 
-        context.insert(tx)
-        try? context.save()
+        do {
+            try withAnimation {
+                context.insert(tx)
+                try context.save()
+            }
 
-        // If you wired Google Sheets:
-        SHEETS.postTransaction(
-            remoteID: tx.remoteID,
-            amount: signedAmount,
-            date: date,
-            categoryName: selectedCategory?.name,
-            paymentName: selectedMethod?.name,
-            note: note.isEmpty ? nil : note
-        )
+            SHEETS.postTransaction(
+                remoteID: tx.remoteID,
+                amount: signedAmount,
+                date: date,
+                categoryName: selectedCategory?.name,
+                paymentName: selectedMethod?.name,
+                note: note.isEmpty ? nil : note
+            )
 
-        // Reset for next entry
-        amountText = ""
-        note = ""
-        date = Date()
-        withAnimation { showSavedToast = true }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            withAnimation { showSavedToast = false }
+            amountText = ""
+            note = ""
+            date = Date()
+            withAnimation { showSavedToast = true }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                withAnimation { showSavedToast = false }
+            }
+
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        } catch {
+            alertMessage = "Could not save entry: \(error.localizedDescription)"
+            print("SAVE ERROR (Transaction):", error)
         }
-
-        // Make sure the keyboard is down after save too
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 
     private func seedDefaults(categoriesOnly: Bool = false,
