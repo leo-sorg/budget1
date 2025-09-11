@@ -119,7 +119,10 @@ struct ManageView: View {
             .navigationTitle("Manage")
             .toolbar { EditButton() } // enables drag handles
             .task { normalizeSortIndicesIfNeeded() }
-            .alert("Oops", isPresented: .constant(alertMessage != nil)) {
+            .alert("Oops", isPresented: Binding(
+                get: { alertMessage != nil },
+                set: { if !$0 { alertMessage = nil } }
+            )) {
                 Button("OK") { alertMessage = nil }
             } message: {
                 Text(alertMessage ?? "")
@@ -129,6 +132,7 @@ struct ManageView: View {
 
     // MARK: - Add
 
+    @MainActor
     private func addCategory() {
         let name = trimmed(newCategory)
         let emoji = trimmed(newCategoryEmoji)
@@ -168,6 +172,7 @@ struct ManageView: View {
         }
     }
 
+    @MainActor
     private func addPayment() {
         let name = trimmed(newPayment)
         guard !name.isEmpty else { return }
@@ -201,6 +206,7 @@ struct ManageView: View {
 
     // MARK: - Reorder handlers
 
+    @MainActor
     private func moveCategory(from source: IndexSet, to destination: Int) {
         var reordered = categories
         reordered.move(fromOffsets: source, toOffset: destination)
@@ -208,6 +214,7 @@ struct ManageView: View {
         try? context.save()
     }
 
+    @MainActor
     private func moveMethod(from source: IndexSet, to destination: Int) {
         var reordered = methods
         reordered.move(fromOffsets: source, toOffset: destination)
@@ -215,16 +222,19 @@ struct ManageView: View {
         try? context.save()
     }
 
+    @MainActor
     private func renumberCategories() {
         for (idx, c) in categories.enumerated() { c.sortIndex = idx }
         try? context.save()
     }
 
+    @MainActor
     private func renumberMethods() {
         for (idx, m) in methods.enumerated() { m.sortIndex = idx }
         try? context.save()
     }
 
+    @MainActor
     private func normalizeSortIndicesIfNeeded() {
         if !categories.isEmpty, Set(categories.map { $0.sortIndex }).count == 1 {
             renumberCategories()
