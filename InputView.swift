@@ -73,6 +73,9 @@ struct AccessoryTextField: UIViewRepresentable {
     var placeholder: String
     var onCancel: () -> Void
     var onDone: () -> Void
+    var keyboardType: UIKeyboardType = .default
+    var prefersEmoji: Bool = false
+    var autocapitalization: UITextAutocapitalizationType = .sentences
 
     class Coordinator: NSObject, UITextFieldDelegate {
         var parent: AccessoryTextField
@@ -96,11 +99,23 @@ struct AccessoryTextField: UIViewRepresentable {
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
+    // UITextField that defaults to the emoji keyboard
+    private class EmojiTextField: UITextField {
+        override var textInputMode: UITextInputMode? {
+            for mode in UITextInputMode.activeInputModes {
+                if mode.primaryLanguage == "emoji" { return mode }
+            }
+            return super.textInputMode
+        }
+    }
+
     func makeUIView(context: Context) -> UITextField {
-        let tf = UITextField(frame: .zero)
+        let tf: UITextField = prefersEmoji ? EmojiTextField(frame: .zero) : UITextField(frame: .zero)
         tf.placeholder = placeholder
         tf.delegate = context.coordinator
         tf.borderStyle = .roundedRect
+        tf.keyboardType = keyboardType
+        tf.autocapitalizationType = autocapitalization
         tf.addTarget(context.coordinator, action: #selector(Coordinator.editingChanged(_:)), for: .editingChanged)
 
         let bar = UIToolbar()
@@ -159,6 +174,7 @@ struct InputView: View {
                 // DATE
                 Section("Date") {
                     DatePicker("When", selection: $date, displayedComponents: .date)
+                        .onChange(of: date) { _ in dismissKeyboard() }
                 }
 
                 // PAYMENT TYPE
@@ -172,6 +188,7 @@ struct InputView: View {
                                 Text(pm.name).tag(PaymentMethod?.some(pm))
                             }
                         }
+                        .onChange(of: selectedMethod) { _ in dismissKeyboard() }
                     }
                 }
 
@@ -187,6 +204,7 @@ struct InputView: View {
                                     .tag(Category?.some(cat))
                             }
                         }
+                        .onChange(of: selectedCategory) { _ in dismissKeyboard() }
                     }
                 }
 
@@ -208,6 +226,7 @@ struct InputView: View {
                     .disabled(!canSave)
                 }
             }
+            .onTapGesture { dismissKeyboard() }
             .navigationTitle("Input")
             .task {
                 if categories.isEmpty || methods.isEmpty { seedDefaults() }
