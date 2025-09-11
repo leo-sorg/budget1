@@ -17,6 +17,7 @@ struct ManageView: View {
 
     @State private var newCategory = ""
     @State private var newCategoryEmoji = ""
+    @State private var newCategoryIsIncome = false
     @State private var newPayment = ""
     @State private var alertMessage: String?
     @FocusState private var focusedField: Field?
@@ -37,6 +38,8 @@ struct ManageView: View {
                                 Text(c.emoji ?? "🏷️")
                                 Text(c.name)
                                 Spacer()
+                                Text(c.isIncome ? "+" : "-")
+                                    .foregroundStyle(c.isIncome ? .green : .red)
                                 Button(role: .destructive) {
                                     context.delete(c)
                                     try? context.save()
@@ -65,6 +68,11 @@ struct ManageView: View {
                                 .frame(maxWidth: 120)
                                 .focused($focusedField, equals: .catEmoji)
                         }
+                        Picker("Type", selection: $newCategoryIsIncome) {
+                            Text("Expense").tag(false)
+                            Text("Income").tag(true)
+                        }
+                        .pickerStyle(.segmented)
                         Button("Add category", action: addCategory)
                             .disabled(trimmed(newCategory).isEmpty)
                     }
@@ -132,7 +140,12 @@ struct ManageView: View {
         }
 
         let next = (categories.map { $0.sortIndex }.max() ?? -1) + 1
-        let newCat = Category(name: name, emoji: emoji.isEmpty ? nil : emoji, sortIndex: next)
+        let newCat = Category(
+            name: name,
+            emoji: emoji.isEmpty ? nil : emoji,
+            sortIndex: next,
+            isIncome: newCategoryIsIncome
+        )
 
         context.insert(newCat)
         do {
@@ -143,10 +156,11 @@ struct ManageView: View {
                 remoteID: newCat.remoteID,
                 name: newCat.name,
                 emoji: newCat.emoji,
-                sortIndex: newCat.sortIndex
+                sortIndex: newCat.sortIndex,
+                isIncome: newCat.isIncome
             )
 
-            newCategory = ""; newCategoryEmoji = ""
+            newCategory = ""; newCategoryEmoji = ""; newCategoryIsIncome = false
             focusedField = .catName
         } catch {
             alertMessage = "Could not save category: \(error.localizedDescription)"

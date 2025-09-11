@@ -9,6 +9,8 @@ final class Category {
     var sortIndex: Int
     /// Stable ID used when syncing to Google Sheets (and future backends).
     var remoteID: String
+    /// Whether transactions in this category should be treated as income (positive values).
+    var isIncome: Bool
     /// Transactions assigned to this category.
     /// If the category is removed, existing transactions should keep their data
     /// and simply become uncategorized rather than crashing when accessed.
@@ -19,12 +21,14 @@ final class Category {
         name: String,
         emoji: String? = nil,
         sortIndex: Int = 0,
-        remoteID: String = UUID().uuidString
+        remoteID: String = UUID().uuidString,
+        isIncome: Bool = false
     ) {
         self.name = name
         self.emoji = emoji
         self.sortIndex = sortIndex
         self.remoteID = remoteID
+        self.isIncome = isIncome
     }
 }
 
