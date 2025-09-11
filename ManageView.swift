@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UIKit
 
 @MainActor
 struct ManageView: View {
@@ -21,9 +22,6 @@ struct ManageView: View {
     @State private var newCategoryIsIncome = false
     @State private var newPayment = ""
     @State private var alertMessage: String?
-    @FocusState private var focusedField: Field?
-
-    enum Field { case catName, catEmoji, payment }
 
     var body: some View {
         NavigationStack {
@@ -62,18 +60,28 @@ struct ManageView: View {
                     // Add category
                     VStack(spacing: 8) {
                         HStack {
-                            TextField("Name (e.g. Food)", text: $newCategory)
-                                .textInputAutocapitalization(.words)
-                                .focused($focusedField, equals: .catName)
-                            TextField("Emoji (optional)", text: $newCategoryEmoji)
-                                .frame(maxWidth: 120)
-                                .focused($focusedField, equals: .catEmoji)
+                            AccessoryTextField(
+                                text: $newCategory,
+                                placeholder: "Name (e.g. Food)",
+                                onCancel: { newCategory = "" },
+                                onDone: { },
+                                autocapitalization: .words
+                            )
+                            AccessoryTextField(
+                                text: $newCategoryEmoji,
+                                placeholder: "Emoji (optional)",
+                                onCancel: { newCategoryEmoji = "" },
+                                onDone: { },
+                                prefersEmoji: true
+                            )
+                            .frame(maxWidth: 120)
                         }
                         Picker("Type", selection: $newCategoryIsIncome) {
                             Text("Expense").tag(false)
                             Text("Income").tag(true)
                         }
                         .pickerStyle(.segmented)
+                        .onChange(of: newCategoryIsIncome) { _ in dismissKeyboard() }
                         Button("Add category", action: addCategory)
                             .disabled(trimmed(newCategory).isEmpty)
                     }
@@ -109,14 +117,19 @@ struct ManageView: View {
 
                     // Add payment method
                     HStack {
-                        TextField("Name (e.g. Credit Card, Pix)", text: $newPayment)
-                            .textInputAutocapitalization(.words)
-                            .focused($focusedField, equals: .payment)
+                        AccessoryTextField(
+                            text: $newPayment,
+                            placeholder: "Name (e.g. Credit Card, Pix)",
+                            onCancel: { newPayment = "" },
+                            onDone: { },
+                            autocapitalization: .words
+                        )
                         Button("Add", action: addPayment)
                             .disabled(trimmed(newPayment).isEmpty)
                     }
                 }
             }
+            .onTapGesture { dismissKeyboard() }
             .navigationTitle("Manage")
             .toolbar { EditButton() } // enables drag handles
             .task { normalizeSortIndicesIfNeeded() }
@@ -135,6 +148,7 @@ struct ManageView: View {
 
     @MainActor
     private func addCategory() {
+        dismissKeyboard()
         let name = trimmed(newCategory)
         let emoji = trimmed(newCategoryEmoji)
         guard !name.isEmpty else { return }
@@ -167,7 +181,6 @@ struct ManageView: View {
             )
 
             newCategory = ""; newCategoryEmoji = ""; newCategoryIsIncome = false
-            focusedField = .catName
         } catch {
             alertMessage = "Could not save category: \(error.localizedDescription)"
             print("SAVE ERROR (Category):", error)
@@ -176,6 +189,7 @@ struct ManageView: View {
 
     @MainActor
     private func addPayment() {
+        dismissKeyboard()
         let name = trimmed(newPayment)
         guard !name.isEmpty else { return }
 
@@ -200,7 +214,6 @@ struct ManageView: View {
             )
 
             newPayment = ""
-            focusedField = .payment
         } catch {
             alertMessage = "Could not save payment method: \(error.localizedDescription)"
             print("SAVE ERROR (Payment):", error)
