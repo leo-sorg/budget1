@@ -1,28 +1,67 @@
 import SwiftUI
 
 struct HomeTabView: View {
-    init() {
-        let tabBar = UITabBar.appearance()
-        tabBar.backgroundColor = UIColor(Color.appSecondaryBackground)
-        tabBar.unselectedItemTintColor = UIColor(Color.appText)
+    private enum Tab: String, CaseIterable {
+        case input = "square.and.pencil"
+        case history = "list.bullet"
+        case summary = "chart.pie"
+        case manage = "gearshape"
+
+        var title: String {
+            switch self {
+            case .input: return "Input"
+            case .history: return "History"
+            case .summary: return "Summary"
+            case .manage: return "Manage"
+            }
+        }
+
+        var systemImage: String { rawValue }
     }
 
+    @State private var selection: Tab = .input
+
     var body: some View {
-        TabView {
-            InputView()
-                .tabItem { Label("Input", systemImage: "square.and.pencil") }
+        ZStack(alignment: .bottom) {
+            Group {
+                switch selection {
+                case .input: InputView()
+                case .history: HistoryView()
+                case .summary: SummaryView()
+                case .manage: ManageView()
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.appBackground)
 
-            HistoryView()
-                .tabItem { Label("History", systemImage: "list.bullet") }
-
-            SummaryView()
-                .tabItem { Label("Summary", systemImage: "chart.pie") }
-
-            ManageView()
-                .tabItem { Label("Manage", systemImage: "gearshape") }
+            HStack {
+                ForEach(Tab.allCases, id: \.self) { tab in
+                    Button {
+                        selection = tab
+                    } label: {
+                        VStack(spacing: 4) {
+                            Image(systemName: tab.systemImage)
+                                .font(.system(size: 16, weight: .semibold))
+                            Text(tab.title)
+                                .font(.caption2.bold())
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .frame(maxWidth: .infinity)
+                        .foregroundColor(selection == tab ? Color.appBackground : Color.appText)
+                        .background(
+                            Capsule().fill(selection == tab ? Color.appAccent : Color.clear)
+                        )
+                    }
+                }
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 12)
+            .background(
+                Capsule().fill(Color.appTabBar)
+            )
+            .padding(.bottom, 20)
         }
-        .background(Color.appBackground)
-        .foregroundColor(.appText)
-        .tint(.appAccent)
+        .ignoresSafeArea(.keyboard, edges: .bottom)
     }
 }
