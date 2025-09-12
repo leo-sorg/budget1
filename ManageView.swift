@@ -6,6 +6,17 @@ import UIKit
 struct ManageView: View {
     @Environment(\.modelContext) private var context
 
+    init() {
+        let segmented = UISegmentedControl.appearance()
+        segmented.selectedSegmentTintColor = UIColor(Color.appAccent)
+        segmented.setTitleTextAttributes([
+            .foregroundColor: UIColor(Color.appText)
+        ], for: .normal)
+        segmented.setTitleTextAttributes([
+            .foregroundColor: UIColor(Color.appBackground)
+        ], for: .selected)
+    }
+
     // Order by sortIndex, then name
     @Query(sort: [
         SortDescriptor(\Category.sortIndex, order: .forward),
