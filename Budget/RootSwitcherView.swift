@@ -1,0 +1,40 @@
+import SwiftUI
+
+struct RootSwitcherView: View {
+    @State private var showSplash = true
+
+    var body: some View {
+        ZStack {
+            Color.appBackground.ignoresSafeArea()
+            Group {
+                if showSplash {
+                    SplashView()
+                } else {
+                    HomeTabView()
+                }
+            }
+        }
+        .animation(.easeInOut(duration: 0.3), value: showSplash)
+        .task {
+            // Simulate small load, then switch to Home
+            try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
+            showSplash = false
+        }
+    }
+}
+
+struct SplashView: View {
+    var body: some View {
+        ZStack {
+            Color.appBackground.ignoresSafeArea()
+            VStack(spacing: 12) {
+                Image(systemName: "creditcard.fill")
+                    .font(.system(size: 56, weight: .bold))
+                    .foregroundColor(.appAccent)
+                Text("Budget")
+                    .font(.title.bold())
+            }
+            .foregroundColor(.appText)
+        }
+    }
+}
