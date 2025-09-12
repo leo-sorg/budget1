@@ -45,6 +45,9 @@ struct MoneyTextField: UIViewRepresentable {
         tf.keyboardType = .numberPad
         tf.delegate = context.coordinator
         tf.borderStyle = .roundedRect
+        tf.backgroundColor = UIColor(Color.appSecondaryBackground)
+        tf.textColor = UIColor(Color.appText)
+        tf.tintColor = UIColor(Color.appAccent)
         tf.addTarget(context.coordinator, action: #selector(Coordinator.editingChanged(_:)), for: .editingChanged)
 
         // Toolbar with Cancel / Done
@@ -54,6 +57,8 @@ struct MoneyTextField: UIViewRepresentable {
         let flex = UIBarButtonItem(systemItem: .flexibleSpace)
         let done = UIBarButtonItem(title: "Done", style: .done, target: context.coordinator, action: #selector(Coordinator.tapDone(_:)))
         bar.items = [cancel, flex, done]
+        bar.barTintColor = UIColor(Color.appSecondaryBackground)
+        bar.tintColor = UIColor(Color.appAccent)
         tf.inputAccessoryView = bar
 
         // Initial formatting (if any)
@@ -116,6 +121,9 @@ struct AccessoryTextField: UIViewRepresentable {
         tf.borderStyle = .roundedRect
         tf.keyboardType = keyboardType
         tf.autocapitalizationType = autocapitalization
+        tf.backgroundColor = UIColor(Color.appSecondaryBackground)
+        tf.textColor = UIColor(Color.appText)
+        tf.tintColor = UIColor(Color.appAccent)
         tf.addTarget(context.coordinator, action: #selector(Coordinator.editingChanged(_:)), for: .editingChanged)
 
         let bar = UIToolbar()
@@ -124,6 +132,8 @@ struct AccessoryTextField: UIViewRepresentable {
         let flex = UIBarButtonItem(systemItem: .flexibleSpace)
         let done = UIBarButtonItem(title: "Done", style: .done, target: context.coordinator, action: #selector(Coordinator.tapDone(_:)))
         bar.items = [cancel, flex, done]
+        bar.barTintColor = UIColor(Color.appSecondaryBackground)
+        bar.tintColor = UIColor(Color.appAccent)
         tf.inputAccessoryView = bar
 
         return tf
@@ -223,9 +233,13 @@ struct InputView: View {
                     Button(action: save) {
                         HStack { Spacer(); Text("Save entry").fontWeight(.semibold); Spacer() }
                     }
+                    .buttonStyle(.borderedProminent)
                     .disabled(!canSave)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(Color.appBackground)
+            .listRowBackground(Color.appSecondaryBackground)
             .onTapGesture { dismissKeyboard() }
             .navigationTitle("Input")
             .task {
@@ -236,8 +250,8 @@ struct InputView: View {
                     Text("Saved ✔︎")
                         .padding(.horizontal, 16)
                         .padding(.vertical, 8)
-                        .background(Color.black.opacity(0.8))
-                        .foregroundStyle(.white)
+                        .background(Color.appSecondaryBackground.opacity(0.8))
+                        .foregroundStyle(.appText)
                         .cornerRadius(8)
                         .padding(.top)
                         .transition(.move(edge: .top).combined(with: .opacity))
@@ -253,6 +267,9 @@ struct InputView: View {
                 Text(alertMessage ?? "")
             }
         }
+        .background(Color.appBackground)
+        .foregroundColor(.appText)
+        .tint(.appAccent)
     }
 
     // MARK: - Validation

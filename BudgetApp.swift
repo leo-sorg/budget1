@@ -9,7 +9,11 @@ let SHEETS = SheetsClient(
 @main
 struct BudgetApp: App {
     var body: some Scene {
-        WindowGroup { RootSwitcherView() }
+        WindowGroup {
+            RootSwitcherView()
+                .preferredColorScheme(.dark)
+                .tint(.appAccent)
+        }
         .modelContainer(for: [Transaction.self, Category.self, PaymentMethod.self])
     }
 }
