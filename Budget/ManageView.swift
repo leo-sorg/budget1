@@ -86,6 +86,7 @@ struct ManageView: View {
                     onAdd: addCategory,
                     onClose: closeCategorySheet
                 )
+                .frame(maxHeight: UIScreen.main.bounds.height / 2)
                 .transition(.move(edge: .bottom))
             }
 
@@ -96,6 +97,7 @@ struct ManageView: View {
                     onAdd: addPayment,
                     onClose: closePaymentSheet
                 )
+                .frame(maxHeight: UIScreen.main.bounds.height / 2)
                 .transition(.move(edge: .bottom))
             }
         }
@@ -337,7 +339,7 @@ private struct CategoryFormSheet: View {
     var onClose: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Spacer()
                 Button(action: onClose) {
@@ -366,6 +368,7 @@ private struct CategoryFormSheet: View {
                         .tag(Bool?.some(isIncome))
                 }
             }
+            .pickerStyle(.segmented)
             .onChange(of: newCategoryIsIncome) { _ in dismissKeyboard() }
             Button("Add Category", action: onAdd)
                 .buttonStyle(AppButtonStyle())
@@ -385,7 +388,7 @@ private struct PaymentFormSheet: View {
     var onClose: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Spacer()
                 Button(action: onClose) {
