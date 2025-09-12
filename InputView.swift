@@ -192,7 +192,7 @@ struct InputView: View {
         .scrollContentBackground(.hidden)
         .background(Color.appBackground)
         .listRowBackground(Color.appSecondaryBackground)
-        .onTapGesture { dismissKeyboard() }
+        .simultaneousGesture(TapGesture().onEnded { dismissKeyboard() })
         .task {
             if categories.isEmpty || methods.isEmpty { seedDefaults() }
         }
