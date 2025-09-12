@@ -411,7 +411,7 @@ private struct PaymentFormSheet: View {
     }
 }
 
-private extension View {
+extension View {
     func formField() -> some View {
         self
             .padding(12)

@@ -236,6 +236,7 @@ struct InputView: View {
                 onCancel: { /* nothing else to do */ },
                 onDone: { /* just collapse; formatting already applied */ }
             )
+            .formField()
         }
     }
 
@@ -247,6 +248,7 @@ struct InputView: View {
                         dismissKeyboard()
                     }
                 }
+                .formField()
         }
     }
 
@@ -262,6 +264,7 @@ struct InputView: View {
                     }
                 }
                 .onChange(of: selectedMethod) { _ in dismissKeyboard() }
+                .formField()
             }
         }
     }
@@ -279,6 +282,7 @@ struct InputView: View {
                     }
                 }
                 .onChange(of: selectedCategory) { _ in dismissKeyboard() }
+                .formField()
             }
         }
     }
@@ -291,6 +295,7 @@ struct InputView: View {
                 onCancel: { /* nothing extra */ },
                 onDone: { /* just collapse */ }
             )
+            .formField()
         }
     }
 
