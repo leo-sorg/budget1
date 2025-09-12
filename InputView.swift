@@ -173,9 +173,6 @@ struct InputView: View {
             formContent
                 .navigationTitle("Input")
         }
-        .toolbarBackground(Color.black, for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarColorScheme(.dark, for: .navigationBar)
         .background(Color.appBackground)
         .foregroundColor(.appText)
         .tint(.appAccent)
@@ -301,7 +298,7 @@ struct InputView: View {
                 HStack { Spacer(); Text("Save entry").fontWeight(.semibold); Spacer() }
             }
             .buttonStyle(.borderedProminent)
-            .tint(Color.appTabBar)
+            .tint(Color.appSecondaryBackground)
             .foregroundColor(Color.appAccent)
             .disabled(!canSave)
         }
