@@ -39,16 +39,16 @@ struct ManageView: View {
     @State private var showPaymentForm = false
 
     var body: some View {
-        NavigationStack {
-            VStack {
-                Picker("", selection: $showingCategories) {
-                    Text("Categories").tag(true)
-                    Text("Payment Types").tag(false)
-                }
-                .pickerStyle(.segmented)
-                .padding()
-
+        ZStack(alignment: .bottom) {
+            NavigationStack {
                 Form {
+                    Picker("", selection: $showingCategories) {
+                        Text("Categories").tag(true)
+                        Text("Payment Types").tag(false)
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.vertical, 8)
+
                     if showingCategories {
                         categorySection
                     } else {
@@ -59,24 +59,48 @@ struct ManageView: View {
                 .background(Color.appBackground)
                 .listRowBackground(Color.appSecondaryBackground)
                 .scrollDismissesKeyboard(.interactively)
+                .navigationTitle("Manage")
+                .toolbar { EditButton() }
+                .task { normalizeSortIndicesIfNeeded() }
+                .alert("Oops", isPresented: Binding(
+                    get: { alertMessage != nil },
+                    set: { if !$0 { alertMessage = nil } }
+                )) {
+                    Button("OK") { alertMessage = nil }
+                } message: {
+                    Text(alertMessage ?? "")
+                }
             }
-            .navigationTitle("Manage")
-            .toolbar { EditButton() }
-            .task { normalizeSortIndicesIfNeeded() }
-            .alert("Oops", isPresented: Binding(
-                get: { alertMessage != nil },
-                set: { if !$0 { alertMessage = nil } }
-            )) {
-                Button("OK") { alertMessage = nil }
-            } message: {
-                Text(alertMessage ?? "")
+            .background(Color.appBackground)
+            .foregroundColor(.appText)
+            .tint(.appAccent)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(Color.black, for: .navigationBar)
+
+            if showCategoryForm {
+                Color.black.opacity(0.4).ignoresSafeArea()
+                CategoryFormSheet(
+                    newCategory: $newCategory,
+                    newCategoryEmoji: $newCategoryEmoji,
+                    newCategoryIsIncome: $newCategoryIsIncome,
+                    onAdd: addCategory,
+                    onClose: closeCategorySheet
+                )
+                .transition(.move(edge: .bottom))
+            }
+
+            if showPaymentForm {
+                Color.black.opacity(0.4).ignoresSafeArea()
+                PaymentFormSheet(
+                    newPayment: $newPayment,
+                    onAdd: addPayment,
+                    onClose: closePaymentSheet
+                )
+                .transition(.move(edge: .bottom))
             }
         }
-        .background(Color.appBackground)
-        .foregroundColor(.appText)
-        .tint(.appAccent)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Color.black, for: .navigationBar)
+        .animation(.easeInOut, value: showCategoryForm)
+        .animation(.easeInOut, value: showPaymentForm)
     }
 
     // MARK: - Sections
@@ -110,48 +134,17 @@ struct ManageView: View {
                 }
                 .onMove(perform: moveCategory)
             }
-
-            if showCategoryForm {
-                VStack(alignment: .leading, spacing: 12) {
-                    AccessoryTextField(
-                        text: $newCategory,
-                        placeholder: "Name (e.g. Food)",
-                        onCancel: { newCategory = "" },
-                        onDone: { },
-                        autocapitalization: .words
-                    )
-                    AccessoryTextField(
-                        text: $newCategoryEmoji,
-                        placeholder: "Emoji (optional)",
-                        onCancel: { newCategoryEmoji = "" },
-                        onDone: { },
-                        prefersEmoji: true
-                    )
-                    Picker("Type", selection: $newCategoryIsIncome) {
-                        Text("Choose…").tag(Bool?.none)
-                        ForEach([false, true], id: \.self) { isIncome in
-                            Text(isIncome ? "Income" : "Expense")
-                                .tag(Bool?.some(isIncome))
-                        }
-                    }
-                    .onChange(of: newCategoryIsIncome) { _ in dismissKeyboard() }
-                    Button("Add Category", action: addCategory)
-                        .buttonStyle(AppButtonStyle())
-                        .disabled(trimmed(newCategory).isEmpty || newCategoryIsIncome == nil)
-                }
-                .transition(.opacity)
-                .padding(.top, 8)
-                .listRowInsets(EdgeInsets())
-                .listRowSeparator(.hidden)
-            }
         } header: {
             HStack {
                 Text("Categories (drag to reorder)")
                 Spacer()
                 Button {
-                    withAnimation { showCategoryForm.toggle() }
+                    withAnimation {
+                        showCategoryForm = true
+                        showPaymentForm = false
+                    }
                 } label: {
-                    Image(systemName: showCategoryForm ? "xmark" : "plus")
+                    Image(systemName: "plus")
                 }
             }
         }
@@ -184,33 +177,17 @@ struct ManageView: View {
                 }
                 .onMove(perform: moveMethod)
             }
-
-            if showPaymentForm {
-                VStack(alignment: .leading, spacing: 12) {
-                    AccessoryTextField(
-                        text: $newPayment,
-                        placeholder: "Name (e.g. Credit Card, Pix)",
-                        onCancel: { newPayment = "" },
-                        onDone: { },
-                        autocapitalization: .words
-                    )
-                    Button("Add Payment Type", action: addPayment)
-                        .buttonStyle(AppButtonStyle())
-                        .disabled(trimmed(newPayment).isEmpty)
-                }
-                .transition(.opacity)
-                .padding(.top, 8)
-                .listRowInsets(EdgeInsets())
-                .listRowSeparator(.hidden)
-            }
         } header: {
             HStack {
                 Text("Payment Methods (drag to reorder)")
                 Spacer()
                 Button {
-                    withAnimation { showPaymentForm.toggle() }
+                    withAnimation {
+                        showPaymentForm = true
+                        showCategoryForm = false
+                    }
                 } label: {
-                    Image(systemName: showPaymentForm ? "xmark" : "plus")
+                    Image(systemName: "plus")
                 }
             }
         }
@@ -253,8 +230,7 @@ struct ManageView: View {
                 isIncome: newCat.isIncome
             )
 
-            newCategory = ""; newCategoryEmoji = ""; newCategoryIsIncome = nil
-            withAnimation { showCategoryForm = false }
+            closeCategorySheet()
         } catch {
             alertMessage = "Could not save category: \(error.localizedDescription)"
             print("SAVE ERROR (Category):", error)
@@ -287,12 +263,25 @@ struct ManageView: View {
                 sortIndex: newPM.sortIndex
             )
 
-            newPayment = ""
-            withAnimation { showPaymentForm = false }
+            closePaymentSheet()
         } catch {
             alertMessage = "Could not save payment method: \(error.localizedDescription)"
             print("SAVE ERROR (Payment):", error)
         }
+    }
+
+    private func closeCategorySheet() {
+        dismissKeyboard()
+        newCategory = ""
+        newCategoryEmoji = ""
+        newCategoryIsIncome = nil
+        withAnimation { showCategoryForm = false }
+    }
+
+    private func closePaymentSheet() {
+        dismissKeyboard()
+        newPayment = ""
+        withAnimation { showPaymentForm = false }
     }
 
     // MARK: - Reorder handlers
@@ -337,6 +326,91 @@ struct ManageView: View {
     // MARK: - Helpers
     private func trimmed(_ s: String) -> String {
         s.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
+private struct CategoryFormSheet: View {
+    @Binding var newCategory: String
+    @Binding var newCategoryEmoji: String
+    @Binding var newCategoryIsIncome: Bool?
+    var onAdd: () -> Void
+    var onClose: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Spacer()
+                Button(action: onClose) {
+                    Image(systemName: "xmark")
+                        .padding()
+                }
+            }
+            AccessoryTextField(
+                text: $newCategory,
+                placeholder: "Name (e.g. Food)",
+                onCancel: { newCategory = "" },
+                onDone: { },
+                autocapitalization: .words
+            )
+            AccessoryTextField(
+                text: $newCategoryEmoji,
+                placeholder: "Emoji (optional)",
+                onCancel: { newCategoryEmoji = "" },
+                onDone: { },
+                prefersEmoji: true
+            )
+            Picker("Type", selection: $newCategoryIsIncome) {
+                Text("Choose…").tag(Bool?.none)
+                ForEach([false, true], id: \.self) { isIncome in
+                    Text(isIncome ? "Income" : "Expense")
+                        .tag(Bool?.some(isIncome))
+                }
+            }
+            .onChange(of: newCategoryIsIncome) { _ in dismissKeyboard() }
+            Spacer()
+            Button("Add Category", action: onAdd)
+                .buttonStyle(AppButtonStyle())
+                .disabled(newCategory.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || newCategoryIsIncome == nil)
+        }
+        .padding()
+        .frame(maxWidth: .infinity)
+        .background(Color.appSecondaryBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .padding()
+    }
+}
+
+private struct PaymentFormSheet: View {
+    @Binding var newPayment: String
+    var onAdd: () -> Void
+    var onClose: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Spacer()
+                Button(action: onClose) {
+                    Image(systemName: "xmark")
+                        .padding()
+                }
+            }
+            AccessoryTextField(
+                text: $newPayment,
+                placeholder: "Name (e.g. Credit Card, Pix)",
+                onCancel: { newPayment = "" },
+                onDone: { },
+                autocapitalization: .words
+            )
+            Spacer()
+            Button("Add Payment Type", action: onAdd)
+                .buttonStyle(AppButtonStyle())
+                .disabled(newPayment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        }
+        .padding()
+        .frame(maxWidth: .infinity)
+        .background(Color.appSecondaryBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .padding()
     }
 }
 
