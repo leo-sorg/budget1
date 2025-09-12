@@ -39,70 +39,64 @@ struct ManageView: View {
     @State private var showPaymentForm = false
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            NavigationStack {
-                Form {
-                    Picker("", selection: $showingCategories) {
-                        Text("Categories").tag(true)
-                        Text("Payment Types").tag(false)
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(.vertical, 8)
-
-                    if showingCategories {
-                        categorySection
-                    } else {
-                        paymentSection
-                    }
+        NavigationStack {
+            Form {
+                Picker("", selection: $showingCategories) {
+                    Text("Categories").tag(true)
+                    Text("Payment Types").tag(false)
                 }
-                .scrollContentBackground(.hidden)
-                .background(Color.appBackground)
-                .listRowBackground(Color.appSecondaryBackground)
-                .scrollDismissesKeyboard(.interactively)
-                .navigationTitle("Manage")
-                .toolbar { EditButton() }
-                .task { normalizeSortIndicesIfNeeded() }
-                .alert("Oops", isPresented: Binding(
-                    get: { alertMessage != nil },
-                    set: { if !$0 { alertMessage = nil } }
-                )) {
-                    Button("OK") { alertMessage = nil }
-                } message: {
-                    Text(alertMessage ?? "")
+                .pickerStyle(.segmented)
+                .padding(.vertical, 8)
+
+                if showingCategories {
+                    categorySection
+                } else {
+                    paymentSection
                 }
             }
+            .scrollContentBackground(.hidden)
             .background(Color.appBackground)
-            .foregroundColor(.appText)
-            .tint(.appAccent)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(Color.black, for: .navigationBar)
-
-            if showCategoryForm {
-                Color.black.opacity(0.4).ignoresSafeArea()
-                CategoryFormSheet(
-                    newCategory: $newCategory,
-                    newCategoryEmoji: $newCategoryEmoji,
-                    newCategoryIsIncome: $newCategoryIsIncome,
-                    onAdd: addCategory,
-                    onClose: closeCategorySheet
-                )
-                .frame(maxHeight: UIScreen.main.bounds.height / 2)
-                .transition(.move(edge: .bottom))
-            }
-
-            if showPaymentForm {
-                Color.black.opacity(0.4).ignoresSafeArea()
-                PaymentFormSheet(
-                    newPayment: $newPayment,
-                    onAdd: addPayment,
-                    onClose: closePaymentSheet
-                )
-                .frame(maxHeight: UIScreen.main.bounds.height / 2)
-                .transition(.move(edge: .bottom))
+            .listRowBackground(Color.appSecondaryBackground)
+            .scrollDismissesKeyboard(.interactively)
+            .navigationTitle("Manage")
+            .toolbar { EditButton() }
+            .task { normalizeSortIndicesIfNeeded() }
+            .alert("Oops", isPresented: Binding(
+                get: { alertMessage != nil },
+                set: { if !$0 { alertMessage = nil } }
+            )) {
+                Button("OK") { alertMessage = nil }
+            } message: {
+                Text(alertMessage ?? "")
             }
         }
-        .animation(.easeInOut, value: showCategoryForm)
-        .animation(.easeInOut, value: showPaymentForm)
+        .background(Color.appBackground)
+        .foregroundColor(.appText)
+        .tint(.appAccent)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(Color.black, for: .navigationBar)
+        .sheet(isPresented: $showCategoryForm) {
+            CategoryFormSheet(
+                newCategory: $newCategory,
+                newCategoryEmoji: $newCategoryEmoji,
+                newCategoryIsIncome: $newCategoryIsIncome,
+                onAdd: addCategory,
+                onClose: closeCategorySheet
+            )
+            .presentationDetents([.fraction(0.5)])
+            .presentationDragIndicator(.visible)
+            .presentationBackground(Color.appSecondaryBackground)
+        }
+        .sheet(isPresented: $showPaymentForm) {
+            PaymentFormSheet(
+                newPayment: $newPayment,
+                onAdd: addPayment,
+                onClose: closePaymentSheet
+            )
+            .presentationDetents([.fraction(0.5)])
+            .presentationDragIndicator(.visible)
+            .presentationBackground(Color.appSecondaryBackground)
+        }
     }
 
     // MARK: - Sections
@@ -141,10 +135,8 @@ struct ManageView: View {
                 Text("Categories (drag to reorder)")
                 Spacer()
                 Button {
-                    withAnimation {
-                        showCategoryForm = true
-                        showPaymentForm = false
-                    }
+                    showCategoryForm = true
+                    showPaymentForm = false
                 } label: {
                     Image(systemName: "plus")
                 }
@@ -184,10 +176,8 @@ struct ManageView: View {
                 Text("Payment Methods (drag to reorder)")
                 Spacer()
                 Button {
-                    withAnimation {
-                        showPaymentForm = true
-                        showCategoryForm = false
-                    }
+                    showPaymentForm = true
+                    showCategoryForm = false
                 } label: {
                     Image(systemName: "plus")
                 }
@@ -277,13 +267,13 @@ struct ManageView: View {
         newCategory = ""
         newCategoryEmoji = ""
         newCategoryIsIncome = nil
-        withAnimation { showCategoryForm = false }
+        showCategoryForm = false
     }
 
     private func closePaymentSheet() {
         dismissKeyboard()
         newPayment = ""
-        withAnimation { showPaymentForm = false }
+        showPaymentForm = false
     }
 
     // MARK: - Reorder handlers
@@ -339,12 +329,13 @@ private struct CategoryFormSheet: View {
     var onClose: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Spacer()
                 Button(action: onClose) {
-                    Image(systemName: "xmark")
-                        .padding()
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.title2)
+                        .padding(4)
                 }
             }
             AccessoryTextField(
@@ -354,6 +345,8 @@ private struct CategoryFormSheet: View {
                 onDone: { },
                 autocapitalization: .words
             )
+            .formField()
+
             AccessoryTextField(
                 text: $newCategoryEmoji,
                 placeholder: "Emoji (optional)",
@@ -361,6 +354,8 @@ private struct CategoryFormSheet: View {
                 onDone: { },
                 prefersEmoji: true
             )
+            .formField()
+
             Picker("Type", selection: $newCategoryIsIncome) {
                 Text("Choose…").tag(Bool?.none)
                 ForEach([false, true], id: \.self) { isIncome in
@@ -370,14 +365,12 @@ private struct CategoryFormSheet: View {
             }
             .pickerStyle(.segmented)
             .onChange(of: newCategoryIsIncome) { _ in dismissKeyboard() }
+            .formField()
+
             Button("Add Category", action: onAdd)
                 .buttonStyle(AppButtonStyle())
                 .disabled(newCategory.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || newCategoryIsIncome == nil)
         }
-        .padding()
-        .frame(maxWidth: .infinity)
-        .background(Color.appSecondaryBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
         .padding()
     }
 }
@@ -388,12 +381,13 @@ private struct PaymentFormSheet: View {
     var onClose: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Spacer()
                 Button(action: onClose) {
-                    Image(systemName: "xmark")
-                        .padding()
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.title2)
+                        .padding(4)
                 }
             }
             AccessoryTextField(
@@ -403,15 +397,28 @@ private struct PaymentFormSheet: View {
                 onDone: { },
                 autocapitalization: .words
             )
+            .formField()
+
             Button("Add Payment Type", action: onAdd)
                 .buttonStyle(AppButtonStyle())
                 .disabled(newPayment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
         .padding()
-        .frame(maxWidth: .infinity)
-        .background(Color.appSecondaryBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .padding()
+    }
+}
+
+private extension View {
+    func formField() -> some View {
+        self
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.appBackground)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.appAccent.opacity(0.3))
+            )
     }
 }
 
