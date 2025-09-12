@@ -414,10 +414,10 @@ private struct PaymentFormSheet: View {
 extension View {
     func formField() -> some View {
         self
-            .padding(12)
+            .padding(8)
             .background(
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.appBackground)
+                    .fill(Color.appTabBar)
             )
     }
 }

@@ -6,4 +6,5 @@ extension Color {
     static let appAccent = Color(red: 0.0/255.0, green: 255.0/255.0, blue: 255.0/255.0)
     static let appText = Color.white
     static let appTabBar = Color(red: 49.0/255.0, green: 50.0/255.0, blue: 50.0/255.0)
+    static let appPlaceholderText = Color(red: 39.0/255.0, green: 40.0/255.0, blue: 40.0/255.0)
 }
