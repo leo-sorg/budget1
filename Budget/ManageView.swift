@@ -85,7 +85,7 @@ struct ManageView: View {
             )
             .presentationDetents([.fraction(0.5)])
             .presentationDragIndicator(.visible)
-            .presentationBackground(Color.appSecondaryBackground)
+            .presentationBackground(Color.black)
         }
         .sheet(isPresented: $showPaymentForm) {
             PaymentFormSheet(
@@ -95,7 +95,7 @@ struct ManageView: View {
             )
             .presentationDetents([.fraction(0.5)])
             .presentationDragIndicator(.visible)
-            .presentationBackground(Color.appSecondaryBackground)
+            .presentationBackground(Color.black)
         }
     }
 
@@ -367,9 +367,11 @@ private struct CategoryFormSheet: View {
             .onChange(of: newCategoryIsIncome) { _ in dismissKeyboard() }
             .formField()
 
-            Button("Add Category", action: onAdd)
-                .buttonStyle(AppButtonStyle())
-                .disabled(newCategory.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || newCategoryIsIncome == nil)
+            Button(action: onAdd) {
+                Text("Add Category")
+            }
+            .buttonStyle(AppButtonStyle())
+            .disabled(newCategory.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || newCategoryIsIncome == nil)
         }
         .padding()
     }
@@ -399,9 +401,11 @@ private struct PaymentFormSheet: View {
             )
             .formField()
 
-            Button("Add Payment Type", action: onAdd)
-                .buttonStyle(AppButtonStyle())
-                .disabled(newPayment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            Button(action: onAdd) {
+                Text("Add Payment Type")
+            }
+            .buttonStyle(AppButtonStyle())
+            .disabled(newPayment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
         .padding()
     }
@@ -414,10 +418,6 @@ private extension View {
             .background(
                 RoundedRectangle(cornerRadius: 8)
                     .fill(Color.appBackground)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color.appAccent.opacity(0.3))
             )
     }
 }
