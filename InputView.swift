@@ -211,7 +211,7 @@ struct InputView: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
                 .background(Color.appSecondaryBackground.opacity(0.8))
-                .foregroundStyle(.appText)
+                .foregroundStyle(Color.appText)
                 .cornerRadius(8)
                 .padding(.top)
                 .transition(.move(edge: .top).combined(with: .opacity))
