@@ -136,9 +136,7 @@ struct ManageView: View {
                     }
                     .onChange(of: newCategoryIsIncome) { _ in dismissKeyboard() }
                     Button("Add category", action: addCategory)
-                        .buttonStyle(.borderedProminent)
-                        .tint(.gray.opacity(0.3))
-                        .foregroundStyle(Color.appAccent)
+                        .buttonStyle(AppButtonStyle())
                         .disabled(trimmed(newCategory).isEmpty || newCategoryIsIncome == nil)
                 }
                 .transition(.opacity)
@@ -194,10 +192,8 @@ struct ManageView: View {
                         onDone: { },
                         autocapitalization: .words
                     )
-                    Button("Add", action: addPayment)
-                        .buttonStyle(.borderedProminent)
-                        .tint(.gray.opacity(0.3))
-                        .foregroundStyle(Color.appAccent)
+                    Button("Add payment type", action: addPayment)
+                        .buttonStyle(AppButtonStyle())
                         .disabled(trimmed(newPayment).isEmpty)
                 }
                 .transition(.opacity)
