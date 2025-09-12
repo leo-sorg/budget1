@@ -19,7 +19,7 @@ struct ManageView: View {
 
     @State private var newCategory = ""
     @State private var newCategoryEmoji = ""
-    @State private var newCategoryIsIncome = false
+    @State private var newCategoryIsIncome: Bool? = nil
     @State private var newPayment = ""
     @State private var alertMessage: String?
 
@@ -115,8 +115,9 @@ struct ManageView: View {
                         prefersEmoji: true
                     )
                     Picker("Type", selection: $newCategoryIsIncome) {
-                        Text("Expense").tag(false)
-                        Text("Income").tag(true)
+                        Text("Choose…").tag(Bool?.none)
+                        Text("Expense").tag(Bool?.some(false))
+                        Text("Income").tag(Bool?.some(true))
                     }
                     .pickerStyle(.navigationLink)
                     .onChange(of: newCategoryIsIncome) { _ in dismissKeyboard() }
@@ -124,7 +125,7 @@ struct ManageView: View {
                         .buttonStyle(.borderedProminent)
                         .tint(.gray.opacity(0.3))
                         .foregroundStyle(Color.appAccent)
-                        .disabled(trimmed(newCategory).isEmpty)
+                        .disabled(trimmed(newCategory).isEmpty || newCategoryIsIncome == nil)
                 }
                 .transition(.opacity)
                 .padding(.top, 8)
@@ -214,12 +215,14 @@ struct ManageView: View {
             return
         }
 
+        guard let isIncome = newCategoryIsIncome else { return }
+
         let next = (categories.map { $0.sortIndex }.max() ?? -1) + 1
         let newCat = Category(
             name: name,
             emoji: emoji.isEmpty ? nil : emoji,
             sortIndex: next,
-            isIncome: newCategoryIsIncome
+            isIncome: isIncome
         )
 
         do {
@@ -236,7 +239,7 @@ struct ManageView: View {
                 isIncome: newCat.isIncome
             )
 
-            newCategory = ""; newCategoryEmoji = ""; newCategoryIsIncome = false
+            newCategory = ""; newCategoryEmoji = ""; newCategoryIsIncome = nil
             withAnimation { showCategoryForm = false }
         } catch {
             alertMessage = "Could not save category: \(error.localizedDescription)"
