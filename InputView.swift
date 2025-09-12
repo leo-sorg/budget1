@@ -44,8 +44,8 @@ struct MoneyTextField: UIViewRepresentable {
         tf.placeholder = placeholder
         tf.keyboardType = .numberPad
         tf.delegate = context.coordinator
-        tf.borderStyle = .roundedRect
-        tf.backgroundColor = UIColor(Color.appSecondaryBackground)
+        tf.borderStyle = .none
+        tf.backgroundColor = .clear
         tf.textColor = UIColor(Color.appText)
         tf.tintColor = UIColor(Color.appAccent)
         tf.addTarget(context.coordinator, action: #selector(Coordinator.editingChanged(_:)), for: .editingChanged)
@@ -118,10 +118,10 @@ struct AccessoryTextField: UIViewRepresentable {
         let tf: UITextField = prefersEmoji ? EmojiTextField(frame: .zero) : UITextField(frame: .zero)
         tf.placeholder = placeholder
         tf.delegate = context.coordinator
-        tf.borderStyle = .roundedRect
+        tf.borderStyle = .none
         tf.keyboardType = keyboardType
         tf.autocapitalizationType = autocapitalization
-        tf.backgroundColor = UIColor(Color.appSecondaryBackground)
+        tf.backgroundColor = .clear
         tf.textColor = UIColor(Color.appText)
         tf.tintColor = UIColor(Color.appAccent)
         tf.addTarget(context.coordinator, action: #selector(Coordinator.editingChanged(_:)), for: .editingChanged)
@@ -294,8 +294,8 @@ struct InputView: View {
                 HStack { Spacer(); Text("Save entry").fontWeight(.semibold); Spacer() }
             }
             .buttonStyle(.borderedProminent)
-            .tint(.gray.opacity(0.3))
-            .foregroundStyle(Color.appAccent)
+            .tint(Color.appSecondaryBackground)
+            .foregroundColor(.cyan)
             .disabled(!canSave)
         }
     }
