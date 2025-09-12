@@ -55,12 +55,13 @@ struct HomeTabView: View {
                     }
                 }
             }
-            .padding(.horizontal, 24)
-            .padding(.vertical, 12)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
             .background(
                 Capsule().fill(Color.appTabBar)
             )
-            .padding(.bottom, 20)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 16)
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
     }
