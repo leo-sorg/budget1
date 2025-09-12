@@ -337,7 +337,7 @@ private struct CategoryFormSheet: View {
     var onClose: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Spacer()
                 Button(action: onClose) {
@@ -367,7 +367,6 @@ private struct CategoryFormSheet: View {
                 }
             }
             .onChange(of: newCategoryIsIncome) { _ in dismissKeyboard() }
-            Spacer()
             Button("Add Category", action: onAdd)
                 .buttonStyle(AppButtonStyle())
                 .disabled(newCategory.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || newCategoryIsIncome == nil)
@@ -386,7 +385,7 @@ private struct PaymentFormSheet: View {
     var onClose: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Spacer()
                 Button(action: onClose) {
@@ -401,7 +400,6 @@ private struct PaymentFormSheet: View {
                 onDone: { },
                 autocapitalization: .words
             )
-            Spacer()
             Button("Add Payment Type", action: onAdd)
                 .buttonStyle(AppButtonStyle())
                 .disabled(newPayment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
