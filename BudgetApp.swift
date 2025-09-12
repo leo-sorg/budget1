@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UIKit
 
 let SHEETS = SheetsClient(
     baseURL: URL(string: "https://script.google.com/macros/s/AKfycbyYTsos6GONUxCFSkLFA32alrshE7Km-ERvBhyKx1Y8QwPfrAKsmjIjGAN7aYsCzyVA/exec")!,
@@ -8,6 +9,17 @@ let SHEETS = SheetsClient(
 
 @main
 struct BudgetApp: App {
+    init() {
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = UIColor(Color.appBackground)
+        appearance.titleTextAttributes = [.foregroundColor: UIColor(Color.appText)]
+        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor(Color.appText)]
+        UINavigationBar.appearance().standardAppearance = appearance
+        UINavigationBar.appearance().scrollEdgeAppearance = appearance
+        UINavigationBar.appearance().compactAppearance = appearance
+    }
+
     var body: some Scene {
         WindowGroup {
             RootSwitcherView()
