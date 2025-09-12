@@ -64,6 +64,8 @@ struct ManageView: View {
         .background(Color.appBackground)
         .foregroundColor(.appText)
         .tint(.appAccent)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(Color.appBackground, for: .navigationBar)
     }
 
     // MARK: - Sections

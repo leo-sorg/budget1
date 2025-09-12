@@ -90,6 +90,8 @@ struct SummaryView: View {
         .background(Color.appBackground)
         .foregroundColor(.appText)
         .tint(.appAccent)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(Color.appBackground, for: .navigationBar)
     }
 
     // MARK: - Filtering for selected month/year
