@@ -294,6 +294,8 @@ struct InputView: View {
                 HStack { Spacer(); Text("Save entry").fontWeight(.semibold); Spacer() }
             }
             .buttonStyle(.borderedProminent)
+            .tint(.gray.opacity(0.3))
+            .foregroundStyle(.appAccent)
             .disabled(!canSave)
         }
     }
