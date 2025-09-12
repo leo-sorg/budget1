@@ -23,120 +23,34 @@ struct ManageView: View {
     @State private var newPayment = ""
     @State private var alertMessage: String?
 
+    @State private var showingCategories = true
+    @State private var showCategoryForm = false
+    @State private var showPaymentForm = false
+
     var body: some View {
         NavigationStack {
-            Form {
-                // CATEGORIES
-                Section("Categories (drag to reorder)") {
-                    if categories.isEmpty {
-                        Text("No categories yet. Add one below.")
-                            .foregroundStyle(.secondary)
-                    } else {
-                        ForEach(categories) { c in
-                            HStack {
-                                Text(c.emoji ?? "🏷️")
-                                Text(c.name)
-                                Spacer()
-                                Text(c.isIncome ? "+" : "-")
-                                    .foregroundStyle(c.isIncome ? .green : .red)
-                                Button(role: .destructive) {
-                                    context.delete(c)
-                                    try? context.save()
-                                    renumberCategories()
-                                } label: {
-                                    Image(systemName: "trash")
-                                }
-                                .buttonStyle(.borderless)
-                            }
-                        }
-                        .onDelete { idx in
-                            for i in idx { context.delete(categories[i]) }
-                            try? context.save()
-                            renumberCategories()
-                        }
-                        .onMove(perform: moveCategory)
-                    }
+            VStack {
+                Picker("", selection: $showingCategories) {
+                    Text("Categories").tag(true)
+                    Text("Payment Types").tag(false)
+                }
+                .pickerStyle(.segmented)
+                .padding()
 
-                    // Add category
-                    VStack(spacing: 8) {
-                        HStack {
-                            AccessoryTextField(
-                                text: $newCategory,
-                                placeholder: "Name (e.g. Food)",
-                                onCancel: { newCategory = "" },
-                                onDone: { },
-                                autocapitalization: .words
-                            )
-                            AccessoryTextField(
-                                text: $newCategoryEmoji,
-                                placeholder: "Emoji (optional)",
-                                onCancel: { newCategoryEmoji = "" },
-                                onDone: { },
-                                prefersEmoji: true
-                            )
-                            .frame(maxWidth: 120)
-                        }
-                        Picker("Type", selection: $newCategoryIsIncome) {
-                            Text("Expense").tag(false)
-                            Text("Income").tag(true)
-                        }
-                        .pickerStyle(.segmented)
-                        .onChange(of: newCategoryIsIncome) { _ in dismissKeyboard() }
-                        Button("Add category", action: addCategory)
-                            .buttonStyle(.borderedProminent)
-                            .disabled(trimmed(newCategory).isEmpty)
+                Form {
+                    if showingCategories {
+                        categorySection
+                    } else {
+                        paymentSection
                     }
                 }
-
-                // PAYMENT METHODS
-                Section("Payment Methods (drag to reorder)") {
-                    if methods.isEmpty {
-                        Text("No payment methods yet. Add one below.")
-                            .foregroundStyle(.secondary)
-                    } else {
-                        ForEach(methods) { m in
-                            HStack {
-                                Text(m.name)
-                                Spacer()
-                                Button(role: .destructive) {
-                                    context.delete(m)
-                                    try? context.save()
-                                    renumberMethods()
-                                } label: {
-                                    Image(systemName: "trash")
-                                }
-                                .buttonStyle(.borderless)
-                            }
-                        }
-                        .onDelete { idx in
-                            for i in idx { context.delete(methods[i]) }
-                            try? context.save()
-                            renumberMethods()
-                        }
-                        .onMove(perform: moveMethod)
-                    }
-
-                    // Add payment method
-                    HStack {
-                        AccessoryTextField(
-                            text: $newPayment,
-                            placeholder: "Name (e.g. Credit Card, Pix)",
-                            onCancel: { newPayment = "" },
-                            onDone: { },
-                            autocapitalization: .words
-                        )
-                        Button("Add", action: addPayment)
-                            .buttonStyle(.borderedProminent)
-                            .disabled(trimmed(newPayment).isEmpty)
-                    }
-                }
+                .scrollContentBackground(.hidden)
+                .background(Color.appBackground)
+                .listRowBackground(Color.appSecondaryBackground)
+                .onTapGesture { dismissKeyboard() }
             }
-            .scrollContentBackground(.hidden)
-            .background(Color.appBackground)
-            .listRowBackground(Color.appSecondaryBackground)
-            .onTapGesture { dismissKeyboard() }
             .navigationTitle("Manage")
-            .toolbar { EditButton() } // enables drag handles
+            .toolbar { EditButton() }
             .task { normalizeSortIndicesIfNeeded() }
             .alert("Oops", isPresented: Binding(
                 get: { alertMessage != nil },
@@ -152,8 +66,142 @@ struct ManageView: View {
         .tint(.appAccent)
     }
 
-    // MARK: - Add
+    // MARK: - Sections
+    @ViewBuilder private var categorySection: some View {
+        Section {
+            if categories.isEmpty {
+                Text("No categories yet. Add one below.")
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(categories) { c in
+                    HStack {
+                        Text(c.emoji ?? "🏷️")
+                        Text(c.name)
+                        Spacer()
+                        Text(c.isIncome ? "+" : "-")
+                            .foregroundStyle(c.isIncome ? .green : .red)
+                        Button(role: .destructive) {
+                            context.delete(c)
+                            try? context.save()
+                            renumberCategories()
+                        } label: {
+                            Image(systemName: "trash")
+                        }
+                        .buttonStyle(.borderless)
+                    }
+                }
+                .onDelete { idx in
+                    for i in idx { context.delete(categories[i]) }
+                    try? context.save()
+                    renumberCategories()
+                }
+                .onMove(perform: moveCategory)
+            }
 
+            if showCategoryForm {
+                VStack(alignment: .leading, spacing: 12) {
+                    AccessoryTextField(
+                        text: $newCategory,
+                        placeholder: "Name (e.g. Food)",
+                        onCancel: { newCategory = "" },
+                        onDone: { },
+                        autocapitalization: .words
+                    )
+                    AccessoryTextField(
+                        text: $newCategoryEmoji,
+                        placeholder: "Emoji (optional)",
+                        onCancel: { newCategoryEmoji = "" },
+                        onDone: { },
+                        prefersEmoji: true
+                    )
+                    Picker("Type", selection: $newCategoryIsIncome) {
+                        Text("Expense").tag(false)
+                        Text("Income").tag(true)
+                    }
+                    .pickerStyle(.navigationLink)
+                    .onChange(of: newCategoryIsIncome) { _ in dismissKeyboard() }
+                    Button("Add category", action: addCategory)
+                        .buttonStyle(.borderedProminent)
+                        .tint(.gray.opacity(0.3))
+                        .foregroundStyle(.appAccent)
+                        .disabled(trimmed(newCategory).isEmpty)
+                }
+                .transition(.opacity)
+                .padding(.top, 8)
+            }
+        } header: {
+            HStack {
+                Text("Categories (drag to reorder)")
+                Spacer()
+                Button {
+                    withAnimation { showCategoryForm.toggle() }
+                } label: {
+                    Image(systemName: showCategoryForm ? "xmark" : "plus")
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private var paymentSection: some View {
+        Section {
+            if methods.isEmpty {
+                Text("No payment methods yet. Add one below.")
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(methods) { m in
+                    HStack {
+                        Text(m.name)
+                        Spacer()
+                        Button(role: .destructive) {
+                            context.delete(m)
+                            try? context.save()
+                            renumberMethods()
+                        } label: {
+                            Image(systemName: "trash")
+                        }
+                        .buttonStyle(.borderless)
+                    }
+                }
+                .onDelete { idx in
+                    for i in idx { context.delete(methods[i]) }
+                    try? context.save()
+                    renumberMethods()
+                }
+                .onMove(perform: moveMethod)
+            }
+
+            if showPaymentForm {
+                VStack(alignment: .leading, spacing: 12) {
+                    AccessoryTextField(
+                        text: $newPayment,
+                        placeholder: "Name (e.g. Credit Card, Pix)",
+                        onCancel: { newPayment = "" },
+                        onDone: { },
+                        autocapitalization: .words
+                    )
+                    Button("Add", action: addPayment)
+                        .buttonStyle(.borderedProminent)
+                        .tint(.gray.opacity(0.3))
+                        .foregroundStyle(.appAccent)
+                        .disabled(trimmed(newPayment).isEmpty)
+                }
+                .transition(.opacity)
+                .padding(.top, 8)
+            }
+        } header: {
+            HStack {
+                Text("Payment Methods (drag to reorder)")
+                Spacer()
+                Button {
+                    withAnimation { showPaymentForm.toggle() }
+                } label: {
+                    Image(systemName: showPaymentForm ? "xmark" : "plus")
+                }
+            }
+        }
+    }
+
+    // MARK: - Add
     @MainActor
     private func addCategory() {
         dismissKeyboard()
@@ -162,7 +210,7 @@ struct ManageView: View {
         guard !name.isEmpty else { return }
 
         if categories.contains(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) {
-            alertMessage = "A category named “\(name)” already exists."
+            alertMessage = "A category named \"\(name)\" already exists."
             return
         }
 
@@ -189,6 +237,7 @@ struct ManageView: View {
             )
 
             newCategory = ""; newCategoryEmoji = ""; newCategoryIsIncome = false
+            withAnimation { showCategoryForm = false }
         } catch {
             alertMessage = "Could not save category: \(error.localizedDescription)"
             print("SAVE ERROR (Category):", error)
@@ -202,7 +251,7 @@ struct ManageView: View {
         guard !name.isEmpty else { return }
 
         if methods.contains(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) {
-            alertMessage = "A payment method named “\(name)” already exists."
+            alertMessage = "A payment method named \"\(name)\" already exists."
             return
         }
 
@@ -222,6 +271,7 @@ struct ManageView: View {
             )
 
             newPayment = ""
+            withAnimation { showPaymentForm = false }
         } catch {
             alertMessage = "Could not save payment method: \(error.localizedDescription)"
             print("SAVE ERROR (Payment):", error)
@@ -229,7 +279,6 @@ struct ManageView: View {
     }
 
     // MARK: - Reorder handlers
-
     @MainActor
     private func moveCategory(from source: IndexSet, to destination: Int) {
         var reordered = categories
@@ -273,3 +322,4 @@ struct ManageView: View {
         s.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
+
