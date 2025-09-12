@@ -176,6 +176,8 @@ struct InputView: View {
         .background(Color.appBackground)
         .foregroundColor(.appText)
         .tint(.appAccent)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(Color.appBackground, for: .navigationBar)
     }
 
     /// Main form broken out for easier type-checking
