@@ -82,7 +82,7 @@ struct HistoryView: View {
         .foregroundColor(.appText)
         .tint(.appAccent)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Color.appBackground, for: .navigationBar)
+        .toolbarBackground(Color.black, for: .navigationBar)
     }
 
     // MARK: - Helpers

@@ -12,12 +12,16 @@ struct BudgetApp: App {
     init() {
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor(Color.appBackground)
+        appearance.backgroundColor = UIColor.black
         appearance.titleTextAttributes = [.foregroundColor: UIColor(Color.appText)]
         appearance.largeTitleTextAttributes = [.foregroundColor: UIColor(Color.appText)]
         UINavigationBar.appearance().standardAppearance = appearance
         UINavigationBar.appearance().scrollEdgeAppearance = appearance
         UINavigationBar.appearance().compactAppearance = appearance
+
+        let segmented = UISegmentedControl.appearance()
+        segmented.backgroundColor = UIColor(Color.appBackground)
+        segmented.selectedSegmentTintColor = UIColor(Color.appAccent)
     }
 
     var body: some Scene {
