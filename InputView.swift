@@ -240,7 +240,11 @@ struct InputView: View {
     @ViewBuilder private var dateSection: some View {
         Section("Date") {
             DatePicker("When", selection: $date, displayedComponents: .date)
-                .onChange(of: date) { _ in dismissKeyboard() }
+                .onChange(of: date) { _ in
+                    DispatchQueue.main.async {
+                        dismissKeyboard()
+                    }
+                }
         }
     }
 
@@ -295,7 +299,7 @@ struct InputView: View {
             }
             .buttonStyle(.borderedProminent)
             .tint(Color.appSecondaryBackground)
-            .foregroundColor(.cyan)
+            .foregroundColor(Color.appAccent)
             .disabled(!canSave)
         }
     }
