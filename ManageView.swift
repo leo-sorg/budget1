@@ -40,26 +40,25 @@ struct ManageView: View {
 
     var body: some View {
         NavigationStack {
-            VStack {
-                Picker("", selection: $showingCategories) {
-                    Text("Categories").tag(true)
-                    Text("Payment Types").tag(false)
-                }
-                .pickerStyle(.segmented)
-                .padding()
-
-                Form {
-                    if showingCategories {
-                        categorySection
-                    } else {
-                        paymentSection
+            Form {
+                Section {
+                    Picker("", selection: $showingCategories) {
+                        Text("Categories").tag(true)
+                        Text("Payment Types").tag(false)
                     }
+                    .pickerStyle(.segmented)
                 }
-                .scrollContentBackground(.hidden)
-                .background(Color.appBackground)
-                .listRowBackground(Color.appSecondaryBackground)
-                .scrollDismissesKeyboard(.interactively)
+
+                if showingCategories {
+                    categorySection
+                } else {
+                    paymentSection
+                }
             }
+            .scrollContentBackground(.hidden)
+            .background(Color.appBackground)
+            .listRowBackground(Color.appSecondaryBackground)
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle("Manage")
             .toolbar { EditButton() }
             .task { normalizeSortIndicesIfNeeded() }
