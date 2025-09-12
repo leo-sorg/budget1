@@ -48,12 +48,12 @@ struct HomeTabView: View {
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
                         .frame(maxWidth: .infinity)
+                        .background(
+                            Capsule().fill(selection == tab ? Color.appAccent : Color.clear),
+                        )
                     }
                     .frame(maxWidth: .infinity)
                     .foregroundColor(selection == tab ? Color.appBackground : Color.appText)
-                    .background(
-                        Capsule().fill(selection == tab ? Color.appAccent : Color.clear)
-                    )
                 }
             }
             .padding(.horizontal, 12)
