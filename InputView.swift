@@ -297,11 +297,9 @@ struct InputView: View {
     @ViewBuilder private var saveSection: some View {
         Section {
             Button(action: save) {
-                HStack { Spacer(); Text("Save entry").fontWeight(.semibold); Spacer() }
+                Text("Save entry")
             }
-            .buttonStyle(.borderedProminent)
-            .tint(Color.appSecondaryBackground)
-            .foregroundColor(Color.appAccent)
+            .buttonStyle(AppButtonStyle())
             .disabled(!canSave)
         }
     }
