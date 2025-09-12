@@ -297,10 +297,12 @@ struct InputView: View {
     @ViewBuilder private var saveSection: some View {
         Section {
             Button(action: save) {
-                Text("Save entry")
+                Text("Save Entry")
             }
             .buttonStyle(AppButtonStyle())
             .disabled(!canSave)
+            .listRowInsets(EdgeInsets())
+            .listRowSeparator(.hidden)
         }
     }
 
