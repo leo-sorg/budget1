@@ -1,0 +1,13 @@
+
+
+cat >> .gitignore <<'EOF'
+# Xcode noise
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+*.xcuserdatad/
+xcuserdata/
+DerivedData/
+# If you share schemes, keep xcshareddata; ignore user data
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
