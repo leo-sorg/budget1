@@ -123,7 +123,7 @@ struct ManageView: View {
                     Button("Add category", action: addCategory)
                         .buttonStyle(.borderedProminent)
                         .tint(.gray.opacity(0.3))
-                        .foregroundStyle(.appAccent)
+                        .foregroundStyle(Color.appAccent)
                         .disabled(trimmed(newCategory).isEmpty)
                 }
                 .transition(.opacity)
@@ -182,7 +182,7 @@ struct ManageView: View {
                     Button("Add", action: addPayment)
                         .buttonStyle(.borderedProminent)
                         .tint(.gray.opacity(0.3))
-                        .foregroundStyle(.appAccent)
+                        .foregroundStyle(Color.appAccent)
                         .disabled(trimmed(newPayment).isEmpty)
                 }
                 .transition(.opacity)

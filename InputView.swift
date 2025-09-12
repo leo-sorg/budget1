@@ -295,7 +295,7 @@ struct InputView: View {
             }
             .buttonStyle(.borderedProminent)
             .tint(.gray.opacity(0.3))
-            .foregroundStyle(.appAccent)
+            .foregroundStyle(Color.appAccent)
             .disabled(!canSave)
         }
     }
