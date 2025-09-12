@@ -170,106 +170,132 @@ struct InputView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                // VALUE (now uses MoneyTextField)
-                Section("Value") {
-                    MoneyTextField(
-                        text: $amountText,
-                        placeholder: "R$ 0,00",
-                        onCancel: { /* nothing else to do */ },
-                        onDone: { /* just collapse; formatting already applied */ }
-                    )
-                }
-
-                // DATE
-                Section("Date") {
-                    DatePicker("When", selection: $date, displayedComponents: .date)
-                        .onChange(of: date) { _ in dismissKeyboard() }
-                }
-
-                // PAYMENT TYPE
-                Section("Payment type") {
-                    if methods.isEmpty {
-                        Button("Add default payment types") { seedDefaults(paymentsOnly: true) }
-                    } else {
-                        Picker("Payment", selection: $selectedMethod) {
-                            Text("Choose…").tag(PaymentMethod?.none)
-                            ForEach(methods) { pm in
-                                Text(pm.name).tag(PaymentMethod?.some(pm))
-                            }
-                        }
-                        .onChange(of: selectedMethod) { _ in dismissKeyboard() }
-                    }
-                }
-
-                // CATEGORY
-                Section("Category") {
-                    if categories.isEmpty {
-                        Button("Add default categories") { seedDefaults(categoriesOnly: true) }
-                    } else {
-                        Picker("Category", selection: $selectedCategory) {
-                            Text("Choose…").tag(Category?.none)
-                            ForEach(categories) { cat in
-                                Text("\(cat.emoji ?? "🏷️") \(cat.name)")
-                                    .tag(Category?.some(cat))
-                            }
-                        }
-                        .onChange(of: selectedCategory) { _ in dismissKeyboard() }
-                    }
-                }
-
-                // NOTE
-                Section("Note") {
-                    AccessoryTextField(
-                        text: $note,
-                        placeholder: "Optional",
-                        onCancel: { /* nothing extra */ },
-                        onDone: { /* just collapse */ }
-                    )
-                }
-
-                // SAVE BUTTON
-                Section {
-                    Button(action: save) {
-                        HStack { Spacer(); Text("Save entry").fontWeight(.semibold); Spacer() }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(!canSave)
-                }
-            }
-            .scrollContentBackground(.hidden)
-            .background(Color.appBackground)
-            .listRowBackground(Color.appSecondaryBackground)
-            .onTapGesture { dismissKeyboard() }
-            .navigationTitle("Input")
-            .task {
-                if categories.isEmpty || methods.isEmpty { seedDefaults() }
-            }
-            .overlay(alignment: .top) {
-                if showSavedToast {
-                    Text("Saved ✔︎")
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(Color.appSecondaryBackground.opacity(0.8))
-                        .foregroundStyle(.appText)
-                        .cornerRadius(8)
-                        .padding(.top)
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                }
-            }
-            .animation(.default, value: showSavedToast)
-            .alert("Oops", isPresented: Binding(
-                get: { alertMessage != nil },
-                set: { if !$0 { alertMessage = nil } }
-            )) {
-                Button("OK") { alertMessage = nil }
-            } message: {
-                Text(alertMessage ?? "")
-            }
+            formContent
+                .navigationTitle("Input")
         }
         .background(Color.appBackground)
         .foregroundColor(.appText)
         .tint(.appAccent)
+    }
+
+    /// Main form broken out for easier type-checking
+    @ViewBuilder
+    private var formContent: some View {
+        Form {
+            valueSection
+            dateSection
+            paymentSection
+            categorySection
+            noteSection
+            saveSection
+        }
+        .scrollContentBackground(.hidden)
+        .background(Color.appBackground)
+        .listRowBackground(Color.appSecondaryBackground)
+        .onTapGesture { dismissKeyboard() }
+        .task {
+            if categories.isEmpty || methods.isEmpty { seedDefaults() }
+        }
+        .overlay(alignment: .top) { toastOverlay }
+        .animation(.default, value: showSavedToast)
+        .alert("Oops", isPresented: alertBinding) {
+            Button("OK") { alertMessage = nil }
+        } message: {
+            Text(alertMessage ?? "")
+        }
+    }
+
+    @ViewBuilder private var toastOverlay: some View {
+        if showSavedToast {
+            Text("Saved ✔︎")
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(Color.appSecondaryBackground.opacity(0.8))
+                .foregroundStyle(.appText)
+                .cornerRadius(8)
+                .padding(.top)
+                .transition(.move(edge: .top).combined(with: .opacity))
+        }
+    }
+
+    private var alertBinding: Binding<Bool> {
+        Binding(
+            get: { alertMessage != nil },
+            set: { if !$0 { alertMessage = nil } }
+        )
+    }
+
+    // MARK: - Form Sections
+    @ViewBuilder private var valueSection: some View {
+        Section("Value") {
+            MoneyTextField(
+                text: $amountText,
+                placeholder: "R$ 0,00",
+                onCancel: { /* nothing else to do */ },
+                onDone: { /* just collapse; formatting already applied */ }
+            )
+        }
+    }
+
+    @ViewBuilder private var dateSection: some View {
+        Section("Date") {
+            DatePicker("When", selection: $date, displayedComponents: .date)
+                .onChange(of: date) { _ in dismissKeyboard() }
+        }
+    }
+
+    @ViewBuilder private var paymentSection: some View {
+        Section("Payment type") {
+            if methods.isEmpty {
+                Button("Add default payment types") { seedDefaults(paymentsOnly: true) }
+            } else {
+                Picker("Payment", selection: $selectedMethod) {
+                    Text("Choose…").tag(PaymentMethod?.none)
+                    ForEach(methods) { pm in
+                        Text(pm.name).tag(PaymentMethod?.some(pm))
+                    }
+                }
+                .onChange(of: selectedMethod) { _ in dismissKeyboard() }
+            }
+        }
+    }
+
+    @ViewBuilder private var categorySection: some View {
+        Section("Category") {
+            if categories.isEmpty {
+                Button("Add default categories") { seedDefaults(categoriesOnly: true) }
+            } else {
+                Picker("Category", selection: $selectedCategory) {
+                    Text("Choose…").tag(Category?.none)
+                    ForEach(categories) { cat in
+                        Text("\(cat.emoji ?? "🏷️") \(cat.name)")
+                            .tag(Category?.some(cat))
+                    }
+                }
+                .onChange(of: selectedCategory) { _ in dismissKeyboard() }
+            }
+        }
+    }
+
+    @ViewBuilder private var noteSection: some View {
+        Section("Note") {
+            AccessoryTextField(
+                text: $note,
+                placeholder: "Optional",
+                onCancel: { /* nothing extra */ },
+                onDone: { /* just collapse */ }
+            )
+        }
+    }
+
+    @ViewBuilder private var saveSection: some View {
+        Section {
+            Button(action: save) {
+                HStack { Spacer(); Text("Save entry").fontWeight(.semibold); Spacer() }
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(!canSave)
+        }
     }
 
     // MARK: - Validation
