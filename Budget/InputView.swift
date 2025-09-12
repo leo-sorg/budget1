@@ -183,17 +183,18 @@ struct InputView: View {
     /// Main form broken out for easier type-checking
     @ViewBuilder
     private var formContent: some View {
-        Form {
-            valueSection
-            dateSection
-            paymentSection
-            categorySection
-            noteSection
-            saveSection
+        ScrollView {
+            VStack(spacing: 24) {
+                valueSection
+                dateSection
+                paymentSection
+                categorySection
+                noteSection
+                saveSection
+            }
+            .padding()
         }
-        .scrollContentBackground(.hidden)
         .background(Color.appBackground)
-        .listRowBackground(Color.appSecondaryBackground)
         .scrollDismissesKeyboard(.interactively)
         .task {
             if categories.isEmpty || methods.isEmpty { seedDefaults() }
@@ -229,7 +230,9 @@ struct InputView: View {
 
     // MARK: - Form Sections
     @ViewBuilder private var valueSection: some View {
-        Section("Value") {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("VALUE")
+                .font(.caption)
             MoneyTextField(
                 text: $amountText,
                 placeholder: "R$ 0,00",
@@ -241,8 +244,11 @@ struct InputView: View {
     }
 
     @ViewBuilder private var dateSection: some View {
-        Section("Date") {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("DATE")
+                .font(.caption)
             DatePicker("When", selection: $date, displayedComponents: .date)
+                .datePickerStyle(.compact)
                 .onChange(of: date) { _ in
                     DispatchQueue.main.async {
                         dismissKeyboard()
@@ -253,7 +259,9 @@ struct InputView: View {
     }
 
     @ViewBuilder private var paymentSection: some View {
-        Section("Payment type") {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("PAYMENT TYPE")
+                .font(.caption)
             if methods.isEmpty {
                 Button("Add default payment types") { seedDefaults(paymentsOnly: true) }
             } else {
@@ -270,7 +278,9 @@ struct InputView: View {
     }
 
     @ViewBuilder private var categorySection: some View {
-        Section("Category") {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("CATEGORY")
+                .font(.caption)
             if categories.isEmpty {
                 Button("Add default categories") { seedDefaults(categoriesOnly: true) }
             } else {
@@ -288,7 +298,9 @@ struct InputView: View {
     }
 
     @ViewBuilder private var noteSection: some View {
-        Section("Note") {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("NOTE")
+                .font(.caption)
             AccessoryTextField(
                 text: $note,
                 placeholder: "Optional",
@@ -300,15 +312,11 @@ struct InputView: View {
     }
 
     @ViewBuilder private var saveSection: some View {
-        Section {
-            Button(action: save) {
-                Text("Save Entry")
-            }
-            .buttonStyle(AppButtonStyle())
-            .disabled(!canSave)
-            .listRowInsets(EdgeInsets())
-            .listRowSeparator(.hidden)
+        Button(action: save) {
+            Text("Save Entry")
         }
+        .buttonStyle(AppButtonStyle())
+        .disabled(!canSave)
     }
 
     // MARK: - Validation
