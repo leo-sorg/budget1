@@ -47,7 +47,7 @@ struct ManageView: View {
                 .scrollContentBackground(.hidden)
                 .background(Color.appBackground)
                 .listRowBackground(Color.appSecondaryBackground)
-                .simultaneousGesture(TapGesture().onEnded { dismissKeyboard() })
+                .scrollDismissesKeyboard(.interactively)
             }
             .navigationTitle("Manage")
             .toolbar { EditButton() }
