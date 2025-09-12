@@ -41,7 +41,10 @@ struct MoneyTextField: UIViewRepresentable {
 
     func makeUIView(context: Context) -> UITextField {
         let tf = UITextField(frame: .zero)
-        tf.placeholder = placeholder
+        tf.attributedPlaceholder = NSAttributedString(
+            string: placeholder,
+            attributes: [.foregroundColor: UIColor(Color.appPlaceholderText)]
+        )
         tf.keyboardType = .numberPad
         tf.delegate = context.coordinator
         tf.borderStyle = .none
@@ -116,7 +119,10 @@ struct AccessoryTextField: UIViewRepresentable {
 
     func makeUIView(context: Context) -> UITextField {
         let tf: UITextField = prefersEmoji ? EmojiTextField(frame: .zero) : UITextField(frame: .zero)
-        tf.placeholder = placeholder
+        tf.attributedPlaceholder = NSAttributedString(
+            string: placeholder,
+            attributes: [.foregroundColor: UIColor(Color.appPlaceholderText)]
+        )
         tf.delegate = context.coordinator
         tf.borderStyle = .none
         tf.keyboardType = keyboardType
