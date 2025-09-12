@@ -63,6 +63,6 @@ struct HomeTabView: View {
             .padding(.horizontal, 16)
             .padding(.bottom, 16)
         }
-        .ignoresSafeArea(.keyboard, edges: .bottom)
+        .ignoresSafeArea(.all, edges: .bottom)
     }
 }
