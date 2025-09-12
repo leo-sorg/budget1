@@ -83,6 +83,7 @@ struct ManageView: View {
                         .pickerStyle(.segmented)
                         .onChange(of: newCategoryIsIncome) { _ in dismissKeyboard() }
                         Button("Add category", action: addCategory)
+                            .buttonStyle(.borderedProminent)
                             .disabled(trimmed(newCategory).isEmpty)
                     }
                 }
@@ -125,10 +126,14 @@ struct ManageView: View {
                             autocapitalization: .words
                         )
                         Button("Add", action: addPayment)
+                            .buttonStyle(.borderedProminent)
                             .disabled(trimmed(newPayment).isEmpty)
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(Color.appBackground)
+            .listRowBackground(Color.appSecondaryBackground)
             .onTapGesture { dismissKeyboard() }
             .navigationTitle("Manage")
             .toolbar { EditButton() } // enables drag handles
@@ -142,6 +147,9 @@ struct ManageView: View {
                 Text(alertMessage ?? "")
             }
         }
+        .background(Color.appBackground)
+        .foregroundColor(.appText)
+        .tint(.appAccent)
     }
 
     // MARK: - Add

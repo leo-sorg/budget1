@@ -1,6 +1,12 @@
 import SwiftUI
 
 struct HomeTabView: View {
+    init() {
+        let tabBar = UITabBar.appearance()
+        tabBar.backgroundColor = UIColor(Color.appSecondaryBackground)
+        tabBar.unselectedItemTintColor = UIColor(Color.appText)
+    }
+
     var body: some View {
         TabView {
             InputView()
@@ -15,5 +21,8 @@ struct HomeTabView: View {
             ManageView()
                 .tabItem { Label("Manage", systemImage: "gearshape") }
         }
+        .background(Color.appBackground)
+        .foregroundColor(.appText)
+        .tint(.appAccent)
     }
 }

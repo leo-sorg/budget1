@@ -4,11 +4,14 @@ struct RootSwitcherView: View {
     @State private var showSplash = true
 
     var body: some View {
-        Group {
-            if showSplash {
-                SplashView()
-            } else {
-                HomeTabView()
+        ZStack {
+            Color.appBackground.ignoresSafeArea()
+            Group {
+                if showSplash {
+                    SplashView()
+                } else {
+                    HomeTabView()
+                }
             }
         }
         .animation(.easeInOut(duration: 0.3), value: showSplash)
@@ -23,13 +26,15 @@ struct RootSwitcherView: View {
 struct SplashView: View {
     var body: some View {
         ZStack {
-            Color(.systemBackground).ignoresSafeArea()
+            Color.appBackground.ignoresSafeArea()
             VStack(spacing: 12) {
                 Image(systemName: "creditcard.fill")
                     .font(.system(size: 56, weight: .bold))
+                    .foregroundColor(.appAccent)
                 Text("Budget")
                     .font(.title.bold())
             }
+            .foregroundColor(.appText)
         }
     }
 }
