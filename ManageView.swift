@@ -135,12 +135,14 @@ struct ManageView: View {
                         }
                     }
                     .onChange(of: newCategoryIsIncome) { _ in dismissKeyboard() }
-                    Button("Add category", action: addCategory)
+                    Button("Add Category", action: addCategory)
                         .buttonStyle(AppButtonStyle())
                         .disabled(trimmed(newCategory).isEmpty || newCategoryIsIncome == nil)
                 }
                 .transition(.opacity)
                 .padding(.top, 8)
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
             }
         } header: {
             HStack {
@@ -192,12 +194,14 @@ struct ManageView: View {
                         onDone: { },
                         autocapitalization: .words
                     )
-                    Button("Add payment type", action: addPayment)
+                    Button("Add Payment Type", action: addPayment)
                         .buttonStyle(AppButtonStyle())
                         .disabled(trimmed(newPayment).isEmpty)
                 }
                 .transition(.opacity)
                 .padding(.top, 8)
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
             }
         } header: {
             HStack {

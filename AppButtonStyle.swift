@@ -14,9 +14,8 @@ struct AppButtonStyle: ButtonStyle {
                 .fontWeight(.semibold)
                 .foregroundColor(.appAccent)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 8)
+                .padding(.vertical, 12)
                 .background(Color.appTabBar)
-                .cornerRadius(8)
                 .opacity(isEnabled ? (configuration.isPressed ? 0.8 : 1.0) : 0.5)
         }
     }
