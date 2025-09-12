@@ -47,7 +47,7 @@ struct ManageView: View {
                 .scrollContentBackground(.hidden)
                 .background(Color.appBackground)
                 .listRowBackground(Color.appSecondaryBackground)
-                .onTapGesture { dismissKeyboard() }
+                .simultaneousGesture(TapGesture().onEnded { dismissKeyboard() })
             }
             .navigationTitle("Manage")
             .toolbar { EditButton() }
@@ -116,10 +116,11 @@ struct ManageView: View {
                     )
                     Picker("Type", selection: $newCategoryIsIncome) {
                         Text("Choose…").tag(Bool?.none)
-                        Text("Expense").tag(Bool?.some(false))
-                        Text("Income").tag(Bool?.some(true))
+                        ForEach([false, true], id: \.self) { isIncome in
+                            Text(isIncome ? "Income" : "Expense")
+                                .tag(Bool?.some(isIncome))
+                        }
                     }
-                    .pickerStyle(.navigationLink)
                     .onChange(of: newCategoryIsIncome) { _ in dismissKeyboard() }
                     Button("Add category", action: addCategory)
                         .buttonStyle(.borderedProminent)
