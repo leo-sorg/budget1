@@ -184,7 +184,7 @@ struct InputView: View {
     @ViewBuilder
     private var formContent: some View {
         ScrollView {
-            VStack(spacing: 24) {
+            VStack(spacing: 16) {
                 valueSection
                 dateSection
                 paymentSection
@@ -230,85 +230,70 @@ struct InputView: View {
 
     // MARK: - Form Sections
     @ViewBuilder private var valueSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("VALUE")
-                .font(.caption)
-            MoneyTextField(
-                text: $amountText,
-                placeholder: "R$ 0,00",
-                onCancel: { /* nothing else to do */ },
-                onDone: { /* just collapse; formatting already applied */ }
-            )
-            .formField()
-        }
+        MoneyTextField(
+            text: $amountText,
+            placeholder: "R$ 0,00",
+            onCancel: { /* nothing else to do */ },
+            onDone: { /* just collapse; formatting already applied */ }
+        )
+        .formField()
     }
 
     @ViewBuilder private var dateSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("DATE")
-                .font(.caption)
-            DatePicker("When", selection: $date, displayedComponents: .date)
-                .datePickerStyle(.compact)
-                .onChange(of: date) { _ in
-                    DispatchQueue.main.async {
-                        dismissKeyboard()
-                    }
+        DatePicker("", selection: $date, displayedComponents: .date)
+            .datePickerStyle(.compact)
+            .labelsHidden()
+            .onChange(of: date) { _ in
+                DispatchQueue.main.async {
+                    dismissKeyboard()
                 }
-                .formField()
-        }
+            }
+            .formField()
     }
 
     @ViewBuilder private var paymentSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("PAYMENT TYPE")
-                .font(.caption)
-            if methods.isEmpty {
-                Button("Add default payment types") { seedDefaults(paymentsOnly: true) }
-            } else {
-                Picker("Payment", selection: $selectedMethod) {
-                    Text("Choose…").tag(PaymentMethod?.none)
-                    ForEach(methods) { pm in
-                        Text(pm.name).tag(PaymentMethod?.some(pm))
-                    }
+        if methods.isEmpty {
+            Button("Add default payment types") { seedDefaults(paymentsOnly: true) }
+        } else {
+            Picker("", selection: $selectedMethod) {
+                Text("Payment Type").tag(PaymentMethod?.none)
+                ForEach(methods) { pm in
+                    Text(pm.name).tag(PaymentMethod?.some(pm))
                 }
-                .onChange(of: selectedMethod) { _ in dismissKeyboard() }
-                .formField()
             }
+            .pickerStyle(.menu)
+            .labelsHidden()
+            .onChange(of: selectedMethod) { _ in dismissKeyboard() }
+            .formField()
         }
     }
 
     @ViewBuilder private var categorySection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("CATEGORY")
-                .font(.caption)
-            if categories.isEmpty {
-                Button("Add default categories") { seedDefaults(categoriesOnly: true) }
-            } else {
-                Picker("Category", selection: $selectedCategory) {
-                    Text("Choose…").tag(Category?.none)
-                    ForEach(categories) { cat in
-                        Text("\(cat.emoji ?? "🏷️") \(cat.name)")
-                            .tag(Category?.some(cat))
-                    }
+        if categories.isEmpty {
+            Button("Add default categories") { seedDefaults(categoriesOnly: true) }
+        } else {
+            Picker("", selection: $selectedCategory) {
+                Text("Category").tag(Category?.none)
+                ForEach(categories) { cat in
+                    Text("\(cat.emoji ?? "🏷️") \(cat.name)")
+                        .tag(Category?.some(cat))
                 }
-                .onChange(of: selectedCategory) { _ in dismissKeyboard() }
-                .formField()
             }
+            .pickerStyle(.menu)
+            .labelsHidden()
+            .onChange(of: selectedCategory) { _ in dismissKeyboard() }
+            .formField()
         }
     }
 
     @ViewBuilder private var noteSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("NOTE")
-                .font(.caption)
-            AccessoryTextField(
-                text: $note,
-                placeholder: "Optional",
-                onCancel: { /* nothing extra */ },
-                onDone: { /* just collapse */ }
-            )
-            .formField()
-        }
+        AccessoryTextField(
+            text: $note,
+            placeholder: "Optional note",
+            onCancel: { /* nothing extra */ },
+            onDone: { /* just collapse */ }
+        )
+        .formField()
     }
 
     @ViewBuilder private var saveSection: some View {
