@@ -1,10 +1,3 @@
-//
-//  ContentView.swift
-//  Budget
-//
-//  Created by Leo Sorg on 10/09/25.
-//
-
 import SwiftUI
 
 struct ContentView: View {
@@ -12,10 +5,12 @@ struct ContentView: View {
         VStack {
             Image(systemName: "globe")
                 .imageScale(.large)
-                .foregroundStyle(.tint)
+                .foregroundColor(.appText)
             Text("Hello, world!")
+                .foregroundColor(.appText)
         }
         .padding()
+        .background(Color.appBackground)
     }
 }
 

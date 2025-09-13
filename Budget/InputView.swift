@@ -1,7 +1,6 @@
 import SwiftUI
 import SwiftData
 import UIKit
-import PhotosUI
 
 // MARK: - UIKit-powered money field with a guaranteed inputAccessoryView
 struct MoneyTextField: UIViewRepresentable {
@@ -169,9 +168,6 @@ struct InputView: View {
     @State private var showSavedToast = false
     @State private var alertMessage: String?
 
-    // Background image picker
-    @AppStorage("backgroundImage") private var backgroundImageData: Data?
-    @State private var photoPickerItem: PhotosPickerItem?
 
     private let chipHeight: CGFloat = 40
 
@@ -179,13 +175,6 @@ struct InputView: View {
         NavigationStack {
             formContent
                 .navigationTitle("Input")
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        PhotosPicker(selection: $photoPickerItem, matching: .images) {
-                            Image(systemName: "plus")
-                        }
-                    }
-                }
         }
         .background(Color.appBackground)
         .foregroundColor(.appText)
@@ -220,13 +209,6 @@ struct InputView: View {
         }
         .overlay(alignment: .top) { toastOverlay }
         .animation(.default, value: showSavedToast)
-        .onChange(of: photoPickerItem) { newItem in
-            Task {
-                if let data = try? await newItem?.loadTransferable(type: Data.self) {
-                    backgroundImageData = data
-                }
-            }
-        }
         .alert("Oops", isPresented: alertBinding) {
             Button("OK") { alertMessage = nil }
         } message: {
@@ -240,7 +222,7 @@ struct InputView: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
                 .background(Color.appSecondaryBackground.opacity(0.8))
-                .foregroundStyle(Color.appText)
+                .foregroundColor(Color.appText)
                 .cornerRadius(8)
                 .padding(.top)
                 .transition(.move(edge: .top).combined(with: .opacity))
@@ -258,7 +240,7 @@ struct InputView: View {
         Text(text.uppercased())
             .font(.caption)
             .fontWeight(.semibold)
-            .foregroundStyle(.secondary)
+            .foregroundColor(Color.appText.opacity(0.6))
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -270,22 +252,19 @@ struct InputView: View {
             onCancel: { /* nothing else to do */ },
             onDone: { /* just collapse; formatting already applied */ }
         )
-        .formField()
+        .appTextField()
     }
 
     @ViewBuilder private var paymentSection: some View {
         if methods.isEmpty {
             Button("Add default payment types") { seedDefaults(paymentsOnly: true) }
+            .buttonStyle(AppButtonStyle())
         } else {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(methods) { pm in
                         Text(pm.name)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 10)
-                            .background(selectedMethod == pm ? Color.appAccent : Color.appTabBar)
-                            .foregroundColor(selectedMethod == pm ? Color.appBackground : Color.appText)
-                            .clipShape(Capsule())
+                            .appChip(isSelected: selectedMethod == pm)
                             .onTapGesture {
                                 selectedMethod = pm
                                 dismissKeyboard()
@@ -302,6 +281,7 @@ struct InputView: View {
     @ViewBuilder private var categorySection: some View {
         if categories.isEmpty {
             Button("Add default categories") { seedDefaults(categoriesOnly: true) }
+            .buttonStyle(AppButtonStyle())
         } else {
             ScrollView(.horizontal, showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 8) {
@@ -323,11 +303,7 @@ struct InputView: View {
 
     private func categoryChip(for cat: Category) -> some View {
         Text("\(cat.emoji ?? "") \(cat.name)")
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .background(selectedCategory == cat ? Color.appAccent : Color.appTabBar)
-            .foregroundColor(selectedCategory == cat ? Color.appBackground : Color.appText)
-            .clipShape(Capsule())
+            .appChip(isSelected: selectedCategory == cat)
             .onTapGesture {
                 selectedCategory = cat
                 dismissKeyboard()
@@ -338,7 +314,7 @@ struct InputView: View {
         DatePicker("", selection: $date, displayedComponents: .date)
             .labelsHidden()
             .datePickerStyle(.compact)
-            .formField()
+            .appTextField()
     }
 
     @ViewBuilder private var descriptionSection: some View {
@@ -348,7 +324,7 @@ struct InputView: View {
             onCancel: { /* nothing extra */ },
             onDone: { /* just collapse */ }
         )
-        .formField()
+        .appTextField()
     }
 
     @ViewBuilder private var saveSection: some View {
