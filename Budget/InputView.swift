@@ -213,7 +213,9 @@ struct InputView: View {
             Task {
                 if let data = try? await newItem?.loadTransferable(type: Data.self),
                    let uiImage = UIImage(data: data) {
-                    bgStore.image = processImage(uiImage)
+                    await MainActor.run {
+                        bgStore.image = processImage(uiImage)
+                    }
                 }
             }
         }
