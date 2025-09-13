@@ -12,8 +12,13 @@ struct BackgroundView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .clipped()
                 .ignoresSafeArea()
+                // Ensure the background image does not intercept touches
+                .allowsHitTesting(false)
         } else {
-            Color.appBackground.ignoresSafeArea()
+            // Static background color that never captures interactions
+            Color.appBackground
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
         }
     }
 }
