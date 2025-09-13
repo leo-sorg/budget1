@@ -12,8 +12,8 @@ struct BudgetApp: App {
     @StateObject private var bgStore = BackgroundImageStore()
     init() {
         let appearance = UINavigationBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor(Color.appBackground)
+        appearance.configureWithTransparentBackground()
+        appearance.backgroundColor = .clear
         appearance.titleTextAttributes = [.foregroundColor: UIColor(Color.appText)]
         appearance.largeTitleTextAttributes = [.foregroundColor: UIColor(Color.appText)]
         UINavigationBar.appearance().standardAppearance = appearance
@@ -21,7 +21,7 @@ struct BudgetApp: App {
         UINavigationBar.appearance().compactAppearance = appearance
 
         let segmented = UISegmentedControl.appearance()
-        segmented.backgroundColor = UIColor(Color.appBackground)
+        segmented.backgroundColor = .clear
         segmented.selectedSegmentTintColor = UIColor(Color.appAccent)
         segmented.setTitleTextAttributes([
             .foregroundColor: UIColor(Color.appText)
@@ -33,13 +33,11 @@ struct BudgetApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ZStack {
-                AppBackgroundView()
-                RootSwitcherView()
-            }
-            .preferredColorScheme(.dark)
-            .tint(.appAccent)
-            .environmentObject(bgStore)
+            RootSwitcherView()
+                .background(AppBackgroundView())
+                .preferredColorScheme(.dark)
+                .tint(.appAccent)
+                .environmentObject(bgStore)
         }
         .modelContainer(for: [Transaction.self, Category.self, PaymentMethod.self])
     }

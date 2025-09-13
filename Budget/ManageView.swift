@@ -67,7 +67,7 @@ struct ManageView: View {
         .foregroundColor(.appText)
         .tint(.appAccent)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Color.appBackground, for: .navigationBar)
+        .toolbarBackground(Color.clear, for: .navigationBar)
         .sheet(isPresented: $showCategoryForm) {
             CategoryFormSheet(
                 newCategory: $newCategory,

@@ -11,6 +11,7 @@ struct RootSwitcherView: View {
                 HomeTabView()
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .animation(.easeInOut(duration: 0.3), value: showSplash)
         .background(Color.clear)
         .task {

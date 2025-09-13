@@ -207,7 +207,7 @@ struct InputView: View {
         .foregroundColor(.appText)
         .tint(.appAccent)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Color.appBackground, for: .navigationBar)
+        .toolbarBackground(Color.clear, for: .navigationBar)
         .photosPicker(isPresented: $showingImagePicker, selection: $photoItem, matching: .images)
         .onChange(of: photoItem) { newItem in
             Task {
