@@ -2,6 +2,7 @@ import SwiftUI
 import UIKit
 
 /// Manages the optional background image for the app.
+@MainActor
 class BackgroundManager: ObservableObject {
     @AppStorage("backgroundImageData") private var storedData: Data?
     @Published var image: UIImage?
