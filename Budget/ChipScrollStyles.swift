@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - Liquid Glass Chip Views - Clean Apple Style
+// MARK: - iOS 18 Style Liquid Glass Chips
 struct PaymentChipView: View {
     let paymentMethod: PaymentMethod
     let isSelected: Bool
@@ -10,29 +10,50 @@ struct PaymentChipView: View {
         Button(action: onTap) {
             Text(paymentMethod.name)
                 .font(.system(size: 16, weight: .medium))
-                .foregroundColor(isSelected ? Color.white : Color.appText)
+                .foregroundColor(.white)
                 .padding(.horizontal, 20)
                 .padding(.vertical, 12)
         }
         .background(
-            ZStack {
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(.thinMaterial)
-                
-                if isSelected {
+            RoundedRectangle(cornerRadius: 20)
+                .fill(.clear)
+                .overlay(
                     RoundedRectangle(cornerRadius: 20)
-                        .fill(Color.white.opacity(0.3))
-                }
-                
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(Color.white.opacity(isSelected ? 0.4 : 0.2), lineWidth: 0.5)
-            }
-        )
-        .shadow(
-            color: isSelected ? Color.white.opacity(0.2) : Color.black.opacity(0.05),
-            radius: isSelected ? 8 : 4,
-            x: 0,
-            y: isSelected ? 4 : 2
+                        .fill(.ultraThinMaterial)
+                        .opacity(0.1)
+                        .blur(radius: 1)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color.white.opacity(0.25),
+                                    Color.white.opacity(0.05),
+                                    Color.white.opacity(0.15)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .opacity(isSelected ? 1.0 : 0.6)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(
+                            LinearGradient(
+                                colors: [
+                                    Color.white.opacity(0.6),
+                                    Color.white.opacity(0.2),
+                                    Color.white.opacity(0.4)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1
+                        )
+                        .opacity(isSelected ? 1.0 : 0.7)
+                )
         )
         .buttonStyle(PlainButtonStyle())
     }
@@ -47,29 +68,50 @@ struct CategoryChipView: View {
         Button(action: onTap) {
             Text("\(category.emoji ?? "") \(category.name)")
                 .font(.system(size: 16, weight: .medium))
-                .foregroundColor(isSelected ? Color.white : Color.appText)
+                .foregroundColor(.white)
                 .padding(.horizontal, 20)
                 .padding(.vertical, 12)
         }
         .background(
-            ZStack {
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(.thinMaterial)
-                
-                if isSelected {
+            RoundedRectangle(cornerRadius: 20)
+                .fill(.clear)
+                .overlay(
                     RoundedRectangle(cornerRadius: 20)
-                        .fill(Color.white.opacity(0.3))
-                }
-                
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(Color.white.opacity(isSelected ? 0.4 : 0.2), lineWidth: 0.5)
-            }
-        )
-        .shadow(
-            color: isSelected ? Color.white.opacity(0.2) : Color.black.opacity(0.05),
-            radius: isSelected ? 8 : 4,
-            x: 0,
-            y: isSelected ? 4 : 2
+                        .fill(.ultraThinMaterial)
+                        .opacity(0.1)
+                        .blur(radius: 1)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color.white.opacity(0.25),
+                                    Color.white.opacity(0.05),
+                                    Color.white.opacity(0.15)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .opacity(isSelected ? 1.0 : 0.6)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(
+                            LinearGradient(
+                                colors: [
+                                    Color.white.opacity(0.6),
+                                    Color.white.opacity(0.2),
+                                    Color.white.opacity(0.4)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1
+                        )
+                        .opacity(isSelected ? 1.0 : 0.7)
+                )
         )
         .buttonStyle(PlainButtonStyle())
     }
