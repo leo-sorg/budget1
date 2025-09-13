@@ -43,7 +43,22 @@ struct HomeTabView: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .background(
-            Capsule().fill(.ultraThinMaterial)
+            Capsule()
+                .fill(.ultraThinMaterial)
+                .background(
+                    Capsule()
+                        .fill(Color.white.opacity(0.05))
+                )
+                .overlay(
+                    Capsule()
+                        .stroke(
+                            LinearGradient(colors: [Color.white.opacity(0.8), Color.white.opacity(0.1)],
+                                           startPoint: .topLeading,
+                                           endPoint: .bottomTrailing),
+                            lineWidth: 1
+                        )
+                )
+                .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
         )
         .padding(.horizontal, 16)
         .padding(.bottom, 16)
@@ -65,12 +80,20 @@ struct HomeTabView: View {
             .padding(.vertical, 8)
             .frame(width: 80, height: 48)
             .background(
-                Capsule().fill(.thinMaterial).opacity(isSelected ? 1 : 0)
+                Capsule()
+                    .fill(.ultraThinMaterial)
+                    .overlay(
+                        Capsule()
+                            .stroke(Color.white.opacity(0.6), lineWidth: 1)
+                            .blendMode(.overlay)
+                    )
+                    .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+                    .opacity(isSelected ? 1 : 0)
             )
             .frame(maxWidth: .infinity)
         }
         .frame(maxWidth: .infinity)
-        .foregroundColor(isSelected ? Color.appBackground : Color.appText)
+        .foregroundColor(isSelected ? .black : .gray)
     }
 
     var body: some View {
