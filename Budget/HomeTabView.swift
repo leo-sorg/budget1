@@ -32,7 +32,7 @@ struct HomeTabView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.appBackground)
+        .background(Color.clear)
     }
 
     private var tabBar: some View {

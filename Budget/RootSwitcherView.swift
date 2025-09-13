@@ -5,7 +5,7 @@ struct RootSwitcherView: View {
 
     var body: some View {
         ZStack {
-            Color.appBackground.ignoresSafeArea()
+            BackgroundView()
             Group {
                 if showSplash {
                     SplashView()

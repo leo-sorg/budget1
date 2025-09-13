@@ -73,12 +73,12 @@ struct HistoryView: View {
                 }
             }
             .scrollContentBackground(.hidden)
-            .background(Color.appBackground)
+            .background(Color.clear)
             .listRowBackground(Color.appSecondaryBackground)
             .navigationTitle("History")
             .toolbar { EditButton() } // enables swipe-to-delete / Edit
         }
-        .background(Color.appBackground)
+        .background(Color.clear)
         .foregroundColor(.appText)
         .tint(.appAccent)
         .navigationBarTitleDisplayMode(.inline)
