@@ -32,7 +32,6 @@ struct HomeTabView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .appBackground()
     }
 
     private var tabBar: some View {
@@ -108,6 +107,7 @@ struct HomeTabView: View {
             contentView
             tabBar
         }
+        .appBackground()
         .ignoresSafeArea(.all, edges: .bottom)
     }
 }

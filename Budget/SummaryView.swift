@@ -87,7 +87,7 @@ struct SummaryView: View {
             .listRowBackground(Color.appSecondaryBackground)
             .navigationTitle("Summary")
         }
-        .appBackground()
+        .background(Color.clear)
         .foregroundColor(.appText)
         .tint(.appAccent)
         .navigationBarTitleDisplayMode(.inline)
