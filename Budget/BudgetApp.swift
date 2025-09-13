@@ -34,11 +34,13 @@ struct BudgetApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootSwitcherView()
-                .background(AppBackgroundView())
-                .preferredColorScheme(.dark)
-                .tint(.appAccent)
-                .environmentObject(bgStore)
+            ZStack {
+                AppBackgroundView()
+                RootSwitcherView()
+            }
+            .preferredColorScheme(.dark)
+            .tint(.appAccent)
+            .environmentObject(bgStore)
         }
         .modelContainer(for: [Transaction.self, Category.self, PaymentMethod.self])
     }
