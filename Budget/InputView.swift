@@ -164,7 +164,7 @@ struct InputView: View {
     @State private var date = Date()
     @State private var selectedCategory: Category?
     @State private var selectedMethod: PaymentMethod?
-    @State private var note = ""
+    @State private var descriptionText = ""
     @State private var showSavedToast = false
     @State private var alertMessage: String?
 
@@ -185,11 +185,14 @@ struct InputView: View {
     private var formContent: some View {
         ScrollView {
             VStack(spacing: 16) {
+                fieldTitle("Value")
                 valueSection
-                dateSection
+                fieldTitle("Description")
+                descriptionSection
+                fieldTitle("Payment Type")
                 paymentSection
+                fieldTitle("Category")
                 categorySection
-                noteSection
                 saveSection
             }
             .padding()
@@ -228,6 +231,14 @@ struct InputView: View {
         )
     }
 
+    private func fieldTitle(_ text: String) -> some View {
+        Text(text.uppercased())
+            .font(.caption)
+            .fontWeight(.semibold)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
     // MARK: - Form Sections
     @ViewBuilder private var valueSection: some View {
         MoneyTextField(
@@ -239,31 +250,35 @@ struct InputView: View {
         .formField()
     }
 
-    @ViewBuilder private var dateSection: some View {
-        DatePicker("", selection: $date, displayedComponents: .date)
-            .datePickerStyle(.compact)
-            .labelsHidden()
-            .onChange(of: date) { _ in
-                DispatchQueue.main.async {
-                    dismissKeyboard()
-                }
-            }
-            .formField()
-    }
-
     @ViewBuilder private var paymentSection: some View {
         if methods.isEmpty {
             Button("Add default payment types") { seedDefaults(paymentsOnly: true) }
         } else {
-            Picker("", selection: $selectedMethod) {
-                Text("Payment Type").tag(PaymentMethod?.none)
-                ForEach(methods) { pm in
-                    Text(pm.name).tag(PaymentMethod?.some(pm))
+            VStack(alignment: .leading, spacing: 8) {
+                Picker("", selection: $selectedMethod) {
+                    Text("Payment Type").tag(PaymentMethod?.none)
+                    ForEach(methods) { pm in
+                        Text(pm.name).tag(PaymentMethod?.some(pm))
+                    }
+                }
+                .pickerStyle(.menu)
+                .labelsHidden()
+                .onChange(of: selectedMethod) { _ in dismissKeyboard() }
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(methods) { pm in
+                            Text(pm.name)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(selectedMethod == pm ? Color.appAccent : Color.appSecondaryBackground)
+                                .foregroundColor(selectedMethod == pm ? Color.appBackground : Color.appText)
+                                .clipShape(Capsule())
+                                .onTapGesture { selectedMethod = pm }
+                        }
+                    }
                 }
             }
-            .pickerStyle(.menu)
-            .labelsHidden()
-            .onChange(of: selectedMethod) { _ in dismissKeyboard() }
             .formField()
         }
     }
@@ -272,24 +287,40 @@ struct InputView: View {
         if categories.isEmpty {
             Button("Add default categories") { seedDefaults(categoriesOnly: true) }
         } else {
-            Picker("", selection: $selectedCategory) {
-                Text("Category").tag(Category?.none)
-                ForEach(categories) { cat in
-                    Text("\(cat.emoji ?? "🏷️") \(cat.name)")
-                        .tag(Category?.some(cat))
+            VStack(alignment: .leading, spacing: 8) {
+                Picker("", selection: $selectedCategory) {
+                    Text("Category").tag(Category?.none)
+                    ForEach(categories) { cat in
+                        Text("\(cat.emoji ?? "🏷️") \(cat.name)")
+                            .tag(Category?.some(cat))
+                    }
+                }
+                .pickerStyle(.menu)
+                .labelsHidden()
+                .onChange(of: selectedCategory) { _ in dismissKeyboard() }
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(categories) { cat in
+                            Text("\(cat.emoji ?? "") \(cat.name)")
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(selectedCategory == cat ? Color.appAccent : Color.appSecondaryBackground)
+                                .foregroundColor(selectedCategory == cat ? Color.appBackground : Color.appText)
+                                .clipShape(Capsule())
+                                .onTapGesture { selectedCategory = cat }
+                        }
+                    }
                 }
             }
-            .pickerStyle(.menu)
-            .labelsHidden()
-            .onChange(of: selectedCategory) { _ in dismissKeyboard() }
             .formField()
         }
     }
 
-    @ViewBuilder private var noteSection: some View {
+    @ViewBuilder private var descriptionSection: some View {
         AccessoryTextField(
-            text: $note,
-            placeholder: "Optional note",
+            text: $descriptionText,
+            placeholder: "Optional description",
             onCancel: { /* nothing extra */ },
             onDone: { /* just collapse */ }
         )
@@ -322,7 +353,7 @@ struct InputView: View {
         let tx = Transaction(
             amount: signedAmount,
             date: date,
-            note: note.isEmpty ? nil : note,
+            note: descriptionText.isEmpty ? nil : descriptionText,
             category: selectedCategory,
             paymentMethod: selectedMethod
         )
@@ -339,11 +370,11 @@ struct InputView: View {
                 date: date,
                 categoryName: selectedCategory?.name,
                 paymentName: selectedMethod?.name,
-                note: note.isEmpty ? nil : note
+                note: descriptionText.isEmpty ? nil : descriptionText
             )
 
             amountText = ""
-            note = ""
+            descriptionText = ""
             date = Date()
             withAnimation { showSavedToast = true }
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
