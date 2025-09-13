@@ -1,24 +1,23 @@
 import SwiftUI
 import UIKit
 
+/// Renders the stored background image behind all content.
 struct BackgroundView: View {
-    @AppStorage("backgroundImageData") private var backgroundImageData: Data?
+    @EnvironmentObject private var manager: BackgroundManager
 
     var body: some View {
-        if let data = backgroundImageData, let uiImage = UIImage(data: data) {
-            Image(uiImage: uiImage)
-                .resizable()
-                .scaledToFill()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .clipped()
-                .ignoresSafeArea()
-                // Ensure the background image does not intercept touches
-                .allowsHitTesting(false)
-        } else {
-            // Static background color that never captures interactions
-            Color.appBackground
-                .ignoresSafeArea()
-                .allowsHitTesting(false)
+        Group {
+            if let image = manager.image {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .clipped()
+            } else {
+                Color.appBackground
+            }
         }
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
     }
 }

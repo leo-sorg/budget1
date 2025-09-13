@@ -6,7 +6,7 @@ import PhotosUI
 @MainActor
 struct ManageView: View {
     @Environment(\.modelContext) private var context
-    @AppStorage("backgroundImageData") private var backgroundImageData: Data?
+    @EnvironmentObject private var backgroundManager: BackgroundManager
     @State private var backgroundItem: PhotosPickerItem?
 
     init() {
@@ -111,7 +111,7 @@ struct ManageView: View {
             if let newItem {
                 Task {
                     if let data = try? await newItem.loadTransferable(type: Data.self) {
-                        backgroundImageData = data
+                        backgroundManager.setImageData(data)
                     }
                 }
             }
