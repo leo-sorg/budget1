@@ -282,17 +282,19 @@ struct InputView: View {
         if categories.isEmpty {
             Button("Add default categories") { seedDefaults(categoriesOnly: true) }
         } else {
-            WrappingHStack(categories, spacing: 8, lineSpacing: 8) { cat in
-                Text("\(cat.emoji ?? "") \(cat.name)")
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-                    .background(selectedCategory == cat ? Color.appAccent : Color.appTabBar)
-                    .foregroundColor(selectedCategory == cat ? Color.appBackground : Color.appText)
-                    .clipShape(Capsule())
-                    .onTapGesture {
-                        selectedCategory = cat
-                        dismissKeyboard()
-                    }
+            WrappingHStack(spacing: 8, lineSpacing: 8) {
+                ForEach(categories) { cat in
+                    Text("\(cat.emoji ?? "") \(cat.name)")
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(selectedCategory == cat ? Color.appAccent : Color.appTabBar)
+                        .foregroundColor(selectedCategory == cat ? Color.appBackground : Color.appText)
+                        .clipShape(Capsule())
+                        .onTapGesture {
+                            selectedCategory = cat
+                            dismissKeyboard()
+                        }
+                }
             }
         }
     }
