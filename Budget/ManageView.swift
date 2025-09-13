@@ -417,7 +417,7 @@ extension View {
             .padding(12)
             .background(
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.appBackground)
+                    .fill(Color.appTabBar)
             )
     }
 }
