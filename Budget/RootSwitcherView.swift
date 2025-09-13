@@ -5,13 +5,10 @@ struct RootSwitcherView: View {
 
     var body: some View {
         ZStack {
-            BackgroundView()
-            Group {
-                if showSplash {
-                    SplashView()
-                } else {
-                    HomeTabView()
-                }
+            if showSplash {
+                SplashView()
+            } else {
+                HomeTabView()
             }
         }
         .animation(.easeInOut(duration: 0.3), value: showSplash)
