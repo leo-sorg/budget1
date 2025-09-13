@@ -6,19 +6,20 @@ struct AppButtonStyle: ButtonStyle {
     }
 
     private struct AppButton: View {
+        @Environment(\.isEnabled) private var isEnabled
         let configuration: Configuration
 
         var body: some View {
             configuration.label
                 .fontWeight(.semibold)
-                .foregroundColor(.appAccent)
+                .foregroundColor(isEnabled ? .appAccent : .gray)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
                 .background(
                     Capsule()
                         .fill(Color.appTabBar)
                 )
-                .opacity(configuration.isPressed ? 0.8 : 1.0)
+                .opacity(isEnabled ? (configuration.isPressed ? 0.8 : 1.0) : 0.5)
         }
     }
 }
