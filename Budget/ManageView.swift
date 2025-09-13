@@ -5,9 +5,6 @@ import UIKit
 @MainActor
 struct ManageView: View {
     @Environment(\.modelContext) private var context
-    @EnvironmentObject private var backgroundStore: BackgroundImageStore
-    @State private var showingImagePicker = false
-    @State private var pickedImage: UIImage?
 
     init() {
         let segmented = UISegmentedControl.appearance()
@@ -64,9 +61,6 @@ struct ManageView: View {
             .navigationTitle("Manage")
             .toolbar {
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
-                    Button(action: { showingImagePicker = true }) {
-                        Image(systemName: "photo")
-                    }
                     EditButton()
                 }
             }
@@ -106,13 +100,6 @@ struct ManageView: View {
             .presentationDetents([.fraction(0.5)])
             .presentationDragIndicator(.visible)
             .presentationBackground(Color.black)
-        }
-        .sheet(isPresented: $showingImagePicker, onDismiss: {
-            if let img = pickedImage {
-                backgroundStore.updateImage(img)
-            }
-        }) {
-            ImagePicker(image: $pickedImage)
         }
     }
 
