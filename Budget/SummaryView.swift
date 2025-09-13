@@ -4,6 +4,7 @@ import SwiftData
 struct SummaryView: View {
     @Query(sort: \Transaction.date, order: .reverse)
     private var txs: [Transaction]
+    @AppStorage("backgroundImage") private var backgroundImageData: Data?
 
     // Month/Year selection (defaults to current)
     @State private var selectedMonth: Int = Calendar.current.component(.month, from: Date())

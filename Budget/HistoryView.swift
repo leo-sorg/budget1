@@ -3,6 +3,7 @@ import SwiftData
 
 struct HistoryView: View {
     @Environment(\.modelContext) private var context
+    @AppStorage("backgroundImage") private var backgroundImageData: Data?
 
     // Fetch all transactions, newest first
     @Query(sort: \Transaction.date, order: .reverse)

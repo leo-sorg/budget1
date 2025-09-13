@@ -5,6 +5,7 @@ import UIKit
 @MainActor
 struct ManageView: View {
     @Environment(\.modelContext) private var context
+    @AppStorage("backgroundImage") private var backgroundImageData: Data?
 
     init() {
         let segmented = UISegmentedControl.appearance()
