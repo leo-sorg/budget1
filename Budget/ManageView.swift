@@ -214,15 +214,17 @@ struct ManageView: View {
                 try context.save()
             }
 
-            SHEETS.postCategory(
-                remoteID: newCat.remoteID,
-                name: newCat.name,
-                emoji: newCat.emoji,
-                sortIndex: newCat.sortIndex,
-                isIncome: newCat.isIncome
-            )
-
             closeCategorySheet()
+
+            Task {
+                SHEETS.postCategory(
+                    remoteID: newCat.remoteID,
+                    name: newCat.name,
+                    emoji: newCat.emoji,
+                    sortIndex: newCat.sortIndex,
+                    isIncome: newCat.isIncome
+                )
+            }
         } catch {
             alertMessage = "Could not save category: \(error.localizedDescription)"
             print("SAVE ERROR (Category):", error)

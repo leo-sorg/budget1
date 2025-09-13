@@ -282,24 +282,12 @@ struct InputView: View {
         if categories.isEmpty {
             Button("Add default categories") { seedDefaults(categoriesOnly: true) }
         } else {
-            let topRow = stride(from: 0, to: categories.count, by: 2).map { categories[$0] }
-            let bottomRow = stride(from: 1, to: categories.count, by: 2).map { categories[$0] }
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 8) {
-                        ForEach(topRow) { cat in
-                            categoryChip(for: cat)
-                        }
-                    }
-                    HStack(spacing: 8) {
-                        ForEach(bottomRow) { cat in
-                            categoryChip(for: cat)
-                        }
-                    }
+            WrappingHStack(spacing: 8, lineSpacing: 8) {
+                ForEach(categories) { cat in
+                    categoryChip(for: cat)
                 }
             }
-            .frame(height: chipHeight * 2 + 8)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
