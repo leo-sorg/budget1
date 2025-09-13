@@ -282,28 +282,38 @@ struct InputView: View {
         if categories.isEmpty {
             Button("Add default categories") { seedDefaults(categoriesOnly: true) }
         } else {
-            let rows: [GridItem] = [
-                GridItem(.fixed(chipHeight), spacing: 8),
-                GridItem(.fixed(chipHeight))
-            ]
+            let topRow = stride(from: 0, to: categories.count, by: 2).map { categories[$0] }
+            let bottomRow = stride(from: 1, to: categories.count, by: 2).map { categories[$0] }
+
             ScrollView(.horizontal, showsIndicators: false) {
-                LazyHGrid(rows: rows, spacing: 8) {
-                    ForEach(categories) { cat in
-                        Text("\(cat.emoji ?? "") \(cat.name)")
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 10)
-                            .background(selectedCategory == cat ? Color.appAccent : Color.appTabBar)
-                            .foregroundColor(selectedCategory == cat ? Color.appBackground : Color.appText)
-                            .clipShape(Capsule())
-                            .onTapGesture {
-                                selectedCategory = cat
-                                dismissKeyboard()
-                            }
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 8) {
+                        ForEach(topRow) { cat in
+                            categoryChip(for: cat)
+                        }
+                    }
+                    HStack(spacing: 8) {
+                        ForEach(bottomRow) { cat in
+                            categoryChip(for: cat)
+                        }
                     }
                 }
             }
             .frame(height: chipHeight * 2 + 8)
         }
+    }
+
+    private func categoryChip(for cat: Category) -> some View {
+        Text("\(cat.emoji ?? "") \(cat.name)")
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(selectedCategory == cat ? Color.appAccent : Color.appTabBar)
+            .foregroundColor(selectedCategory == cat ? Color.appBackground : Color.appText)
+            .clipShape(Capsule())
+            .onTapGesture {
+                selectedCategory = cat
+                dismissKeyboard()
+            }
     }
 
     @ViewBuilder private var dateSection: some View {
