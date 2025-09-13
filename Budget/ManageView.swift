@@ -55,8 +55,8 @@ struct ManageView: View {
                 }
             }
             .scrollContentBackground(.hidden)
-            .background(Color.clear)
-            .listRowBackground(Color.appSecondaryBackground)
+            .background(Color.appBackground)
+            .listRowBackground(Color.appBackground)
             .scrollDismissesKeyboard(.interactively)
             .navigationTitle("Manage")
             .toolbar {
@@ -74,11 +74,11 @@ struct ManageView: View {
                 Text(alertMessage ?? "")
             }
         }
-        .background(Color.clear)
+        .background(Color.appBackground)
         .foregroundColor(.appText)
         .tint(.appAccent)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Color.black, for: .navigationBar)
+        .toolbarBackground(Color.appBackground, for: .navigationBar)
         .sheet(isPresented: $showCategoryForm) {
             CategoryFormSheet(
                 newCategory: $newCategory,
@@ -89,7 +89,7 @@ struct ManageView: View {
             )
             .presentationDetents([.fraction(0.5)])
             .presentationDragIndicator(.visible)
-            .presentationBackground(Color.black)
+            .presentationBackground(Color.appBackground)
         }
         .sheet(isPresented: $showPaymentForm) {
             PaymentFormSheet(
@@ -99,7 +99,7 @@ struct ManageView: View {
             )
             .presentationDetents([.fraction(0.5)])
             .presentationDragIndicator(.visible)
-            .presentationBackground(Color.black)
+            .presentationBackground(Color.appBackground)
         }
     }
 
@@ -418,7 +418,7 @@ extension View {
             .padding(12)
             .background(
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.appTabBar)
+                    .fill(Color.appBackground)
             )
     }
 }
