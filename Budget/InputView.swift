@@ -160,24 +160,12 @@ struct InputView: View {
     @State private var showSavedToast = false
     @State private var alertMessage: String?
 
-    @State private var showBackgroundPicker = false
-
-
     private let chipHeight: CGFloat = 40
 
     var body: some View {
         NavigationStack {
             formContent
                 .navigationTitle("Input")
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button {
-                            showBackgroundPicker = true
-                        } label: {
-                            Image(systemName: "plus")
-                        }
-                    }
-                }
         }
         .background(Color.clear)
         .foregroundColor(.appText)
@@ -186,9 +174,6 @@ struct InputView: View {
         .task {
             categories = (try? ctx.fetch(FetchDescriptor<Category>(sortBy: [SortDescriptor(\.name)]))) ?? []
             paymentMethods = (try? ctx.fetch(FetchDescriptor<PaymentMethod>(sortBy: [SortDescriptor(\.name)]))) ?? []
-        }
-        .sheet(isPresented: $showBackgroundPicker) {
-            BackgroundPicker()
         }
     }
 
