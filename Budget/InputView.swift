@@ -285,15 +285,20 @@ struct InputView: View {
             Button("Add default categories") { seedDefaults(categoriesOnly: true) }
         } else {
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach(categories) { cat in
-                        categoryChip(for: cat)
+                HStack(alignment: .top, spacing: 8) {
+                    ForEach(Array(stride(from: 0, to: categories.count, by: 2)), id: \.self) { idx in
+                        VStack(spacing: 8) {
+                            categoryChip(for: categories[idx])
+                            if idx + 1 < categories.count {
+                                categoryChip(for: categories[idx + 1])
+                            }
+                        }
                     }
                 }
                 .padding(.horizontal)
             }
             .padding(.horizontal, -16)
-            .frame(height: chipHeight)
+            .frame(height: chipHeight * 2 + 8)
         }
     }
 
