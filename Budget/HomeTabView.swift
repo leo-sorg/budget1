@@ -32,6 +32,7 @@ struct HomeTabView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.clear) // Ensure content is transparent
     }
 
     private var tabBar: some View {
@@ -103,14 +104,16 @@ struct HomeTabView: View {
     }
 
     var body: some View {
-        ZStack {
-            ZStack(alignment: .bottom) {
-                contentView
-                tabBar
-            }
-            .ignoresSafeArea(.all, edges: .bottom)
-            .background(Color.clear)
-
+        // Remove the outer ZStack and simplify the structure
+        ZStack(alignment: .bottom) {
+            // Main content area
+            contentView
+                .ignoresSafeArea(.all, edges: .bottom)
+            
+            // Tab bar overlay
+            tabBar
+            
+            // Background add button overlay
             VStack {
                 HStack {
                     Spacer()
@@ -118,11 +121,11 @@ struct HomeTabView: View {
                         .padding(.trailing, 16)
                 }
                 .padding(.top, 8)
-
                 Spacer()
             }
             .allowsHitTesting(true)
         }
-        .background(Color.clear)
+        .background(Color.clear) // This is crucial - keeps the entire view transparent
+        .ignoresSafeArea(.all, edges: .bottom)
     }
 }

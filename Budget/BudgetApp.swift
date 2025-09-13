@@ -10,14 +10,60 @@ let SHEETS = SheetsClient(
 struct BudgetApp: App {
     @StateObject private var bgStore = BackgroundImageStore()
 
-    init() { AppAppearance.configure() }
+    init() {
+        AppAppearance.configure()
+    }
 
     var body: some Scene {
         WindowGroup {
             ZStack {
-                WindowBackgroundView()      // base layer
-                RootSwitcherView()          // app content
+                // Background layer - always at the bottom
+                WindowBackgroundView()
+                    .ignoresSafeArea(.all)
+                    .zIndex(0)
+                
+                // App content layer
+                RootSwitcherView()
                     .background(Color.clear)
+                    .zIndex(1)
+            }
+            .environmentObject(bgStore)
+            .preferredColorScheme(.dark)
+            .tint(.appAccent)
+        }
+        .modelContainer(for: [Transaction.self, Category.self, PaymentMethod.self])
+    }
+}
+
+struct DebugBudgetApp: App {
+    @StateObject private var bgStore = BackgroundImageStore()
+
+    var body: some Scene {
+        WindowGroup {
+            ZStack {
+                // Debug: Use a bright color instead of your background image
+                Color.red.opacity(0.3)
+                    .ignoresSafeArea(.all)
+                    .zIndex(0)
+                
+                // Your normal content
+                RootSwitcherView()
+                    .background(Color.clear)
+                    .zIndex(1)
+                
+                // Debug overlay
+                VStack {
+                    HStack {
+                        Text("BG Store has image: \(bgStore.image != nil ? "YES" : "NO")")
+                            .padding()
+                            .background(.ultraThinMaterial)
+                            .cornerRadius(8)
+                        Spacer()
+                    }
+                    Spacer()
+                }
+                .padding()
+                .zIndex(2)
             }
             .environmentObject(bgStore)
             .preferredColorScheme(.dark)
