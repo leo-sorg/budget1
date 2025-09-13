@@ -16,6 +16,7 @@ struct AppBackgroundView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipped()
         .ignoresSafeArea()
+        .allowsHitTesting(false)
     }
 }
 

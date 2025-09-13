@@ -24,22 +24,26 @@ struct HistoryView: View {
                 } else {
                     // Monthly total section (current month)
                     Section("This month") {
-                        HStack {
-                            Text("Income")
-                            Spacer()
-                            Text(incomeThisMonth as NSNumber, formatter: currencyFormatter)
+                        Group {
+                            HStack {
+                                Text("Income")
+                                Spacer()
+                                Text(incomeThisMonth as NSNumber, formatter: currencyFormatter)
+                            }
+                            HStack {
+                                Text("Expenses")
+                                Spacer()
+                                Text(expensesThisMonth as NSNumber, formatter: currencyFormatter)
+                            }
+                            HStack {
+                                Text("Net")
+                                Spacer()
+                                Text(netThisMonth as NSNumber, formatter: currencyFormatter)
+                                    .fontWeight(.semibold)
+                            }
                         }
-                        HStack {
-                            Text("Expenses")
-                            Spacer()
-                            Text(expensesThisMonth as NSNumber, formatter: currencyFormatter)
-                        }
-                        HStack {
-                            Text("Net")
-                            Spacer()
-                            Text(netThisMonth as NSNumber, formatter: currencyFormatter)
-                                .fontWeight(.semibold)
-                        }
+                        .padding(12)
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
                     }
 
                     // All transactions
@@ -67,14 +71,17 @@ struct HistoryView: View {
                                 .foregroundColor(Color.appText.opacity(0.6))
                                 .font(.caption)
                             }
+                            .padding(12)
+                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
                         }
                         .onDelete(perform: delete)
                     }
                 }
             }
+            .listStyle(.plain)
             .scrollContentBackground(.hidden)
             .background(Color.clear)
-            .listRowBackground(Color.appSecondaryBackground)
+            .listRowBackground(Color.clear)
             .navigationTitle("History")
             .toolbar { EditButton() } // enables swipe-to-delete / Edit
         }
@@ -82,7 +89,6 @@ struct HistoryView: View {
         .foregroundColor(.appText)
         .tint(.appAccent)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Color.clear, for: .navigationBar)
     }
 
     // MARK: - Helpers

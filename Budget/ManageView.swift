@@ -45,7 +45,8 @@ struct ManageView: View {
             }
             .scrollContentBackground(.hidden)
             .background(Color.clear)
-            .listRowBackground(Color.appSecondaryBackground)
+            .listRowBackground(Color.clear)
+            .listStyle(.grouped)
             .scrollDismissesKeyboard(.interactively)
             .navigationTitle("Manage")
             .toolbar {
@@ -67,7 +68,6 @@ struct ManageView: View {
         .foregroundColor(.appText)
         .tint(.appAccent)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Color.clear, for: .navigationBar)
         .sheet(isPresented: $showCategoryForm) {
             CategoryFormSheet(
                 newCategory: $newCategory,

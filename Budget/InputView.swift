@@ -173,19 +173,6 @@ struct InputView: View {
     @State private var showingImagePicker = false
     @State private var photoItem: PhotosPickerItem?
 
-    private func processImage(_ image: UIImage) -> UIImage {
-        let screen = UIScreen.main.bounds.size
-        let scale = max(screen.width / image.size.width, screen.height / image.size.height)
-        let newSize = CGSize(width: image.size.width * scale, height: image.size.height * scale)
-        let renderer = UIGraphicsImageRenderer(size: screen)
-        return renderer.image { _ in
-            image.draw(in: CGRect(x: (screen.width - newSize.width) / 2,
-                                  y: (screen.height - newSize.height) / 2,
-                                  width: newSize.width,
-                                  height: newSize.height))
-        }
-    }
-
 
     private let chipHeight: CGFloat = 40
 
@@ -207,15 +194,12 @@ struct InputView: View {
         .foregroundColor(.appText)
         .tint(.appAccent)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Color.clear, for: .navigationBar)
         .photosPicker(isPresented: $showingImagePicker, selection: $photoItem, matching: .images)
         .onChange(of: photoItem) { newItem in
             Task {
                 if let data = try? await newItem?.loadTransferable(type: Data.self),
                    let uiImage = UIImage(data: data) {
-                    await MainActor.run {
-                        bgStore.image = processImage(uiImage)
-                    }
+                    await MainActor.run { bgStore.image = uiImage }
                 }
             }
         }
