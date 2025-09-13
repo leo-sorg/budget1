@@ -13,6 +13,7 @@ struct BudgetApp: App {
     init() {
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
+        appearance.backgroundEffect = UIBlurEffect(style: .systemThinMaterialDark)
         appearance.backgroundColor = .clear
         appearance.titleTextAttributes = [.foregroundColor: UIColor(Color.appText)]
         appearance.largeTitleTextAttributes = [.foregroundColor: UIColor(Color.appText)]

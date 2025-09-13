@@ -82,16 +82,16 @@ struct SummaryView: View {
                     }
                 }
             }
+            .listStyle(.plain)
             .scrollContentBackground(.hidden)
             .background(Color.clear)
-            .listRowBackground(Color.appSecondaryBackground)
+            .listRowBackground(Color.clear)
             .navigationTitle("Summary")
         }
         .background(Color.clear)
         .foregroundColor(.appText)
         .tint(.appAccent)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Color.clear, for: .navigationBar)
     }
 
     // MARK: - Filtering for selected month/year
