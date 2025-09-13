@@ -5,24 +5,18 @@ struct WindowBackgroundView: View {
 
     var body: some View {
         GeometryReader { proxy in
-            let size = proxy.size
-            ZStack {
-                if let ui = store.image {
-                    Image(uiImage: ui)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: size.width, height: size.height)
-                        .clipped()
-                } else {
-                    Color.black
-                }
+            if let ui = store.image {
+                Image(uiImage: ui)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                    .clipped()
+                    .overlay(Color.black.opacity(store.dim))
+                    .blur(radius: store.blur)
             }
-            .frame(width: size.width, height: size.height)
-            .overlay(Color.black.opacity(store.dim))
-            .blur(radius: store.blur)
-            .ignoresSafeArea()
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+        .ignoresSafeArea(.all)
     }
 }

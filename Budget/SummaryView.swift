@@ -16,82 +16,92 @@ struct SummaryView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            List {
-                // Month and Year on separate rows to avoid truncation
-                Section("Period") {
-                    Picker("Month", selection: $selectedMonth) {
-                        ForEach(1...12, id: \.self) { m in
-                            Text(shortMonthName(m)).tag(m)
+        ScrollView {
+            VStack(spacing: 24) {
+                // Period Section
+                SectionContainer("Period") {
+                    VStack(spacing: 12) {
+                        Picker("Month", selection: $selectedMonth) {
+                            ForEach(1...12, id: \.self) { m in
+                                Text(shortMonthName(m)).tag(m)
+                            }
                         }
-                    }
-                    .pickerStyle(.menu)
-
-                    Picker("Year", selection: $selectedYear) {
-                        ForEach(years, id: \.self) { y in
-                            Text(String(y)).tag(y) // plain string (no 2.025 formatting)
+                        .appPickerStyle()
+                        
+                        Picker("Year", selection: $selectedYear) {
+                            ForEach(years, id: \.self) { y in
+                                Text(String(y)).tag(y)
+                            }
                         }
-                    }
-                    .pickerStyle(.menu)
-                }
-
-                Section(header: Text("Totals")) {
-                    HStack {
-                        Text("Income")
-                        Spacer()
-                        Text(formatCurrency(totalIncome))
-                    }
-                    HStack {
-                        Text("Expenses")
-                        Spacer()
-                        Text(formatCurrency(totalExpenses))
-                    }
-                    HStack {
-                        Text("Net")
-                        Spacer()
-                        Text(formatCurrency(netTotal))
-                            .fontWeight(.semibold)
+                        .appPickerStyle()
                     }
                 }
-
-                Section(header: Text("By category")) {
+                
+                // Totals Section
+                SectionContainer("Totals") {
+                    VStack(spacing: 8) {
+                        HStack {
+                            Text("Income")
+                            Spacer()
+                            Text(formatCurrency(totalIncome))
+                        }
+                        HStack {
+                            Text("Expenses")
+                            Spacer()
+                            Text(formatCurrency(totalExpenses))
+                        }
+                        HStack {
+                            Text("Net")
+                            Spacer()
+                            Text(formatCurrency(netTotal))
+                                .fontWeight(.semibold)
+                        }
+                    }
+                    .foregroundColor(.appText)
+                }
+                
+                // By Category Section
+                SectionContainer("By category") {
                     if byCategory.isEmpty {
-                        Text("No data for this month").foregroundColor(Color.appText.opacity(0.6))
+                        Text("No data for this month")
+                            .foregroundColor(.appText.opacity(0.6))
                     } else {
-                        ForEach(byCategoryKeys, id: \.self) { key in
-                            HStack {
-                                Text(key)
-                                Spacer()
-                                Text(formatCurrency(byCategory[key] ?? 0))
+                        VStack(spacing: 8) {
+                            ForEach(byCategoryKeys, id: \.self) { key in
+                                HStack {
+                                    Text(key)
+                                    Spacer()
+                                    Text(formatCurrency(byCategory[key] ?? 0))
+                                }
+                                .foregroundColor(.appText)
                             }
                         }
                     }
                 }
-
-                Section(header: Text("By payment method")) {
+                
+                // By Payment Method Section
+                SectionContainer("By payment method") {
                     if byPayment.isEmpty {
-                        Text("No data for this month").foregroundColor(Color.appText.opacity(0.6))
+                        Text("No data for this month")
+                            .foregroundColor(.appText.opacity(0.6))
                     } else {
-                        ForEach(byPaymentKeys, id: \.self) { key in
-                            HStack {
-                                Text(key)
-                                Spacer()
-                                Text(formatCurrency(byPayment[key] ?? 0))
+                        VStack(spacing: 8) {
+                            ForEach(byPaymentKeys, id: \.self) { key in
+                                HStack {
+                                    Text(key)
+                                    Spacer()
+                                    Text(formatCurrency(byPayment[key] ?? 0))
+                                }
+                                .foregroundColor(.appText)
                             }
                         }
                     }
                 }
             }
-            .listStyle(.plain)
-            .scrollContentBackground(.hidden)
-            .background(Color.clear)
-            .listRowBackground(Color.clear)
-            .navigationTitle("Summary")
+            .padding()
         }
+        .scrollContentBackground(.hidden)
         .background(Color.clear)
-        .foregroundColor(.appText)
-        .tint(.appAccent)
-        .navigationBarTitleDisplayMode(.inline)
     }
 
     // MARK: - Filtering for selected month/year

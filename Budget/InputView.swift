@@ -14,7 +14,6 @@ struct MoneyTextField: UIViewRepresentable {
         init(_ parent: MoneyTextField) { self.parent = parent }
 
         @objc func editingChanged(_ tf: UITextField) {
-            // Keep only digits, treat as cents, format as pt_BR currency
             let digits = (tf.text ?? "").filter(\.isNumber)
             let intVal = NSDecimalNumber(string: digits.isEmpty ? "0" : digits)
             let value = intVal.dividing(by: 100)
@@ -26,7 +25,7 @@ struct MoneyTextField: UIViewRepresentable {
         }
 
         @objc func tapCancel(_ sender: UIBarButtonItem) {
-            parent.text = ""          // clear
+            parent.text = ""
             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
             parent.onCancel()
         }
@@ -50,7 +49,6 @@ struct MoneyTextField: UIViewRepresentable {
         tf.tintColor = UIColor(Color.appAccent)
         tf.addTarget(context.coordinator, action: #selector(Coordinator.editingChanged(_:)), for: .editingChanged)
 
-        // Toolbar with Cancel / Done
         let bar = UIToolbar()
         bar.sizeToFit()
         let cancel = UIBarButtonItem(title: "Cancel", style: .plain, target: context.coordinator, action: #selector(Coordinator.tapCancel(_:)))
@@ -61,13 +59,11 @@ struct MoneyTextField: UIViewRepresentable {
         bar.tintColor = UIColor(Color.appAccent)
         tf.inputAccessoryView = bar
 
-        // Initial formatting (if any)
         context.coordinator.editingChanged(tf)
         return tf
     }
 
     func updateUIView(_ uiView: UITextField, context: Context) {
-        // Keep UIKit field in sync if SwiftUI state changes externally
         if uiView.text != text { uiView.text = text }
     }
 }
@@ -104,7 +100,6 @@ struct AccessoryTextField: UIViewRepresentable {
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
-    // UITextField that defaults to the emoji keyboard
     private class EmojiTextField: UITextField {
         override var textInputMode: UITextInputMode? {
             for mode in UITextInputMode.activeInputModes {
@@ -144,15 +139,54 @@ struct AccessoryTextField: UIViewRepresentable {
     }
 }
 
-// MARK: - Your main InputView
+// MARK: - Separate chip views to avoid compiler issues
+struct PaymentChipView: View {
+    let paymentMethod: PaymentMethod
+    let isSelected: Bool
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: onTap) {
+            Text(paymentMethod.name)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .foregroundColor(isSelected ? Color.appAccent : Color.appText)
+        }
+        .background(isSelected ? Color.appAccent.opacity(0.2) : Color.clear)
+        .background(.ultraThinMaterial, in: Capsule())
+        .clipShape(Capsule())
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
+struct CategoryChipView: View {
+    let category: Category
+    let isSelected: Bool
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: onTap) {
+            Text("\(category.emoji ?? "") \(category.name)")
+                .font(.body)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .foregroundColor(isSelected ? Color.appAccent : Color.appText)
+        }
+        .background(isSelected ? Color.appAccent.opacity(0.3) : Color.clear)
+        .background(.ultraThinMaterial, in: Capsule())
+        .clipShape(Capsule())
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
+// MARK: - Your main InputView with material styling
 @MainActor
 struct InputView: View {
     @Environment(\.modelContext) private var ctx
     @State private var categories: [Category] = []
     @State private var paymentMethods: [PaymentMethod] = []
 
-    // Form state
-    @State private var amountText = ""   // formatted "R$ 0,00"
+    @State private var amountText = ""
     @State private var date = Date()
     @State private var selectedCategory: Category?
     @State private var selectedMethod: PaymentMethod?
@@ -160,53 +194,174 @@ struct InputView: View {
     @State private var showSavedToast = false
     @State private var alertMessage: String?
 
-    private let chipHeight: CGFloat = 40
-
     var body: some View {
-        NavigationStack {
-            formContent
-                .navigationTitle("Input")
-        }
-        .background(Color.clear)
-        .foregroundColor(.appText)
-        .tint(.appAccent)
-        .navigationBarTitleDisplayMode(.inline)
-        .task {
-            categories = (try? ctx.fetch(FetchDescriptor<Category>(sortBy: [SortDescriptor(\.name)]))) ?? []
-            paymentMethods = (try? ctx.fetch(FetchDescriptor<PaymentMethod>(sortBy: [SortDescriptor(\.name)]))) ?? []
-        }
-    }
-
-    /// Main form broken out for easier type-checking
-    @ViewBuilder
-    private var formContent: some View {
         ScrollView {
-            VStack(spacing: 16) {
-                fieldTitle("Value")
+            VStack(spacing: 24) {
                 valueSection
-                fieldTitle("Description")
                 descriptionSection
-                fieldTitle("Payment Type")
-                paymentSection
-                fieldTitle("Category")
+                paymentTypeSection
                 categorySection
-                fieldTitle("Date")
                 dateSection
                 saveSection
             }
             .padding()
         }
+        .scrollContentBackground(.hidden)
         .background(Color.clear)
         .scrollDismissesKeyboard(.interactively)
-        .task {
-            if categories.isEmpty || paymentMethods.isEmpty { seedDefaults() }
-        }
         .overlay(alignment: .top) { toastOverlay }
         .animation(.default, value: showSavedToast)
         .alert("Oops", isPresented: alertBinding) {
             Button("OK") { alertMessage = nil }
         } message: {
             Text(alertMessage ?? "")
+        }
+        .task {
+            categories = (try? ctx.fetch(FetchDescriptor<Category>(sortBy: [SortDescriptor(\.name)]))) ?? []
+            paymentMethods = (try? ctx.fetch(FetchDescriptor<PaymentMethod>(sortBy: [SortDescriptor(\.name)]))) ?? []
+            if categories.isEmpty || paymentMethods.isEmpty { seedDefaults() }
+        }
+    }
+    
+    // MARK: - Section Views
+    @ViewBuilder private var valueSection: some View {
+        SectionContainer("Value") {
+            MoneyTextField(
+                text: $amountText,
+                placeholder: "R$ 0,00",
+                onCancel: { },
+                onDone: { }
+            )
+            .materialContainer()
+        }
+    }
+    
+    @ViewBuilder private var descriptionSection: some View {
+        SectionContainer("Description") {
+            AccessoryTextField(
+                text: $descriptionText,
+                placeholder: "Optional description",
+                onCancel: { },
+                onDone: { }
+            )
+            .materialContainer()
+        }
+    }
+    
+    @ViewBuilder private var paymentTypeSection: some View {
+        SectionContainer("Payment Type") {
+            if paymentMethods.isEmpty {
+                Button("Add default payment types") {
+                    seedDefaults(paymentsOnly: true)
+                }
+                .appMaterialButton()
+            } else {
+                paymentChipsScrollView
+            }
+        }
+    }
+    
+    @ViewBuilder private var categorySection: some View {
+        SectionContainer("Category") {
+            if categories.isEmpty {
+                Button("Add default categories") {
+                    seedDefaults(categoriesOnly: true)
+                }
+                .appMaterialButton()
+            } else {
+                categoryChipsScrollView
+            }
+        }
+    }
+    
+    @ViewBuilder private var dateSection: some View {
+        SectionContainer("Date") {
+            DatePicker("", selection: $date, displayedComponents: .date)
+                .labelsHidden()
+                .datePickerStyle(.compact)
+                .materialContainer()
+        }
+    }
+    
+    @ViewBuilder private var saveSection: some View {
+        Button("Save Entry") {
+            save()
+        }
+        .appMaterialButton()
+        .disabled(!canSave)
+        .opacity(canSave ? 1.0 : 0.5)
+    }
+    
+    // MARK: - Chip Views
+    @ViewBuilder private var paymentChipsScrollView: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(paymentMethods) { pm in
+                    PaymentChipView(
+                        paymentMethod: pm,
+                        isSelected: selectedMethod == pm,
+                        onTap: {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                selectedMethod = pm
+                            }
+                            dismissKeyboard()
+                        }
+                    )
+                }
+            }
+            .padding(.horizontal)
+        }
+        .padding(.horizontal, -16)
+    }
+    
+    @ViewBuilder private var categoryChipsScrollView: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            VStack(spacing: 8) {
+                firstCategoryRow
+                if categories.count > 1 {
+                    secondCategoryRow
+                }
+            }
+            .padding(.horizontal)
+        }
+        .padding(.horizontal, -16)
+    }
+    
+    @ViewBuilder private var firstCategoryRow: some View {
+        HStack(spacing: 8) {
+            // FIXED: Convert stride to Array to conform to RandomAccessCollection
+            ForEach(Array(stride(from: 0, to: categories.count, by: 2)), id: \.self) { index in
+                CategoryChipView(
+                    category: categories[index],
+                    isSelected: selectedCategory == categories[index],
+                    onTap: {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            selectedCategory = categories[index]
+                        }
+                        dismissKeyboard()
+                    }
+                )
+            }
+            Spacer(minLength: 0) // Push everything to the left
+        }
+    }
+    
+    @ViewBuilder private var secondCategoryRow: some View {
+        HStack(spacing: 8) {
+            // FIXED: Convert stride to Array to conform to RandomAccessCollection
+            ForEach(Array(stride(from: 1, to: categories.count, by: 2)), id: \.self) { index in
+                CategoryChipView(
+                    category: categories[index],
+                    isSelected: selectedCategory == categories[index],
+                    onTap: {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            selectedCategory = categories[index]
+                        }
+                        dismissKeyboard()
+                    }
+                )
+            }
+            Spacer(minLength: 0) // Push everything to the left
         }
     }
 
@@ -215,9 +370,8 @@ struct InputView: View {
             Text("Saved ✔︎")
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
-                .background(Color.appSecondaryBackground.opacity(0.8))
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
                 .foregroundColor(Color.appText)
-                .cornerRadius(8)
                 .padding(.top)
                 .transition(.move(edge: .top).combined(with: .opacity))
         }
@@ -230,109 +384,9 @@ struct InputView: View {
         )
     }
 
-    private func fieldTitle(_ text: String) -> some View {
-        Text(text.uppercased())
-            .font(.caption)
-            .fontWeight(.semibold)
-            .foregroundColor(Color.appText.opacity(0.6))
-            .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    // MARK: - Form Sections
-    @ViewBuilder private var valueSection: some View {
-        MoneyTextField(
-            text: $amountText,
-            placeholder: "R$ 0,00",
-            onCancel: { /* nothing else to do */ },
-            onDone: { /* just collapse; formatting already applied */ }
-        )
-        .appTextField()
-    }
-
-    @ViewBuilder private var paymentSection: some View {
-        if paymentMethods.isEmpty {
-            Button("Add default payment types") { seedDefaults(paymentsOnly: true) }
-            .buttonStyle(AppButtonStyle())
-        } else {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach(paymentMethods) { pm in
-                        Text(pm.name)
-                            .appChip(isSelected: selectedMethod == pm)
-                            .onTapGesture {
-                                selectedMethod = pm
-                                dismissKeyboard()
-                            }
-                    }
-                }
-                .padding(.horizontal)
-            }
-            .padding(.horizontal, -16)
-            .frame(height: chipHeight)
-        }
-    }
-
-    @ViewBuilder private var categorySection: some View {
-        if categories.isEmpty {
-            Button("Add default categories") { seedDefaults(categoriesOnly: true) }
-            .buttonStyle(AppButtonStyle())
-        } else {
-            ScrollView(.horizontal, showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 8) {
-                    let firstRow = stride(from: 0, to: categories.count, by: 2).map { categories[$0] }
-                    HStack(spacing: 8) {
-                        ForEach(firstRow) { categoryChip(for: $0) }
-                    }
-                    let secondRow = stride(from: 1, to: categories.count, by: 2).map { categories[$0] }
-                    HStack(spacing: 8) {
-                        ForEach(secondRow) { categoryChip(for: $0) }
-                    }
-                }
-                .padding(.horizontal)
-            }
-            .padding(.horizontal, -16)
-            .frame(height: chipHeight * 2 + 8)
-        }
-    }
-
-    private func categoryChip(for cat: Category) -> some View {
-        Text("\(cat.emoji ?? "") \(cat.name)")
-            .appChip(isSelected: selectedCategory == cat)
-            .onTapGesture {
-                selectedCategory = cat
-                dismissKeyboard()
-            }
-    }
-
-    @ViewBuilder private var dateSection: some View {
-        DatePicker("", selection: $date, displayedComponents: .date)
-            .labelsHidden()
-            .datePickerStyle(.compact)
-            .appTextField()
-    }
-
-    @ViewBuilder private var descriptionSection: some View {
-        AccessoryTextField(
-            text: $descriptionText,
-            placeholder: "Optional description",
-            onCancel: { /* nothing extra */ },
-            onDone: { /* just collapse */ }
-        )
-        .appTextField()
-    }
-
-    @ViewBuilder private var saveSection: some View {
-        Button(action: save) {
-            Text("Save Entry")
-        }
-        .buttonStyle(AppButtonStyle())
-        .disabled(!canSave)
-    }
-
     // MARK: - Validation
     private var canSave: Bool { amountDecimal != nil }
     private var amountDecimal: Decimal? {
-        // Parse "R$ 12,34" back to Decimal
         let digits = amountText.filter(\.isNumber)
         guard !digits.isEmpty, let intVal = Decimal(string: digits) else { return nil }
         return intVal / 100
@@ -382,8 +436,7 @@ struct InputView: View {
         }
     }
 
-    private func seedDefaults(categoriesOnly: Bool = false,
-                              paymentsOnly: Bool = false) {
+    private func seedDefaults(categoriesOnly: Bool = false, paymentsOnly: Bool = false) {
         if !paymentsOnly && categories.isEmpty {
             let base = (categories.map { $0.sortIndex }.max() ?? -1) + 1
             let seeds: [(String, String?, Bool)] = [

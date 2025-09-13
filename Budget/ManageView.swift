@@ -31,14 +31,17 @@ struct ManageView: View {
     @State private var pickerItem: PhotosPickerItem?
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Picker("", selection: $showingCategories) {
-                    Text("Categories").tag(true)
-                    Text("Payment Types").tag(false)
+        ScrollView {
+            VStack(spacing: 24) {
+                // Tab Selector
+                SectionContainer("Manage") {
+                    Picker("", selection: $showingCategories) {
+                        Text("Categories").tag(true)
+                        Text("Payment Types").tag(false)
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.vertical, 8)
                 }
-                .pickerStyle(.segmented)
-                .padding(.vertical, 8)
 
                 if showingCategories {
                     categorySection
@@ -46,47 +49,21 @@ struct ManageView: View {
                     paymentSection
                 }
 
-                Section("Background") {
-                    PhotosPicker(selection: $pickerItem, matching: .images, photoLibrary: .shared()) {
-                        Text("Choose Background")
-                    }
-                    .onChange(of: pickerItem) { oldValue, newValue in
-                        Task { await loadSelection(newValue) }
-                    }
-                    .task(id: pickerItem) {
-                        await loadSelection(pickerItem)
-                    }
-
-                    if store.image != nil {
-                        Button("Remove Background") { store.setImage(nil) }
-                    }
-                }
+                backgroundSection
             }
-            .scrollContentBackground(.hidden)
-            .background(Color.clear)
-            .listRowBackground(Color.clear)
-            .listStyle(.plain)
-            .scrollDismissesKeyboard(.interactively)
-            .navigationTitle("Manage")
-            .toolbar {
-                ToolbarItemGroup(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-            }
-            .task { normalizeSortIndicesIfNeeded() }
-            .alert("Oops", isPresented: Binding(
-                get: { alertMessage != nil },
-                set: { if !$0 { alertMessage = nil } }
-            )) {
-                Button("OK") { alertMessage = nil }
-            } message: {
-                Text(alertMessage ?? "")
-            }
+            .padding()
         }
+        .scrollContentBackground(.hidden)
         .background(Color.clear)
-        .foregroundColor(.appText)
-        .tint(.appAccent)
-        .navigationBarTitleDisplayMode(.inline)
+        .task { normalizeSortIndicesIfNeeded() }
+        .alert("Oops", isPresented: Binding(
+            get: { alertMessage != nil },
+            set: { if !$0 { alertMessage = nil } }
+        )) {
+            Button("OK") { alertMessage = nil }
+        } message: {
+            Text(alertMessage ?? "")
+        }
         .sheet(isPresented: $showCategoryForm) {
             CategoryFormSheet(
                 newCategory: $newCategory,
@@ -109,91 +86,129 @@ struct ManageView: View {
 
     // MARK: - Sections
     @ViewBuilder private var categorySection: some View {
-        Section {
-            if categories.isEmpty {
-                Text("No categories yet. Add one below.")
-                    .foregroundColor(Color.appText.opacity(0.6))
-            } else {
-                ForEach(categories) { c in
-                    HStack {
-                        Text(c.emoji ?? "🏷️")
-                        Text(c.name)
-                        Spacer()
-                        Text(c.isIncome ? "+" : "-")
-                            .foregroundColor(Color.appAccent)
-                        Button(role: .destructive) {
-                            context.delete(c)
-                            try? context.save()
-                            renumberCategories()
-                        } label: {
-                            Image(systemName: "trash")
-                        }
-                        .buttonStyle(.borderless)
+        SectionContainer("Categories") {
+            VStack(spacing: 12) {
+                HStack {
+                    Text("Drag to reorder")
+                        .font(.caption)
+                        .foregroundColor(.appText.opacity(0.6))
+                    Spacer()
+                    Button {
+                        showCategoryForm = true
+                        showPaymentForm = false
+                    } label: {
+                        Image(systemName: "plus")
+                            .foregroundColor(.appAccent)
                     }
                 }
-                .onDelete { idx in
-                    for i in idx { context.delete(categories[i]) }
-                    try? context.save()
-                    renumberCategories()
-                }
-                .onMove(perform: moveCategory)
-            }
-        } header: {
-            HStack {
-                Text("Categories (drag to reorder)")
-                Spacer()
-                Button {
-                    showCategoryForm = true
-                    showPaymentForm = false
-                } label: {
-                    Image(systemName: "plus")
+                
+                if categories.isEmpty {
+                    Text("No categories yet. Add one above.")
+                        .foregroundColor(.appText.opacity(0.6))
+                        .padding()
+                } else {
+                    VStack(spacing: 8) {
+                        ForEach(categories) { c in
+                            HStack {
+                                Text(c.emoji ?? "🏷️")
+                                Text(c.name)
+                                    .foregroundColor(.appText)
+                                Spacer()
+                                Text(c.isIncome ? "+" : "-")
+                                    .foregroundColor(.appAccent)
+                                Button(role: .destructive) {
+                                    context.delete(c)
+                                    try? context.save()
+                                    renumberCategories()
+                                } label: {
+                                    Image(systemName: "trash")
+                                        .foregroundColor(.red)
+                                }
+                                .buttonStyle(.borderless)
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
+                        }
+                    }
                 }
             }
         }
     }
 
     @ViewBuilder private var paymentSection: some View {
-        Section {
-            if methods.isEmpty {
-                Text("No payment methods yet. Add one below.")
-                    .foregroundColor(Color.appText.opacity(0.6))
-            } else {
-                ForEach(methods) { m in
-                    HStack {
-                        Text(m.name)
-                        Spacer()
-                        Button(role: .destructive) {
-                            context.delete(m)
-                            try? context.save()
-                            renumberMethods()
-                        } label: {
-                            Image(systemName: "trash")
-                        }
-                        .buttonStyle(.borderless)
+        SectionContainer("Payment Methods") {
+            VStack(spacing: 12) {
+                HStack {
+                    Text("Drag to reorder")
+                        .font(.caption)
+                        .foregroundColor(.appText.opacity(0.6))
+                    Spacer()
+                    Button {
+                        showPaymentForm = true
+                        showCategoryForm = false
+                    } label: {
+                        Image(systemName: "plus")
+                            .foregroundColor(.appAccent)
                     }
                 }
-                .onDelete { idx in
-                    for i in idx { context.delete(methods[i]) }
-                    try? context.save()
-                    renumberMethods()
-                }
-                .onMove(perform: moveMethod)
-            }
-        } header: {
-            HStack {
-                Text("Payment Methods (drag to reorder)")
-                Spacer()
-                Button {
-                    showPaymentForm = true
-                    showCategoryForm = false
-                } label: {
-                    Image(systemName: "plus")
+                
+                if methods.isEmpty {
+                    Text("No payment methods yet. Add one above.")
+                        .foregroundColor(.appText.opacity(0.6))
+                        .padding()
+                } else {
+                    VStack(spacing: 8) {
+                        ForEach(methods) { m in
+                            HStack {
+                                Text(m.name)
+                                    .foregroundColor(.appText)
+                                Spacer()
+                                Button(role: .destructive) {
+                                    context.delete(m)
+                                    try? context.save()
+                                    renumberMethods()
+                                } label: {
+                                    Image(systemName: "trash")
+                                        .foregroundColor(.red)
+                                }
+                                .buttonStyle(.borderless)
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
+                        }
+                    }
                 }
             }
         }
     }
 
-    // MARK: - Add
+    @ViewBuilder private var backgroundSection: some View {
+        SectionContainer("Background") {
+            VStack(spacing: 12) {
+                PhotosPicker(selection: $pickerItem, matching: .images, photoLibrary: .shared()) {
+                    Text("Choose Background")
+                }
+                .appMaterialButton()
+                .onChange(of: pickerItem) { oldValue, newValue in
+                    Task { await loadSelection(newValue) }
+                }
+                .task(id: pickerItem) {
+                    await loadSelection(pickerItem)
+                }
+
+                if store.image != nil {
+                    Button("Remove Background") {
+                        store.setImage(nil)
+                    }
+                    .appMaterialButton(isDestructive: true)
+                }
+            }
+        }
+    }
+
+    // MARK: - Add Functions
     @MainActor
     private func addCategory() {
         dismissKeyboard()
@@ -286,22 +301,6 @@ struct ManageView: View {
 
     // MARK: - Reorder handlers
     @MainActor
-    private func moveCategory(from source: IndexSet, to destination: Int) {
-        var reordered = categories
-        reordered.move(fromOffsets: source, toOffset: destination)
-        for (idx, cat) in reordered.enumerated() { cat.sortIndex = idx }
-        try? context.save()
-    }
-
-    @MainActor
-    private func moveMethod(from source: IndexSet, to destination: Int) {
-        var reordered = methods
-        reordered.move(fromOffsets: source, toOffset: destination)
-        for (idx, m) in reordered.enumerated() { m.sortIndex = idx }
-        try? context.save()
-    }
-
-    @MainActor
     private func renumberCategories() {
         for (idx, c) in categories.enumerated() { c.sortIndex = idx }
         try? context.save()
@@ -341,6 +340,7 @@ struct ManageView: View {
     }
 }
 
+// Form sheets with consistent button styling
 private struct CategoryFormSheet: View {
     @Binding var newCategory: String
     @Binding var newCategoryEmoji: String
@@ -365,7 +365,7 @@ private struct CategoryFormSheet: View {
                 onDone: { },
                 autocapitalization: .words
             )
-            .appTextField()
+            .materialContainer()
 
             AccessoryTextField(
                 text: $newCategoryEmoji,
@@ -374,7 +374,7 @@ private struct CategoryFormSheet: View {
                 onDone: { },
                 prefersEmoji: true
             )
-            .appTextField()
+            .materialContainer()
 
             Picker("Type", selection: $newCategoryIsIncome) {
                 Text("Expense").tag(false)
@@ -382,12 +382,12 @@ private struct CategoryFormSheet: View {
             }
             .pickerStyle(.segmented)
             .onChange(of: newCategoryIsIncome) { _ in dismissKeyboard() }
-            .appTextField()
+            .materialContainer()
 
-            Button(action: onAdd) {
-                Text("Add Category")
+            Button("Add Category") {
+                onAdd()
             }
-            .buttonStyle(AppButtonStyle())
+            .appMaterialButton()
             .disabled(newCategory.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
         .padding()
@@ -417,17 +417,15 @@ private struct PaymentFormSheet: View {
                 onDone: { },
                 autocapitalization: .words
             )
-            .appTextField()
+            .materialContainer()
 
-            Button(action: onAdd) {
-                Text("Add Payment Type")
+            Button("Add Payment Type") {
+                onAdd()
             }
-            .buttonStyle(AppButtonStyle())
+            .appMaterialButton()
             .disabled(newPayment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
         .padding()
         .background(Color.clear)
     }
 }
-
-

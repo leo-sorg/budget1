@@ -9,86 +9,81 @@ struct HistoryView: View {
     private var txs: [Transaction]
 
     var body: some View {
-        NavigationStack {
+        if txs.isEmpty {
+            // Show empty state without List wrapper to avoid black background
+            VStack(alignment: .leading, spacing: 8) {
+                Text("No transactions yet")
+                    .font(.headline)
+                    .foregroundColor(.appText)
+                Text("Add one in the Input tab. It will appear here.")
+                    .foregroundColor(Color.appText.opacity(0.6))
+            }
+            .padding()
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            .background(Color.clear)
+        } else {
             List {
-                if txs.isEmpty {
-                    Section {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("No transactions yet")
-                                .font(.headline)
-                            Text("Add one in the Input tab. It will appear here.")
-                                .foregroundColor(Color.appText.opacity(0.6))
+                // Monthly total section (current month)
+                Section("This month") {
+                    Group {
+                        HStack {
+                            Text("Income")
+                            Spacer()
+                            Text(incomeThisMonth as NSNumber, formatter: currencyFormatter)
                         }
-                        .padding(.vertical, 8)
+                        HStack {
+                            Text("Expenses")
+                            Spacer()
+                            Text(expensesThisMonth as NSNumber, formatter: currencyFormatter)
+                        }
+                        HStack {
+                            Text("Net")
+                            Spacer()
+                            Text(netThisMonth as NSNumber, formatter: currencyFormatter)
+                                .fontWeight(.semibold)
+                        }
                     }
-                } else {
-                    // Monthly total section (current month)
-                    Section("This month") {
-                        Group {
+                    .padding(12)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                }
+
+                // All transactions
+                Section("All transactions") {
+                    ForEach(txs) { tx in
+                        VStack(alignment: .leading, spacing: 4) {
                             HStack {
-                                Text("Income")
+                                Text(tx.category?.emoji ?? "💸")
+                                Text(tx.category?.name ?? "Uncategorized")
+                                    .fontWeight(.medium)
                                 Spacer()
-                                Text(incomeThisMonth as NSNumber, formatter: currencyFormatter)
+                                Text(tx.amount as NSNumber, formatter: currencyFormatter)
                             }
-                            HStack {
-                                Text("Expenses")
-                                Spacer()
-                                Text(expensesThisMonth as NSNumber, formatter: currencyFormatter)
+                            .font(.body)
+
+                            HStack(spacing: 8) {
+                                Text(dateFormatter.string(from: tx.date))
+                                if let pm = tx.paymentMethod?.name {
+                                    Text("• \(pm)")
+                                }
+                                if let note = tx.note, !note.isEmpty {
+                                    Text("• \(note)")
+                                }
                             }
-                            HStack {
-                                Text("Net")
-                                Spacer()
-                                Text(netThisMonth as NSNumber, formatter: currencyFormatter)
-                                    .fontWeight(.semibold)
-                            }
+                            .foregroundColor(Color.appText.opacity(0.6))
+                            .font(.caption)
                         }
                         .padding(12)
                         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
                     }
-
-                    // All transactions
-                    Section("All transactions") {
-                        ForEach(txs) { tx in
-                            VStack(alignment: .leading, spacing: 4) {
-                                HStack {
-                                    Text(tx.category?.emoji ?? "💸")
-                                    Text(tx.category?.name ?? "Uncategorized")
-                                        .fontWeight(.medium)
-                                    Spacer()
-                                    Text(tx.amount as NSNumber, formatter: currencyFormatter)
-                                }
-                                .font(.body)
-
-                                HStack(spacing: 8) {
-                                    Text(dateFormatter.string(from: tx.date))
-                                    if let pm = tx.paymentMethod?.name {
-                                        Text("• \(pm)")
-                                    }
-                                    if let note = tx.note, !note.isEmpty {
-                                        Text("• \(note)")
-                                    }
-                                }
-                                .foregroundColor(Color.appText.opacity(0.6))
-                                .font(.caption)
-                            }
-                            .padding(12)
-                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
-                        }
-                        .onDelete(perform: delete)
-                    }
+                    .onDelete(perform: delete)
                 }
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
             .background(Color.clear)
             .listRowBackground(Color.clear)
-            .navigationTitle("History")
-            .toolbar { EditButton() } // enables swipe-to-delete / Edit
+            .listSectionSeparator(.hidden)
         }
-        .background(Color.clear)
-        .foregroundColor(.appText)
-        .tint(.appAccent)
-        .navigationBarTitleDisplayMode(.inline)
     }
 
     // MARK: - Helpers
@@ -121,8 +116,6 @@ struct HistoryView: View {
     private var currencyFormatter: NumberFormatter {
         let f = NumberFormatter()
         f.numberStyle = .currency
-        // If you want BRL explicitly, uncomment:
-        // f.locale = Locale(identifier: "pt_BR")
         return f
     }
 

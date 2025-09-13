@@ -3,31 +3,54 @@ import UIKit
 
 enum AppAppearance {
     static func configure() {
-        // Make all system backgrounds transparent
+        // Make ALL system backgrounds completely transparent
+        UIView.appearance().backgroundColor = .clear
         UITableView.appearance().backgroundColor = .clear
         UITableViewCell.appearance().backgroundColor = .clear
         UICollectionView.appearance().backgroundColor = .clear
         UIScrollView.appearance().backgroundColor = .clear
         
-        // Navigation bar transparency
+        // Navigation transparency
         let nav = UINavigationBar.appearance()
         nav.setBackgroundImage(UIImage(), for: .default)
         nav.shadowImage = UIImage()
         nav.isTranslucent = true
         nav.backgroundColor = .clear
         
-        // Tab bar transparency (if you were using UITabBar)
-        let tabBar = UITabBar.appearance()
-        tabBar.backgroundColor = .clear
-        tabBar.barTintColor = .clear
+        // Form/List specific transparency
+        UITableView.appearance().separatorStyle = .none
+        UITableView.appearance().allowsSelection = true
         
-        // Make sure Form/List backgrounds are transparent
-        UITableView.appearance(whenContainedInInstancesOf: [UINavigationController.self]).backgroundColor = .clear
+        // SECTION HEADERS - Fix the black section backgrounds
+        UITableViewHeaderFooterView.appearance().backgroundColor = .clear
+        UITableViewHeaderFooterView.appearance().tintColor = .clear
         
-        // Window background
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let window = windowScene.windows.first {
-            window.backgroundColor = .clear
+        // PICKER BACKGROUNDS - Fix the black backgrounds
+        UISegmentedControl.appearance().backgroundColor = .clear
+        UISegmentedControl.appearance().selectedSegmentTintColor = UIColor(Color.appAccent)
+        
+        // Date picker backgrounds
+        UIDatePicker.appearance().backgroundColor = .clear
+        
+        // Text field backgrounds (for your custom text fields)
+        UITextField.appearance().backgroundColor = .clear
+        
+        // Toolbar backgrounds (for your keyboard toolbars)
+        UIToolbar.appearance().backgroundColor = .clear
+        UIToolbar.appearance().barTintColor = .clear
+        UIToolbar.appearance().isTranslucent = true
+        
+        // Make sure window backgrounds are clear
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+                for window in windowScene.windows {
+                    window.backgroundColor = UIColor.clear
+                    window.isOpaque = false
+                    if let rootVC = window.rootViewController {
+                        rootVC.view.backgroundColor = UIColor.clear
+                    }
+                }
+            }
         }
     }
 }

@@ -7,17 +7,21 @@ struct RootSwitcherView: View {
         ZStack {
             if showSplash {
                 SplashView()
+                    .transition(.opacity)
             } else {
                 HomeTabView()
+                    .transition(.opacity)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .animation(.easeInOut(duration: 0.3), value: showSplash)
         .background(Color.clear)
+        .animation(.easeInOut(duration: 0.3), value: showSplash)
         .task {
             // Simulate small load, then switch to Home
             try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
-            showSplash = false
+            withAnimation {
+                showSplash = false
+            }
         }
     }
 }
@@ -34,7 +38,8 @@ struct SplashView: View {
             }
             .foregroundColor(.appText)
         }
-        .ignoresSafeArea()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.clear)
+        .ignoresSafeArea(.all)
     }
 }
