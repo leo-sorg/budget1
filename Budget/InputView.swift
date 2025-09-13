@@ -139,45 +139,7 @@ struct AccessoryTextField: UIViewRepresentable {
     }
 }
 
-// MARK: - Chip views
-struct PaymentChipView: View {
-    let paymentMethod: PaymentMethod
-    let isSelected: Bool
-    let onTap: () -> Void
-    
-    var body: some View {
-        Button(action: onTap) {
-            Text(paymentMethod.name)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-                .foregroundColor(isSelected ? Color.appAccent : Color.appText)
-        }
-        .background(isSelected ? Color.appAccent.opacity(0.2) : Color.clear)
-        .background(.ultraThinMaterial, in: Capsule())
-        .clipShape(Capsule())
-        .buttonStyle(PlainButtonStyle())
-    }
-}
-
-struct CategoryChipView: View {
-    let category: Category
-    let isSelected: Bool
-    let onTap: () -> Void
-    
-    var body: some View {
-        Button(action: onTap) {
-            Text("\(category.emoji ?? "") \(category.name)")
-                .font(.body)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-                .foregroundColor(isSelected ? Color.appAccent : Color.appText)
-        }
-        .background(isSelected ? Color.appAccent.opacity(0.3) : Color.clear)
-        .background(.ultraThinMaterial, in: Capsule())
-        .clipShape(Capsule())
-        .buttonStyle(PlainButtonStyle())
-    }
-}
+// NO CHIP VIEW DEFINITIONS HERE AT ALL - ALL CHIP VIEWS ARE IN ChipScrollStyles.swift
 
 // MARK: - Main InputView
 @MainActor
@@ -267,8 +229,9 @@ struct InputView: View {
                 }
                 .appMaterialButton()
             } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
+                Color.clear
+                    .frame(height: 50)
+                    .singleRowChipScroll {
                         ForEach(paymentMethods) { pm in
                             PaymentChipView(
                                 paymentMethod: pm,
@@ -282,13 +245,6 @@ struct InputView: View {
                             )
                         }
                     }
-                    .padding(.horizontal, 0)
-                }
-                .padding(.horizontal, -16)
-                .padding(.leading, 16)
-                .padding(.trailing, 16) // Add right padding for scroll end alignment
-                .scrollContentBackground(.hidden)
-                .scrollClipDisabled()
             }
         }
     }
@@ -305,10 +261,10 @@ struct InputView: View {
                 }
                 .appMaterialButton()
             } else {
-                // Single ScrollView containing both rows so they scroll together
-                ScrollView(.horizontal, showsIndicators: false) {
-                    VStack(spacing: 8) {
-                        HStack(spacing: 8) {
+                Color.clear
+                    .frame(height: categories.count > 1 ? 100 : 50)
+                    .doubleRowChipScroll(
+                        firstRow: {
                             ForEach(Array(stride(from: 0, to: categories.count, by: 2)), id: \.self) { index in
                                 CategoryChipView(
                                     category: categories[index],
@@ -321,11 +277,9 @@ struct InputView: View {
                                     }
                                 )
                             }
-                            Spacer(minLength: 0) // Push to left
-                        }
-                        
-                        if categories.count > 1 {
-                            HStack(spacing: 8) {
+                        },
+                        secondRow: {
+                            if categories.count > 1 {
                                 ForEach(Array(stride(from: 1, to: categories.count, by: 2)), id: \.self) { index in
                                     CategoryChipView(
                                         category: categories[index],
@@ -338,17 +292,11 @@ struct InputView: View {
                                         }
                                     )
                                 }
-                                Spacer(minLength: 0) // Push to left
+                            } else {
+                                EmptyView()
                             }
                         }
-                    }
-                    .padding(.horizontal, 0)
-                }
-                .padding(.horizontal, -16)
-                .padding(.leading, 16)
-                .padding(.trailing, 16) // Add right padding for scroll end alignment
-                .scrollContentBackground(.hidden)
-                .scrollClipDisabled()
+                    )
             }
         }
     }

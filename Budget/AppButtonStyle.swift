@@ -11,15 +11,34 @@ struct AppButtonStyle: ButtonStyle {
 
         var body: some View {
             configuration.label
-                .fontWeight(.semibold)
-                .foregroundColor(isEnabled ? .appAccent : Color.appText.opacity(0.5))
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundColor(isEnabled ? Color.white : Color.appText.opacity(0.5))
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
+                .padding(.vertical, 16)
                 .background(
-                    Capsule()
-                        .fill(Color.appTabBar)
+                    ZStack {
+                        // Base glass layer
+                        Capsule()
+                            .fill(.thinMaterial)
+                        
+                        // White overlay for glow effect
+                        Capsule()
+                            .fill(Color.white.opacity(isEnabled ? 0.3 : 0.1))
+                        
+                        // Subtle border
+                        Capsule()
+                            .stroke(Color.white.opacity(0.3), lineWidth: 0.5)
+                    }
                 )
-                .opacity(isEnabled ? (configuration.isPressed ? 0.8 : 1.0) : 0.5)
+                .shadow(
+                    color: Color.white.opacity(isEnabled ? 0.2 : 0.1),
+                    radius: configuration.isPressed ? 4 : 8,
+                    x: 0,
+                    y: configuration.isPressed ? 2 : 4
+                )
+                .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+                .opacity(isEnabled ? (configuration.isPressed ? 0.9 : 1.0) : 0.5)
+                .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
         }
     }
 }
