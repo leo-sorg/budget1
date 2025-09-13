@@ -35,11 +35,11 @@ struct BudgetApp: App {
     var body: some Scene {
         WindowGroup {
             ZStack {
-                WindowBackgroundView()     // base layer
-                RootSwitcherView()         // your app
+                WindowBackgroundView()      // base layer
+                RootSwitcherView()          // app content
                     .background(Color.clear)
             }
-            .environmentObject(bgStore)    // inject once
+            .environmentObject(bgStore)
             .preferredColorScheme(.dark)
             .tint(.appAccent)
         }
