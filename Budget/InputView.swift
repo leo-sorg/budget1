@@ -12,24 +12,46 @@ struct InputView: View {
     @State private var selectedCategory: Category?
     @State private var selectedMethod: PaymentMethod?
     @State private var descriptionText = ""
+    @State private var showDatePicker = false
     @State private var showSavedToast = false
     @State private var alertMessage: String?
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                valueSection
-                descriptionSection
-                paymentTypeSection
-                categorySection
-                dateSection
-                saveSection
+        VStack(spacing: 0) {
+            // More spacing at top, then date section
+            Spacer()
+                .frame(height: 40)
+            
+            // Date at the top
+            topDateSection
+            
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Add tiny spacing between date and payment type
+                    Spacer()
+                        .frame(height: 0.1)
+                    
+                    // 1. Payment Type section
+                    paymentTypeSection
+                    
+                    // 2. Category section
+                    categorySection
+                    
+                    // 3. Value section
+                    valueSection
+                    
+                    // Description section
+                    descriptionSection
+                    
+                    // Save button
+                    saveSection
+                }
+                .padding()
             }
-            .padding()
+            .scrollContentBackground(.hidden)
+            .background(Color.clear)
+            .scrollDismissesKeyboard(.interactively)
         }
-        .scrollContentBackground(.hidden)
-        .background(Color.clear)
-        .scrollDismissesKeyboard(.interactively)
         .overlay(alignment: .top) { toastOverlay }
         .animation(.default, value: showSavedToast)
         .alert("Oops", isPresented: alertBinding) {
@@ -44,28 +66,43 @@ struct InputView: View {
         }
     }
     
-    // MARK: - Section Views
-    @ViewBuilder private var valueSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Value")
-                .font(.headline)
-                .foregroundColor(.appText)
+    // MARK: - Date Section with inline calendar
+    @ViewBuilder private var topDateSection: some View {
+        VStack(spacing: 16) {
+            // Date header with dropdown arrow
+            Button(action: {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    showDatePicker.toggle()
+                }
+                dismissKeyboard()
+            }) {
+                HStack(spacing: 8) {
+                    Text(formatFullDate(date))
+                        .font(.headline)
+                        .foregroundColor(.appText)
+                    
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.appText.opacity(0.7))
+                        .rotationEffect(.degrees(showDatePicker ? 180 : 0))
+                        .animation(.easeInOut(duration: 0.2), value: showDatePicker)
+                }
+            }
+            .buttonStyle(PlainButtonStyle())
             
-            CurrencyTextField(text: $amountText, placeholder: "R$ 0,00")
+            // Calendar appears directly here when showDatePicker is true
+            if showDatePicker {
+                CalendarView(selectedDate: $date)
+                    .transition(.asymmetric(
+                        insertion: .opacity.combined(with: .scale(scale: 0.9)),
+                        removal: .opacity.combined(with: .scale(scale: 0.9))
+                    ))
+            }
         }
+        .padding(.horizontal, 16)
     }
     
-    @ViewBuilder private var descriptionSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Description")
-                .font(.headline)
-                .foregroundColor(.appText)
-            
-            TextField("Optional description", text: $descriptionText)
-                .textFieldStyle(GlassTextFieldStyle())
-        }
-    }
-    
+    // MARK: - Rest of the sections
     @ViewBuilder private var paymentTypeSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Payment Type")
@@ -150,13 +187,24 @@ struct InputView: View {
         }
     }
     
-    @ViewBuilder private var dateSection: some View {
+    @ViewBuilder private var valueSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Date")
+            Text("Value")
                 .font(.headline)
                 .foregroundColor(.appText)
             
-            GlassDatePicker(selection: $date)
+            CurrencyTextField(text: $amountText, placeholder: "R$ 0,00")
+        }
+    }
+    
+    @ViewBuilder private var descriptionSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Description")
+                .font(.headline)
+                .foregroundColor(.appText)
+            
+            TextField("Optional description", text: $descriptionText)
+                .textFieldStyle(GlassTextFieldStyle())
         }
     }
     
@@ -176,7 +224,7 @@ struct InputView: View {
                 .padding(.vertical, 8)
                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
                 .foregroundColor(Color.appText)
-                .padding(.top)
+                .padding(.top, 60)
                 .transition(.move(edge: .top).combined(with: .opacity))
         }
     }
@@ -188,15 +236,29 @@ struct InputView: View {
         )
     }
 
-    // MARK: - Validation
-    private var canSave: Bool { amountDecimal != nil }
+    // MARK: - Validation and actions
+    private var canSave: Bool {
+        amountDecimal != nil
+    }
     
     private var amountDecimal: Decimal? {
-        let cleanString = amountText.replacingOccurrences(of: "R$", with: "").replacingOccurrences(of: " ", with: "").replacingOccurrences(of: ",", with: ".")
+        var cleanString = amountText
+            .replacingOccurrences(of: "R$", with: "")
+            .replacingOccurrences(of: " ", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        if cleanString.contains(",") {
+            let parts = cleanString.components(separatedBy: ",")
+            if parts.count == 2 {
+                let integerPart = parts[0].replacingOccurrences(of: ".", with: "")
+                let decimalPart = parts[1]
+                cleanString = integerPart + "." + decimalPart
+            }
+        }
+        
         return Decimal(string: cleanString)
     }
 
-    // MARK: - Actions
     private func save() {
         guard let amount = amountDecimal else { return }
 
@@ -228,6 +290,10 @@ struct InputView: View {
             amountText = ""
             descriptionText = ""
             date = Date()
+            selectedCategory = nil
+            selectedMethod = nil
+            showDatePicker = false
+            
             withAnimation { showSavedToast = true }
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                 withAnimation { showSavedToast = false }
@@ -265,5 +331,165 @@ struct InputView: View {
             }
         }
         try? ctx.save()
+    }
+    
+    private func formatFullDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .full
+        formatter.timeStyle = .none
+        return formatter.string(from: date)
+    }
+}
+
+// MARK: - Custom Calendar View
+struct CalendarView: View {
+    @Binding var selectedDate: Date
+    @State private var currentMonth = Date()
+    
+    private let calendar = Calendar.current
+    private let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM yyyy"
+        return formatter
+    }()
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            // Month/Year header
+            HStack {
+                Button(action: {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        currentMonth = calendar.date(byAdding: .month, value: -1, to: currentMonth) ?? currentMonth
+                    }
+                }) {
+                    Image(systemName: "chevron.left")
+                        .foregroundColor(.appText)
+                        .font(.title3.weight(.medium))
+                }
+                
+                Spacer()
+                
+                Text(dateFormatter.string(from: currentMonth))
+                    .font(.headline.weight(.semibold))
+                    .foregroundColor(.appText)
+                
+                Spacer()
+                
+                Button(action: {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        currentMonth = calendar.date(byAdding: .month, value: 1, to: currentMonth) ?? currentMonth
+                    }
+                }) {
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(.appText)
+                        .font(.title3.weight(.medium))
+                }
+            }
+            .padding(.horizontal, 4)
+            
+            // Calendar grid
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
+                // Days of week headers
+                ForEach(["S", "M", "T", "W", "T", "F", "S"], id: \.self) { day in
+                    Text(day)
+                        .font(.caption.weight(.medium))
+                        .foregroundColor(.appText.opacity(0.6))
+                        .frame(height: 20)
+                }
+                
+                // Calendar days
+                ForEach(calendarDays, id: \.self) { date in
+                    if let date = date {
+                        Button(action: {
+                            selectedDate = date
+                        }) {
+                            Text("\(calendar.component(.day, from: date))")
+                                .font(.system(size: 16, weight: calendar.isDate(date, inSameDayAs: selectedDate) ? .bold : .regular))
+                                .foregroundColor(
+                                    calendar.isDate(date, inSameDayAs: selectedDate) ? .black :
+                                    calendar.isDate(date, equalTo: currentMonth, toGranularity: .month) ? .appText : .appText.opacity(0.3)
+                                )
+                                .frame(width: 36, height: 36)
+                                .background(
+                                    Circle()
+                                        .fill(calendar.isDate(date, inSameDayAs: selectedDate) ? Color.appAccent : Color.clear)
+                                )
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    } else {
+                        Color.clear
+                            .frame(width: 36, height: 36)
+                    }
+                }
+            }
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.clear)
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(.ultraThinMaterial)
+                        .opacity(0.5)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color.white.opacity(0.25),
+                                    Color.white.opacity(0.15),
+                                    Color.white.opacity(0.15)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .opacity(0.6)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(
+                            LinearGradient(
+                                colors: [
+                                    Color.white.opacity(0.6),
+                                    Color.white.opacity(0.2),
+                                    Color.white.opacity(0.4)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1
+                        )
+                        .opacity(0.7)
+                )
+        )
+        .onAppear {
+            currentMonth = selectedDate
+        }
+    }
+    
+    private var calendarDays: [Date?] {
+        guard let monthInterval = calendar.dateInterval(of: .month, for: currentMonth) else { return [] }
+        
+        let firstOfMonth = monthInterval.start
+        let firstWeekday = calendar.component(.weekday, from: firstOfMonth)
+        let daysInMonth = calendar.range(of: .day, in: .month, for: currentMonth)?.count ?? 0
+        
+        var days: [Date?] = []
+        
+        // Add empty slots for days before the first day of the month
+        for _ in 1..<firstWeekday {
+            days.append(nil)
+        }
+        
+        // Add all days of the current month
+        for day in 1...daysInMonth {
+            if let date = calendar.date(byAdding: .day, value: day - 1, to: firstOfMonth) {
+                days.append(date)
+            }
+        }
+        
+        return days
     }
 }
