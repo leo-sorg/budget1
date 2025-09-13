@@ -1,5 +1,7 @@
 import SwiftUI
 
+import SwiftUI
+
 // MARK: - Shared Glass Background Component for Text Fields
 private struct GlassTextFieldBackground: View {
     let isFocused: Bool
@@ -72,12 +74,61 @@ struct GlassTextFieldStyle: TextFieldStyle {
     }
 }
 
-// MARK: - Currency Text Field with Proper Formatting
+// MARK: - Custom Glass Text Field with Focus Callback
+struct GlassTextFieldWithCallback: View {
+    @Binding var text: String
+    let placeholder: String
+    let onFocusChange: (Bool) -> Void
+    @FocusState private var isFocused: Bool
+    
+    var body: some View {
+        TextField(placeholder, text: $text)
+            .focused($isFocused)
+            .foregroundColor(.white)
+            .padding(12)
+            .background(GlassTextFieldBackground(isFocused: isFocused))
+            .onChange(of: isFocused) { _, newValue in
+                onFocusChange(newValue)
+            }
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Button("Cancel") {
+                        isFocused = false
+                        hideKeyboard()
+                    }
+                    Spacer()
+                    Button("Done") {
+                        isFocused = false
+                        hideKeyboard()
+                    }
+                }
+            }
+    }
+}
+
+// MARK: - Currency Text Field with Proper Formatting - Updated with Focus Binding
 struct CurrencyTextField: View {
     @Binding var text: String
     let placeholder: String
     @FocusState private var isFocused: Bool
     @State private var displayText: String = ""
+    
+    // Callback to notify parent about focus changes
+    let onFocusChange: ((Bool) -> Void)?
+    
+    // NEW: Initializer that accepts focus change callback
+    init(text: Binding<String>, placeholder: String, onFocusChange: @escaping (Bool) -> Void) {
+        self._text = text
+        self.placeholder = placeholder
+        self.onFocusChange = onFocusChange
+    }
+    
+    // LEGACY: Initializer for backward compatibility (without focus tracking)
+    init(text: Binding<String>, placeholder: String) {
+        self._text = text
+        self.placeholder = placeholder
+        self.onFocusChange = nil
+    }
     
     var body: some View {
         TextField(placeholder, text: $displayText)
@@ -93,6 +144,9 @@ struct CurrencyTextField: View {
                 if newValue.isEmpty {
                     displayText = ""
                 }
+            }
+            .onChange(of: isFocused) { _, newValue in
+                onFocusChange?(newValue)
             }
             .onAppear {
                 displayText = text

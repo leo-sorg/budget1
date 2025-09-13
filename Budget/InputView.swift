@@ -15,6 +15,18 @@ struct InputView: View {
     @State private var showDatePicker = false
     @State private var showSavedToast = false
     @State private var alertMessage: String?
+    
+    // Add focus state for auto-scroll
+    @State private var isAmountFieldFocused: Bool = false
+    @State private var isDescriptionFieldFocused: Bool = false
+    @State private var scrollOffset: CGFloat = 0
+    
+    // Track focus changes to handle direct switching
+    @State private var focusedField: String? = nil {
+        didSet {
+            handleFieldSwitch(from: oldValue, to: focusedField)
+        }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -40,13 +52,29 @@ struct InputView: View {
                     // 3. Value section
                     valueSection
                     
-                    // Description section
-                    descriptionSection
+                    // 4. Description section
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Description")
+                            .font(.headline)
+                            .foregroundColor(.appText)
+                        
+                        GlassTextFieldWithCallback(
+                            text: $descriptionText,
+                            placeholder: "Optional description"
+                        ) { isFocused in
+                            isDescriptionFieldFocused = isFocused
+                        }
+                    }
                     
                     // Save button
                     saveSection
+                    
+                    // Extra padding at bottom
+                    Spacer()
+                        .frame(height: 300)
                 }
                 .padding()
+                .offset(y: scrollOffset)
             }
             .scrollContentBackground(.hidden)
             .background(Color.clear)
@@ -54,6 +82,12 @@ struct InputView: View {
         }
         .overlay(alignment: .top) { toastOverlay }
         .animation(.default, value: showSavedToast)
+        .onChange(of: isAmountFieldFocused) { _, isFocused in
+            focusedField = isFocused ? "value" : (isDescriptionFieldFocused ? "description" : nil)
+        }
+        .onChange(of: isDescriptionFieldFocused) { _, isFocused in
+            focusedField = isFocused ? "description" : (isAmountFieldFocused ? "value" : nil)
+        }
         .alert("Oops", isPresented: alertBinding) {
             Button("OK") { alertMessage = nil }
         } message: {
@@ -63,6 +97,30 @@ struct InputView: View {
             categories = (try? ctx.fetch(FetchDescriptor<Category>(sortBy: [SortDescriptor(\.name)]))) ?? []
             paymentMethods = (try? ctx.fetch(FetchDescriptor<PaymentMethod>(sortBy: [SortDescriptor(\.name)]))) ?? []
             if categories.isEmpty || paymentMethods.isEmpty { seedDefaults() }
+        }
+    }
+    
+    private func handleFieldSwitch(from: String?, to: String?) {
+        withAnimation(.easeInOut(duration: 0.3)) {
+            switch (from, to) {
+            case (nil, "value"):
+                // First time focusing value field
+                scrollOffset = -180
+            case (nil, "description"):
+                // First time focusing description field
+                scrollOffset = -225
+            case ("value", "description"):
+                // Switching from value to description - scroll up 45 more points
+                scrollOffset = -225
+            case ("description", "value"):
+                // Switching from description to value - scroll down 45 points
+                scrollOffset = -180
+            case (_, nil):
+                // Any field to no field - return to normal
+                scrollOffset = 0
+            default:
+                break
+            }
         }
     }
     
@@ -193,18 +251,13 @@ struct InputView: View {
                 .font(.headline)
                 .foregroundColor(.appText)
             
-            CurrencyTextField(text: $amountText, placeholder: "R$ 0,00")
-        }
-    }
-    
-    @ViewBuilder private var descriptionSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Description")
-                .font(.headline)
-                .foregroundColor(.appText)
-            
-            TextField("Optional description", text: $descriptionText)
-                .textFieldStyle(GlassTextFieldStyle())
+            // Updated CurrencyTextField with focus callback
+            CurrencyTextField(
+                text: $amountText,
+                placeholder: "R$ 0,00"
+            ) { isFocused in
+                isAmountFieldFocused = isFocused
+            }
         }
     }
     
