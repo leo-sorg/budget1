@@ -37,11 +37,13 @@ struct InputView: View {
             // Date at the top
             topDateSection
             
+            // Add similar spacing at bottom of date section
+            Spacer()
+                .frame(height: 40)
+            
             ScrollView {
                 VStack(spacing: 24) {
-                    // Add tiny spacing between date and payment type
-                    Spacer()
-                        .frame(height: 0.1)
+
                     
                     // 1. Payment Type section
                     paymentTypeSection
@@ -105,16 +107,16 @@ struct InputView: View {
             switch (from, to) {
             case (nil, "value"):
                 // First time focusing value field
-                scrollOffset = -180
+                scrollOffset = -190
             case (nil, "description"):
                 // First time focusing description field
-                scrollOffset = -225
+                scrollOffset = -235
             case ("value", "description"):
                 // Switching from value to description - scroll up 45 more points
-                scrollOffset = -225
+                scrollOffset = -235
             case ("description", "value"):
                 // Switching from description to value - scroll down 45 points
-                scrollOffset = -180
+                scrollOffset = -190
             case (_, nil):
                 // Any field to no field - return to normal
                 scrollOffset = 0
