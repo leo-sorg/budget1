@@ -108,5 +108,6 @@ struct HomeTabView: View {
             tabBar
         }
         .ignoresSafeArea(.all, edges: .bottom)
+        .background(Color.clear)
     }
 }
