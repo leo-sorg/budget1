@@ -5,23 +5,15 @@ struct AppBackgroundView: View {
 
     var body: some View {
         Group {
-            if let image = store.image {
-                Image(uiImage: image)
+            if let ui = store.image {
+                Image(uiImage: ui)
                     .resizable()
                     .scaledToFill()
             } else {
                 Color.appBackground
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .clipped()
         .ignoresSafeArea()
         .allowsHitTesting(false)
-    }
-}
-
-extension View {
-    func appBackground() -> some View {
-        background(AppBackgroundView())
     }
 }
