@@ -193,21 +193,21 @@ struct InputView: View {
         NavigationStack {
             formContent
                 .navigationTitle("Input")
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            showingImagePicker = true
+                        } label: {
+                            Image(systemName: "plus")
+                        }
+                    }
+                }
         }
         .appBackground()
         .foregroundColor(.appText)
         .tint(.appAccent)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(Color.appBackground, for: .navigationBar)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    showingImagePicker = true
-                } label: {
-                    Image(systemName: "plus")
-                }
-            }
-        }
         .photosPicker(isPresented: $showingImagePicker, selection: $photoItem, matching: .images)
         .onChange(of: photoItem) { newItem in
             Task {
