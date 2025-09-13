@@ -9,6 +9,8 @@ let SHEETS = SheetsClient(
 
 @main
 struct BudgetApp: App {
+    @AppStorage("backgroundImageData") private var backgroundImageData: Data?
+
     init() {
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
@@ -26,10 +28,21 @@ struct BudgetApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootSwitcherView()
-                .background(Color.black.ignoresSafeArea())
-                .preferredColorScheme(.dark)
-                .tint(.appAccent)
+            ZStack {
+                if let data = backgroundImageData,
+                   let uiImage = UIImage(data: data) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFill()
+                        .ignoresSafeArea()
+                } else {
+                    Color.black.ignoresSafeArea()
+                }
+
+                RootSwitcherView()
+            }
+            .preferredColorScheme(.dark)
+            .tint(.appAccent)
         }
         .modelContainer(for: [Transaction.self, Category.self, PaymentMethod.self])
     }

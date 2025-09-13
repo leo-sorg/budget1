@@ -170,7 +170,7 @@ struct InputView: View {
     @State private var alertMessage: String?
 
     @State private var selectedItem: PhotosPickerItem?
-    @State private var backgroundImage: Image?
+    @AppStorage("backgroundImageData") private var backgroundImageData: Data?
 
     private let chipHeight: CGFloat = 40
 
@@ -186,22 +186,12 @@ struct InputView: View {
                     }
                 }
         }
-        .background {
-            if let backgroundImage {
-                backgroundImage
-                    .resizable()
-                    .scaledToFill()
-                    .ignoresSafeArea()
-            } else {
-                Color.black.ignoresSafeArea()
-            }
-        }
+        .background(Color.clear)
         .onChange(of: selectedItem) { newItem in
             if let newItem {
                 Task {
-                    if let data = try? await newItem.loadTransferable(type: Data.self),
-                       let uiImage = UIImage(data: data) {
-                        backgroundImage = Image(uiImage: uiImage)
+                    if let data = try? await newItem.loadTransferable(type: Data.self) {
+                        backgroundImageData = data
                     }
                 }
             }
