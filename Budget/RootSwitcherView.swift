@@ -23,7 +23,6 @@ struct RootSwitcherView: View {
 struct SplashView: View {
     var body: some View {
         ZStack {
-            Color.appBackground.ignoresSafeArea()
             VStack(spacing: 12) {
                 Image(systemName: "creditcard.fill")
                     .font(.system(size: 56, weight: .bold))
@@ -33,5 +32,6 @@ struct SplashView: View {
             }
             .foregroundColor(.appText)
         }
+        .ignoresSafeArea()
     }
 }
