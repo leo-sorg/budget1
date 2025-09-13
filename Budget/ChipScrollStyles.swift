@@ -1,5 +1,51 @@
 import SwiftUI
 
+// MARK: - Shared Glass Background Component
+private struct GlassChipBackground: View {
+    let isSelected: Bool
+    
+    var body: some View {
+        RoundedRectangle(cornerRadius: 20)
+            .fill(.clear)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(.ultraThinMaterial)
+                    .opacity(0.5)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(isSelected ? 0.35 : 0.25),
+                                Color.white.opacity(isSelected ? 0.15 : 0.05),
+                                Color.white.opacity(isSelected ? 0.25 : 0.15)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .opacity(isSelected ? 1.0 : 0.6)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(isSelected ? 0.7 : 0.6),
+                                Color.white.opacity(isSelected ? 0.3 : 0.2),
+                                Color.white.opacity(isSelected ? 0.5 : 0.4)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
+                    .opacity(isSelected ? 1.0 : 0.7)
+            )
+    }
+}
+
 // MARK: - iOS 18 Style Liquid Glass Chips
 struct PaymentChipView: View {
     let paymentMethod: PaymentMethod
@@ -14,47 +60,7 @@ struct PaymentChipView: View {
                 .padding(.horizontal, 20)
                 .padding(.vertical, 12)
         }
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(.clear)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20)
-                        .fill(.ultraThinMaterial)
-                        .opacity(0.1)
-                        .blur(radius: 1)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20)
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    Color.white.opacity(0.25),
-                                    Color.white.opacity(0.05),
-                                    Color.white.opacity(0.15)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .opacity(isSelected ? 1.0 : 0.6)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(
-                            LinearGradient(
-                                colors: [
-                                    Color.white.opacity(0.6),
-                                    Color.white.opacity(0.2),
-                                    Color.white.opacity(0.4)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 1
-                        )
-                        .opacity(isSelected ? 1.0 : 0.7)
-                )
-        )
+        .background(GlassChipBackground(isSelected: isSelected))
         .buttonStyle(PlainButtonStyle())
     }
 }
@@ -72,47 +78,7 @@ struct CategoryChipView: View {
                 .padding(.horizontal, 20)
                 .padding(.vertical, 12)
         }
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(.clear)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20)
-                        .fill(.ultraThinMaterial)
-                        .opacity(0.1)
-                        .blur(radius: 1)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20)
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    Color.white.opacity(0.25),
-                                    Color.white.opacity(0.05),
-                                    Color.white.opacity(0.15)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .opacity(isSelected ? 1.0 : 0.6)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(
-                            LinearGradient(
-                                colors: [
-                                    Color.white.opacity(0.6),
-                                    Color.white.opacity(0.2),
-                                    Color.white.opacity(0.4)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 1
-                        )
-                        .opacity(isSelected ? 1.0 : 0.7)
-                )
-        )
+        .background(GlassChipBackground(isSelected: isSelected))
         .buttonStyle(PlainButtonStyle())
     }
 }
