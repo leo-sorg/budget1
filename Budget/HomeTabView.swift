@@ -123,5 +123,6 @@ struct HomeTabView: View {
             }
             .allowsHitTesting(true)
         }
+        .background(Color.clear)
     }
 }

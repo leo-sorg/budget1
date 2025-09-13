@@ -24,11 +24,7 @@ struct BackgroundAddButton: View {
         .task(id: pickerItem) {
             await loadSelection(pickerItem)
         }
-    }
-
-    @MainActor
-    private func setBackground(_ ui: UIImage?) {
-        store.setImage(ui)
+        .background(Color.clear)
     }
 
     private func loadSelection(_ item: PhotosPickerItem?) async {
@@ -36,7 +32,7 @@ struct BackgroundAddButton: View {
         do {
             if let data = try await item.loadTransferable(type: Data.self),
                let ui   = UIImage(data: data) {
-                await MainActor.run { setBackground(ui) }
+                await MainActor.run { store.setImage(ui) }
             }
         } catch {
             // ignore failures

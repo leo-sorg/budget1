@@ -14,7 +14,7 @@ struct WindowBackgroundView: View {
                         .frame(width: size.width, height: size.height)
                         .clipped()
                 } else {
-                    Color.black  // fallback
+                    Color.black
                 }
             }
             .frame(width: size.width, height: size.height)

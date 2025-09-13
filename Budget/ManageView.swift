@@ -324,17 +324,12 @@ struct ManageView: View {
     }
 
     // MARK: - Helpers
-    @MainActor
-    private func setBackground(_ ui: UIImage?) {
-        store.setImage(ui)
-    }
-
     private func loadSelection(_ item: PhotosPickerItem?) async {
         guard let item else { return }
         do {
             if let data = try await item.loadTransferable(type: Data.self),
                let ui = UIImage(data: data) {
-                await MainActor.run { setBackground(ui) }
+                await MainActor.run { store.setImage(ui) }
             }
         } catch {
             // Ignore; keep previous background
@@ -396,6 +391,7 @@ private struct CategoryFormSheet: View {
             .disabled(newCategory.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
         .padding()
+        .background(Color.clear)
     }
 }
 
@@ -430,6 +426,7 @@ private struct PaymentFormSheet: View {
             .disabled(newPayment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
         .padding()
+        .background(Color.clear)
     }
 }
 

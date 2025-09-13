@@ -35,5 +35,6 @@ struct SplashView: View {
             .foregroundColor(.appText)
         }
         .ignoresSafeArea()
+        .background(Color.clear)
     }
 }
