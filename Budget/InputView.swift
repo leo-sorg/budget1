@@ -147,17 +147,9 @@ struct AccessoryTextField: UIViewRepresentable {
 // MARK: - Your main InputView
 @MainActor
 struct InputView: View {
-    @Environment(\.modelContext) private var context
-
-    @Query(sort: [
-        SortDescriptor(\Category.sortIndex, order: .forward),
-        SortDescriptor(\Category.name, order: .forward)
-    ]) private var categories: [Category]
-
-    @Query(sort: [
-        SortDescriptor(\PaymentMethod.sortIndex, order: .forward),
-        SortDescriptor(\PaymentMethod.name, order: .forward)
-    ]) private var methods: [PaymentMethod]
+    @Environment(\.modelContext) private var ctx
+    @State private var categories: [Category] = []
+    @State private var paymentMethods: [PaymentMethod] = []
 
     // Form state
     @State private var amountText = ""   // formatted "R$ 0,00"
@@ -191,6 +183,10 @@ struct InputView: View {
         .foregroundColor(.appText)
         .tint(.appAccent)
         .navigationBarTitleDisplayMode(.inline)
+        .task {
+            categories = (try? ctx.fetch(FetchDescriptor<Category>(sortBy: [SortDescriptor(\.name)]))) ?? []
+            paymentMethods = (try? ctx.fetch(FetchDescriptor<PaymentMethod>(sortBy: [SortDescriptor(\.name)]))) ?? []
+        }
         .sheet(isPresented: $showBackgroundPicker) {
             BackgroundPicker()
         }
@@ -218,7 +214,7 @@ struct InputView: View {
         .background(Color.clear)
         .scrollDismissesKeyboard(.interactively)
         .task {
-            if categories.isEmpty || methods.isEmpty { seedDefaults() }
+            if categories.isEmpty || paymentMethods.isEmpty { seedDefaults() }
         }
         .overlay(alignment: .top) { toastOverlay }
         .animation(.default, value: showSavedToast)
@@ -269,13 +265,13 @@ struct InputView: View {
     }
 
     @ViewBuilder private var paymentSection: some View {
-        if methods.isEmpty {
+        if paymentMethods.isEmpty {
             Button("Add default payment types") { seedDefaults(paymentsOnly: true) }
             .buttonStyle(AppButtonStyle())
         } else {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    ForEach(methods) { pm in
+                    ForEach(paymentMethods) { pm in
                         Text(pm.name)
                             .appChip(isSelected: selectedMethod == pm)
                             .onTapGesture {
@@ -373,8 +369,8 @@ struct InputView: View {
 
         do {
             try withAnimation {
-                context.insert(tx)
-                try context.save()
+                ctx.insert(tx)
+                try ctx.save()
             }
 
             SHEETS.postTransaction(
@@ -416,16 +412,16 @@ struct InputView: View {
             ]
             for (offset, seed) in seeds.enumerated() {
                 let (name, emoji, isIncome) = seed
-                context.insert(Category(name: name, emoji: emoji, sortIndex: base + offset, isIncome: isIncome))
+                ctx.insert(Category(name: name, emoji: emoji, sortIndex: base + offset, isIncome: isIncome))
             }
         }
-        if !categoriesOnly && methods.isEmpty {
-            let base = (methods.map { $0.sortIndex }.max() ?? -1) + 1
+        if !categoriesOnly && paymentMethods.isEmpty {
+            let base = (paymentMethods.map { $0.sortIndex }.max() ?? -1) + 1
             let seeds = ["Credit Card", "Debit Card", "Pix", "Cash"]
             for (offset, name) in seeds.enumerated() {
-                context.insert(PaymentMethod(name: name, sortIndex: base + offset))
+                ctx.insert(PaymentMethod(name: name, sortIndex: base + offset))
             }
         }
-        try? context.save()
+        try? ctx.save()
     }
 }

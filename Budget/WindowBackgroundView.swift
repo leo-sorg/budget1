@@ -18,11 +18,11 @@ struct WindowBackgroundView: View {
                 }
             }
             .frame(width: size.width, height: size.height)
-            .overlay(Color.black.opacity(store.dim))   // optional dim
+            .overlay(Color.black.opacity(store.dim))
             .blur(radius: store.blur)
             .ignoresSafeArea()
         }
-        .allowsHitTesting(false)     // never blocks taps
+        .allowsHitTesting(false)
         .accessibilityHidden(true)
     }
 }

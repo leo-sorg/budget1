@@ -46,7 +46,7 @@ struct ManageView: View {
             .scrollContentBackground(.hidden)
             .background(Color.clear)
             .listRowBackground(Color.clear)
-            .listStyle(.grouped)
+            .listStyle(.plain)
             .scrollDismissesKeyboard(.interactively)
             .navigationTitle("Manage")
             .toolbar {
