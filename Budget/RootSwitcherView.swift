@@ -11,7 +11,6 @@ struct RootSwitcherView: View {
                 HomeTabView()
             }
         }
-        .background(Color.appBackground)
         .animation(.easeInOut(duration: 0.3), value: showSplash)
         .task {
             // Simulate small load, then switch to Home
@@ -33,7 +32,6 @@ struct SplashView: View {
             }
             .foregroundColor(.appText)
         }
-        .background(Color.appBackground)
         .ignoresSafeArea()
     }
 }

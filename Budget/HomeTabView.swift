@@ -20,6 +20,7 @@ struct HomeTabView: View {
     }
 
     @State private var selection: Tab = .input
+    @Namespace private var animation
 
     private var contentView: some View {
         Group {
@@ -31,7 +32,7 @@ struct HomeTabView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.appBackground)
+        .background(Color.clear)
     }
 
     private var tabBar: some View {
@@ -42,7 +43,24 @@ struct HomeTabView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(Color.appBackground)
+        .background(
+            Capsule()
+                .fill(.ultraThinMaterial)
+                .background(
+                    Capsule()
+                        .fill(Color.white.opacity(0.05))
+                )
+                .overlay(
+                    Capsule()
+                        .stroke(
+                            LinearGradient(colors: [Color.white.opacity(0.8), Color.white.opacity(0.1)],
+                                           startPoint: .topLeading,
+                                           endPoint: .bottomTrailing),
+                            lineWidth: 1
+                        )
+                )
+                .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
+        )
         .padding(.horizontal, 16)
         .padding(.bottom, 16)
     }
@@ -61,10 +79,26 @@ struct HomeTabView: View {
                 Text(tab.title)
                     .font(.caption2.bold())
             }
-            .foregroundColor(isSelected ? .appAccent : .appText)
+            .foregroundColor(isSelected ? .black : .gray)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .frame(width: 80, height: 48)
+            .background(
+                ZStack {
+                    if isSelected {
+                        Capsule()
+                            .fill(.ultraThinMaterial)
+                            .overlay(
+                                Capsule()
+                                    .stroke(Color.white.opacity(0.6), lineWidth: 1)
+                                    .blendMode(.overlay)
+                            )
+                            .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+                            .matchedGeometryEffect(id: "TAB", in: animation)
+                    }
+                }
+            )
+            .frame(maxWidth: .infinity)
         }
         .frame(maxWidth: .infinity)
     }
@@ -74,7 +108,6 @@ struct HomeTabView: View {
             contentView
             tabBar
         }
-        .background(Color.appBackground)
         .ignoresSafeArea(.all, edges: .bottom)
     }
 }

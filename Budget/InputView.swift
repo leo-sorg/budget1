@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import UIKit
+import PhotosUI
 
 // MARK: - UIKit-powered money field with a guaranteed inputAccessoryView
 struct MoneyTextField: UIViewRepresentable {
@@ -57,7 +58,7 @@ struct MoneyTextField: UIViewRepresentable {
         let flex = UIBarButtonItem(systemItem: .flexibleSpace)
         let done = UIBarButtonItem(title: "Done", style: .done, target: context.coordinator, action: #selector(Coordinator.tapDone(_:)))
         bar.items = [cancel, flex, done]
-        bar.barTintColor = UIColor(Color.appBackground)
+        bar.barTintColor = UIColor(Color.appSecondaryBackground)
         bar.tintColor = UIColor(Color.appAccent)
         tf.inputAccessoryView = bar
 
@@ -132,7 +133,7 @@ struct AccessoryTextField: UIViewRepresentable {
         let flex = UIBarButtonItem(systemItem: .flexibleSpace)
         let done = UIBarButtonItem(title: "Done", style: .done, target: context.coordinator, action: #selector(Coordinator.tapDone(_:)))
         bar.items = [cancel, flex, done]
-        bar.barTintColor = UIColor(Color.appBackground)
+        bar.barTintColor = UIColor(Color.appSecondaryBackground)
         bar.tintColor = UIColor(Color.appAccent)
         tf.inputAccessoryView = bar
 
@@ -168,6 +169,8 @@ struct InputView: View {
     @State private var showSavedToast = false
     @State private var alertMessage: String?
 
+    @State private var selectedItem: PhotosPickerItem?
+    @AppStorage("backgroundImageData") private var backgroundImageData: Data?
 
     private let chipHeight: CGFloat = 40
 
@@ -175,12 +178,28 @@ struct InputView: View {
         NavigationStack {
             formContent
                 .navigationTitle("Input")
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        PhotosPicker(selection: $selectedItem, matching: .images) {
+                            Image(systemName: "plus")
+                        }
+                    }
+                }
         }
-        .background(Color.appBackground)
+        .background(Color.clear)
+        .onChange(of: selectedItem) { newItem in
+            if let newItem {
+                Task {
+                    if let data = try? await newItem.loadTransferable(type: Data.self) {
+                        backgroundImageData = data
+                    }
+                }
+            }
+        }
         .foregroundColor(.appText)
         .tint(.appAccent)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Color.appBackground, for: .navigationBar)
+        .toolbarBackground(Color.black, for: .navigationBar)
     }
 
     /// Main form broken out for easier type-checking
@@ -202,7 +221,7 @@ struct InputView: View {
             }
             .padding()
         }
-        .background(Color.appBackground)
+        .background(Color.clear)
         .scrollDismissesKeyboard(.interactively)
         .task {
             if categories.isEmpty || methods.isEmpty { seedDefaults() }
@@ -221,7 +240,7 @@ struct InputView: View {
             Text("Saved ✔︎")
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
-                .background(Color.appBackground.opacity(0.8))
+                .background(Color.appSecondaryBackground.opacity(0.8))
                 .foregroundStyle(Color.appText)
                 .cornerRadius(8)
                 .padding(.top)
@@ -262,16 +281,16 @@ struct InputView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(methods) { pm in
-                            Text(pm.name)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 10)
-                                .background(selectedMethod == pm ? Color.appAccent : Color.appBackground)
-                                .foregroundColor(selectedMethod == pm ? Color.appBackground : Color.appText)
-                                .clipShape(Capsule())
-                                .onTapGesture {
-                                    selectedMethod = pm
-                                    dismissKeyboard()
-                                }
+                        Text(pm.name)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                            .background(selectedMethod == pm ? Color.appAccent : Color.appTabBar)
+                            .foregroundColor(selectedMethod == pm ? Color.appBackground : Color.appText)
+                            .clipShape(Capsule())
+                            .onTapGesture {
+                                selectedMethod = pm
+                                dismissKeyboard()
+                            }
                     }
                 }
                 .padding(.horizontal)
@@ -307,7 +326,7 @@ struct InputView: View {
         Text("\(cat.emoji ?? "") \(cat.name)")
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
-            .background(selectedCategory == cat ? Color.appAccent : Color.appBackground)
+            .background(selectedCategory == cat ? Color.appAccent : Color.appTabBar)
             .foregroundColor(selectedCategory == cat ? Color.appBackground : Color.appText)
             .clipShape(Capsule())
             .onTapGesture {
