@@ -139,7 +139,7 @@ struct AccessoryTextField: UIViewRepresentable {
     }
 }
 
-// MARK: - Separate chip views to avoid compiler issues
+// MARK: - Chip views
 struct PaymentChipView: View {
     let paymentMethod: PaymentMethod
     let isSelected: Bool
@@ -179,13 +179,12 @@ struct CategoryChipView: View {
     }
 }
 
-// MARK: - Your main InputView with material styling
+// MARK: - Main InputView
 @MainActor
 struct InputView: View {
     @Environment(\.modelContext) private var ctx
     @State private var categories: [Category] = []
     @State private var paymentMethods: [PaymentMethod] = []
-
     @State private var amountText = ""
     @State private var date = Date()
     @State private var selectedCategory: Category?
@@ -225,7 +224,11 @@ struct InputView: View {
     
     // MARK: - Section Views
     @ViewBuilder private var valueSection: some View {
-        SectionContainer("Value") {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Value")
+                .font(.headline)
+                .foregroundColor(.appText)
+            
             MoneyTextField(
                 text: $amountText,
                 placeholder: "R$ 0,00",
@@ -237,7 +240,11 @@ struct InputView: View {
     }
     
     @ViewBuilder private var descriptionSection: some View {
-        SectionContainer("Description") {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Description")
+                .font(.headline)
+                .foregroundColor(.appText)
+            
             AccessoryTextField(
                 text: $descriptionText,
                 placeholder: "Optional description",
@@ -249,33 +256,109 @@ struct InputView: View {
     }
     
     @ViewBuilder private var paymentTypeSection: some View {
-        SectionContainer("Payment Type") {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Payment Type")
+                .font(.headline)
+                .foregroundColor(.appText)
+            
             if paymentMethods.isEmpty {
                 Button("Add default payment types") {
                     seedDefaults(paymentsOnly: true)
                 }
                 .appMaterialButton()
             } else {
-                paymentChipsScrollView
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(paymentMethods) { pm in
+                            PaymentChipView(
+                                paymentMethod: pm,
+                                isSelected: selectedMethod == pm,
+                                onTap: {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        selectedMethod = pm
+                                    }
+                                    dismissKeyboard()
+                                }
+                            )
+                        }
+                    }
+                    .padding(.horizontal, 0)
+                }
+                .padding(.horizontal, -16)
+                .padding(.leading, 16)
+                .padding(.trailing, 16) // Add right padding for scroll end alignment
+                .scrollContentBackground(.hidden)
+                .scrollClipDisabled()
             }
         }
     }
     
     @ViewBuilder private var categorySection: some View {
-        SectionContainer("Category") {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Category")
+                .font(.headline)
+                .foregroundColor(.appText)
+            
             if categories.isEmpty {
                 Button("Add default categories") {
                     seedDefaults(categoriesOnly: true)
                 }
                 .appMaterialButton()
             } else {
-                categoryChipsScrollView
+                // Single ScrollView containing both rows so they scroll together
+                ScrollView(.horizontal, showsIndicators: false) {
+                    VStack(spacing: 8) {
+                        HStack(spacing: 8) {
+                            ForEach(Array(stride(from: 0, to: categories.count, by: 2)), id: \.self) { index in
+                                CategoryChipView(
+                                    category: categories[index],
+                                    isSelected: selectedCategory == categories[index],
+                                    onTap: {
+                                        withAnimation(.easeInOut(duration: 0.2)) {
+                                            selectedCategory = categories[index]
+                                        }
+                                        dismissKeyboard()
+                                    }
+                                )
+                            }
+                            Spacer(minLength: 0) // Push to left
+                        }
+                        
+                        if categories.count > 1 {
+                            HStack(spacing: 8) {
+                                ForEach(Array(stride(from: 1, to: categories.count, by: 2)), id: \.self) { index in
+                                    CategoryChipView(
+                                        category: categories[index],
+                                        isSelected: selectedCategory == categories[index],
+                                        onTap: {
+                                            withAnimation(.easeInOut(duration: 0.2)) {
+                                                selectedCategory = categories[index]
+                                            }
+                                            dismissKeyboard()
+                                        }
+                                    )
+                                }
+                                Spacer(minLength: 0) // Push to left
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 0)
+                }
+                .padding(.horizontal, -16)
+                .padding(.leading, 16)
+                .padding(.trailing, 16) // Add right padding for scroll end alignment
+                .scrollContentBackground(.hidden)
+                .scrollClipDisabled()
             }
         }
     }
     
     @ViewBuilder private var dateSection: some View {
-        SectionContainer("Date") {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Date")
+                .font(.headline)
+                .foregroundColor(.appText)
+            
             DatePicker("", selection: $date, displayedComponents: .date)
                 .labelsHidden()
                 .datePickerStyle(.compact)
@@ -290,79 +373,6 @@ struct InputView: View {
         .appMaterialButton()
         .disabled(!canSave)
         .opacity(canSave ? 1.0 : 0.5)
-    }
-    
-    // MARK: - Chip Views
-    @ViewBuilder private var paymentChipsScrollView: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(paymentMethods) { pm in
-                    PaymentChipView(
-                        paymentMethod: pm,
-                        isSelected: selectedMethod == pm,
-                        onTap: {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                selectedMethod = pm
-                            }
-                            dismissKeyboard()
-                        }
-                    )
-                }
-            }
-            .padding(.horizontal)
-        }
-        .padding(.horizontal, -16)
-    }
-    
-    @ViewBuilder private var categoryChipsScrollView: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            VStack(spacing: 8) {
-                firstCategoryRow
-                if categories.count > 1 {
-                    secondCategoryRow
-                }
-            }
-            .padding(.horizontal)
-        }
-        .padding(.horizontal, -16)
-    }
-    
-    @ViewBuilder private var firstCategoryRow: some View {
-        HStack(spacing: 8) {
-            // FIXED: Convert stride to Array to conform to RandomAccessCollection
-            ForEach(Array(stride(from: 0, to: categories.count, by: 2)), id: \.self) { index in
-                CategoryChipView(
-                    category: categories[index],
-                    isSelected: selectedCategory == categories[index],
-                    onTap: {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            selectedCategory = categories[index]
-                        }
-                        dismissKeyboard()
-                    }
-                )
-            }
-            Spacer(minLength: 0) // Push everything to the left
-        }
-    }
-    
-    @ViewBuilder private var secondCategoryRow: some View {
-        HStack(spacing: 8) {
-            // FIXED: Convert stride to Array to conform to RandomAccessCollection
-            ForEach(Array(stride(from: 1, to: categories.count, by: 2)), id: \.self) { index in
-                CategoryChipView(
-                    category: categories[index],
-                    isSelected: selectedCategory == categories[index],
-                    onTap: {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            selectedCategory = categories[index]
-                        }
-                        dismissKeyboard()
-                    }
-                )
-            }
-            Spacer(minLength: 0) // Push everything to the left
-        }
     }
 
     @ViewBuilder private var toastOverlay: some View {
@@ -386,6 +396,7 @@ struct InputView: View {
 
     // MARK: - Validation
     private var canSave: Bool { amountDecimal != nil }
+    
     private var amountDecimal: Decimal? {
         let digits = amountText.filter(\.isNumber)
         guard !digits.isEmpty, let intVal = Decimal(string: digits) else { return nil }
