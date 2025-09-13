@@ -9,6 +9,7 @@ let SHEETS = SheetsClient(
 
 @main
 struct BudgetApp: App {
+    @StateObject private var bgStore = BackgroundImageStore()
     init() {
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
@@ -35,6 +36,7 @@ struct BudgetApp: App {
             RootSwitcherView()
                 .preferredColorScheme(.dark)
                 .tint(.appAccent)
+                .environmentObject(bgStore)
         }
         .modelContainer(for: [Transaction.self, Category.self, PaymentMethod.self])
     }

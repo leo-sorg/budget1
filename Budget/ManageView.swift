@@ -44,7 +44,7 @@ struct ManageView: View {
                 }
             }
             .scrollContentBackground(.hidden)
-            .background(Color.appBackground)
+            .background(Color.clear)
             .listRowBackground(Color.appSecondaryBackground)
             .scrollDismissesKeyboard(.interactively)
             .navigationTitle("Manage")
@@ -63,7 +63,7 @@ struct ManageView: View {
                 Text(alertMessage ?? "")
             }
         }
-        .background(Color.appBackground)
+        .appBackground()
         .foregroundColor(.appText)
         .tint(.appAccent)
         .navigationBarTitleDisplayMode(.inline)

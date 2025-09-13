@@ -83,11 +83,11 @@ struct SummaryView: View {
                 }
             }
             .scrollContentBackground(.hidden)
-            .background(Color.appBackground)
+            .background(Color.clear)
             .listRowBackground(Color.appSecondaryBackground)
             .navigationTitle("Summary")
         }
-        .background(Color.appBackground)
+        .appBackground()
         .foregroundColor(.appText)
         .tint(.appAccent)
         .navigationBarTitleDisplayMode(.inline)

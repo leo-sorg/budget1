@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import UIKit
+import PhotosUI
 
 // MARK: - UIKit-powered money field with a guaranteed inputAccessoryView
 struct MoneyTextField: UIViewRepresentable {
@@ -148,6 +149,7 @@ struct AccessoryTextField: UIViewRepresentable {
 @MainActor
 struct InputView: View {
     @Environment(\.modelContext) private var context
+    @EnvironmentObject private var bgStore: BackgroundImageStore
 
     @Query(sort: [
         SortDescriptor(\Category.sortIndex, order: .forward),
@@ -168,6 +170,22 @@ struct InputView: View {
     @State private var showSavedToast = false
     @State private var alertMessage: String?
 
+    @State private var showingImagePicker = false
+    @State private var photoItem: PhotosPickerItem?
+
+    private func processImage(_ image: UIImage) -> UIImage {
+        let screen = UIScreen.main.bounds.size
+        let scale = max(screen.width / image.size.width, screen.height / image.size.height)
+        let newSize = CGSize(width: image.size.width * scale, height: image.size.height * scale)
+        let renderer = UIGraphicsImageRenderer(size: screen)
+        return renderer.image { _ in
+            image.draw(in: CGRect(x: (screen.width - newSize.width) / 2,
+                                  y: (screen.height - newSize.height) / 2,
+                                  width: newSize.width,
+                                  height: newSize.height))
+        }
+    }
+
 
     private let chipHeight: CGFloat = 40
 
@@ -176,11 +194,29 @@ struct InputView: View {
             formContent
                 .navigationTitle("Input")
         }
-        .background(Color.appBackground)
+        .appBackground()
         .foregroundColor(.appText)
         .tint(.appAccent)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(Color.appBackground, for: .navigationBar)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    showingImagePicker = true
+                } label: {
+                    Image(systemName: "plus")
+                }
+            }
+        }
+        .photosPicker(isPresented: $showingImagePicker, selection: $photoItem, matching: .images)
+        .onChange(of: photoItem) { newItem in
+            Task {
+                if let data = try? await newItem?.loadTransferable(type: Data.self),
+                   let uiImage = UIImage(data: data) {
+                    bgStore.image = processImage(uiImage)
+                }
+            }
+        }
     }
 
     /// Main form broken out for easier type-checking
@@ -202,7 +238,7 @@ struct InputView: View {
             }
             .padding()
         }
-        .background(Color.appBackground)
+        .background(Color.clear)
         .scrollDismissesKeyboard(.interactively)
         .task {
             if categories.isEmpty || methods.isEmpty { seedDefaults() }
