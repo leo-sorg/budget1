@@ -103,11 +103,25 @@ struct HomeTabView: View {
     }
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            contentView
-            tabBar
+        ZStack {
+            ZStack(alignment: .bottom) {
+                contentView
+                tabBar
+            }
+            .ignoresSafeArea(.all, edges: .bottom)
+            .background(Color.clear)
+
+            VStack {
+                HStack {
+                    Spacer()
+                    BackgroundAddButton()
+                        .padding(.trailing, 16)
+                }
+                .padding(.top, 8)
+
+                Spacer()
+            }
+            .allowsHitTesting(true)
         }
-        .ignoresSafeArea(.all, edges: .bottom)
-        .background(Color.clear)
     }
 }
