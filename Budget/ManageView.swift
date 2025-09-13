@@ -111,7 +111,7 @@ struct ManageView: View {
             if let newItem {
                 Task {
                     if let data = try? await newItem.loadTransferable(type: Data.self) {
-                        backgroundManager.setImageData(data)
+                        await backgroundManager.setImageData(data)
                     }
                 }
             }
