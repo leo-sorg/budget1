@@ -22,50 +22,136 @@ struct HomeTabView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            // TEST: Now test ManageView (the last one!)
+            // Content views
             Group {
                 switch selection {
                 case .input:
-                    InputView()  // ✅ Works
+                    InputView()
                 case .history:
-                    HistoryView()  // ✅ Works
+                    HistoryView()
                 case .summary:
-                    SummaryView()  // ✅ Works now with new styles!
+                    SummaryView()
                 case .manage:
-                    ManageView()  // <-- Test this final view
+                    ManageView()
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             
-            // Simple tab bar
-            HStack(spacing: 0) {
-                ForEach(Tab.allCases, id: \.self) { tab in
-                    Button {
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                            selection = tab
+            // Tab Bar Container
+            ZStack {
+                // Base glass container - PURE, identical to buttons
+                Capsule()
+                    .fill(.clear)
+                    .background(
+                        Capsule()
+                            .fill(.ultraThinMaterial)
+                            .opacity(0.5)
+                    )
+                    .overlay(
+                        Capsule()
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        Color.white.opacity(0.25),
+                                        Color.white.opacity(0.15),
+                                        Color.white.opacity(0.15)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                    )
+                    .overlay(
+                        Capsule()
+                            .stroke(
+                                LinearGradient(
+                                    colors: [
+                                        Color.white.opacity(0.6),
+                                        Color.white.opacity(0.2),
+                                        Color.white.opacity(0.4)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 1
+                            )
+                    )
+                    .frame(height: 64)
+                
+                // Tab content
+                HStack(spacing: 0) {
+                    ForEach(Array(Tab.allCases.enumerated()), id: \.element) { index, tab in
+                        Button {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                                selection = tab
+                            }
+                        } label: {
+                            VStack(spacing: 4) {
+                                Image(systemName: tab.rawValue)
+                                    .font(.system(size: 16, weight: .semibold))
+                                Text(tab.title)
+                                    .font(.caption2.bold())
+                            }
+                            .foregroundColor(selection == tab ? .white : .white.opacity(0.3))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
                         }
-                    } label: {
-                        VStack(spacing: 4) {
-                            Image(systemName: tab.rawValue)
-                                .font(.system(size: 16, weight: .semibold))
-                            Text(tab.title)
-                                .font(.caption2.bold())
+                        .buttonStyle(PlainButtonStyle())
+                        
+                        // Add separator line between tabs (except after the last tab)
+                        if index < Tab.allCases.count - 1 {
+                            Rectangle()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [
+                                            Color.white.opacity(0.6),
+                                            Color.white.opacity(0.2),
+                                            Color.white.opacity(0.4)
+                                        ],
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    )
+                                )
+                                .frame(width: 1, height: 32)
+                                .opacity(0.7)
                         }
-                        .foregroundColor(selection == tab ? .black : .white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .frame(width: 80, height: 48)
-                        .background(selection == tab ? Color.white.opacity(0.9) : Color.clear)
-                        .clipShape(Capsule())
                     }
                 }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                
+                // Lighting mask overlay - SMALL and contained
+                if let activeIndex = Tab.allCases.firstIndex(of: selection) {
+                    GeometryReader { geometry in
+                        let tabWidth = geometry.size.width / CGFloat(Tab.allCases.count)
+                        let activeTabCenter = tabWidth * (CGFloat(activeIndex) + 0.5)
+                        
+                        // Small, precise lighting effect
+                        RadialGradient(
+                            colors: [
+                                Color.white.opacity(0.3),
+                                Color.white.opacity(0.2),
+                                Color.white.opacity(0.12),
+                                Color.white.opacity(0.06),
+                                Color.white.opacity(0.03),
+                                Color.white.opacity(0.01),
+                                Color.clear,
+                                Color.clear
+                            ],
+                            center: UnitPoint(x: activeTabCenter / geometry.size.width, y: 0.5),
+                            startRadius: 5,
+                            endRadius: tabWidth * 1.5 // Only 1.5x tab width
+                        )
+                        .frame(width: geometry.size.width, height: 64) // Fixed size
+                        .clipShape(Capsule())
+                        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: selection)
+                    }
+                    .frame(height: 64) // Fixed height
+                    .allowsHitTesting(false)
+                }
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(Color.black.opacity(0.8))
-            .clipShape(Capsule())
             .padding(.horizontal, 16)
-            .padding(.bottom, 16)
+            .padding(.bottom, 32)
             
             // Background add button
             VStack {
