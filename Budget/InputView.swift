@@ -285,14 +285,14 @@ struct InputView: View {
             Button("Add default categories") { seedDefaults(categoriesOnly: true) }
         } else {
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(alignment: .top, spacing: 8) {
-                    ForEach(Array(stride(from: 0, to: categories.count, by: 2)), id: \.self) { idx in
-                        VStack(spacing: 8) {
-                            categoryChip(for: categories[idx])
-                            if idx + 1 < categories.count {
-                                categoryChip(for: categories[idx + 1])
-                            }
-                        }
+                VStack(alignment: .leading, spacing: 8) {
+                    let firstRow = stride(from: 0, to: categories.count, by: 2).map { categories[$0] }
+                    HStack(spacing: 8) {
+                        ForEach(firstRow) { categoryChip(for: $0) }
+                    }
+                    let secondRow = stride(from: 1, to: categories.count, by: 2).map { categories[$0] }
+                    HStack(spacing: 8) {
+                        ForEach(secondRow) { categoryChip(for: $0) }
                     }
                 }
                 .padding(.horizontal)
