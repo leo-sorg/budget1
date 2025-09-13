@@ -176,24 +176,24 @@ struct InputView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                if let backgroundImage {
-                    backgroundImage
-                        .resizable()
-                        .scaledToFill()
-                        .ignoresSafeArea()
-                } else {
-                    Color.black.ignoresSafeArea()
-                }
-                formContent
-            }
-            .navigationTitle("Input")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    PhotosPicker(selection: $selectedItem, matching: .images) {
-                        Image(systemName: "plus")
+            formContent
+                .navigationTitle("Input")
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        PhotosPicker(selection: $selectedItem, matching: .images) {
+                            Image(systemName: "plus")
+                        }
                     }
                 }
+        }
+        .background {
+            if let backgroundImage {
+                backgroundImage
+                    .resizable()
+                    .scaledToFill()
+                    .ignoresSafeArea()
+            } else {
+                Color.black.ignoresSafeArea()
             }
         }
         .onChange(of: selectedItem) { newItem in
