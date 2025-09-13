@@ -27,7 +27,7 @@ struct BudgetApp: App {
     var body: some Scene {
         WindowGroup {
             ZStack {
-                Color.appBackground.ignoresSafeArea()
+                BackgroundImageView()
                 RootSwitcherView()
             }
             .preferredColorScheme(.dark)

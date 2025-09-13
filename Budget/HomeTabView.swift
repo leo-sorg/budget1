@@ -21,6 +21,8 @@ struct HomeTabView: View {
 
     @State private var selection: Tab = .input
     @Namespace private var animation
+    // Trigger view updates when background image changes
+    @AppStorage("backgroundImage") private var backgroundImageData: Data?
 
     private var contentView: some View {
         Group {
