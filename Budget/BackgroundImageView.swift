@@ -1,13 +1,13 @@
 import SwiftUI
 import UIKit
 
-/// Renders the stored background image behind all content.
-struct BackgroundView: View {
-    @EnvironmentObject private var manager: BackgroundManager
+/// Displays the stored background image behind all content.
+struct BackgroundImageView: View {
+    @EnvironmentObject private var store: BackgroundImageStore
 
     var body: some View {
         Group {
-            if let image = manager.image {
+            if let image = store.image {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
