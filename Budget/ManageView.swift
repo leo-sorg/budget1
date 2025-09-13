@@ -1,10 +1,13 @@
 import SwiftUI
 import SwiftData
 import UIKit
+import PhotosUI
 
 @MainActor
 struct ManageView: View {
     @Environment(\.modelContext) private var context
+    @AppStorage("backgroundImageData") private var backgroundImageData: Data?
+    @State private var backgroundItem: PhotosPickerItem?
 
     init() {
         let segmented = UISegmentedControl.appearance()
@@ -55,11 +58,18 @@ struct ManageView: View {
                 }
             }
             .scrollContentBackground(.hidden)
-            .background(Color.appBackground)
+            .background(Color.clear)
             .listRowBackground(Color.appSecondaryBackground)
             .scrollDismissesKeyboard(.interactively)
             .navigationTitle("Manage")
-            .toolbar { EditButton() }
+            .toolbar {
+                ToolbarItemGroup(placement: .navigationBarTrailing) {
+                    PhotosPicker(selection: $backgroundItem, matching: .images) {
+                        Image(systemName: "plus")
+                    }
+                    EditButton()
+                }
+            }
             .task { normalizeSortIndicesIfNeeded() }
             .alert("Oops", isPresented: Binding(
                 get: { alertMessage != nil },
@@ -70,7 +80,7 @@ struct ManageView: View {
                 Text(alertMessage ?? "")
             }
         }
-        .background(Color.appBackground)
+        .background(Color.clear)
         .foregroundColor(.appText)
         .tint(.appAccent)
         .navigationBarTitleDisplayMode(.inline)
@@ -96,6 +106,15 @@ struct ManageView: View {
             .presentationDetents([.fraction(0.5)])
             .presentationDragIndicator(.visible)
             .presentationBackground(Color.black)
+        }
+        .onChange(of: backgroundItem) { newItem in
+            if let newItem {
+                Task {
+                    if let data = try? await newItem.loadTransferable(type: Data.self) {
+                        backgroundImageData = data
+                    }
+                }
+            }
         }
     }
 

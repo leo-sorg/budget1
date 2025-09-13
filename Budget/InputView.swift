@@ -175,7 +175,7 @@ struct InputView: View {
             formContent
                 .navigationTitle("Input")
         }
-        .background(Color.appBackground)
+        .background(Color.clear)
         .foregroundColor(.appText)
         .tint(.appAccent)
         .navigationBarTitleDisplayMode(.inline)
@@ -201,7 +201,7 @@ struct InputView: View {
             }
             .padding()
         }
-        .background(Color.appBackground)
+        .background(Color.clear)
         .scrollDismissesKeyboard(.interactively)
         .task {
             if categories.isEmpty || methods.isEmpty { seedDefaults() }
