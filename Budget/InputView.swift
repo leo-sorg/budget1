@@ -1,7 +1,6 @@
 import SwiftUI
 import SwiftData
 import UIKit
-import PhotosUI
 
 // MARK: - UIKit-powered money field with a guaranteed inputAccessoryView
 struct MoneyTextField: UIViewRepresentable {
@@ -149,7 +148,6 @@ struct AccessoryTextField: UIViewRepresentable {
 @MainActor
 struct InputView: View {
     @Environment(\.modelContext) private var context
-    @EnvironmentObject private var store: BackgroundImageStore
 
     @Query(sort: [
         SortDescriptor(\Category.sortIndex, order: .forward),
@@ -170,8 +168,7 @@ struct InputView: View {
     @State private var showSavedToast = false
     @State private var alertMessage: String?
 
-    @State private var showingImagePicker = false
-    @State private var photoItem: PhotosPickerItem?
+    @State private var showBackgroundPicker = false
 
 
     private let chipHeight: CGFloat = 40
@@ -182,13 +179,8 @@ struct InputView: View {
                 .navigationTitle("Input")
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
-                        Menu {
-                            Button("Choose Background") {
-                                showingImagePicker = true
-                            }
-                            Button("Remove Background") {
-                                store.image = nil
-                            }
+                        Button {
+                            showBackgroundPicker = true
                         } label: {
                             Image(systemName: "plus")
                         }
@@ -199,14 +191,8 @@ struct InputView: View {
         .foregroundColor(.appText)
         .tint(.appAccent)
         .navigationBarTitleDisplayMode(.inline)
-        .photosPicker(isPresented: $showingImagePicker, selection: $photoItem, matching: .images)
-        .onChange(of: photoItem) { newItem in
-            Task {
-                if let data = try? await newItem?.loadTransferable(type: Data.self),
-                   let uiImage = UIImage(data: data) {
-                    await MainActor.run { store.image = uiImage }
-                }
-            }
+        .sheet(isPresented: $showBackgroundPicker) {
+            BackgroundPicker()
         }
     }
 
