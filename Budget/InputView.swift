@@ -203,7 +203,7 @@ struct InputView: View {
                     }
                 }
         }
-        .appBackground()
+        .background(Color.clear)
         .foregroundColor(.appText)
         .tint(.appAccent)
         .navigationBarTitleDisplayMode(.inline)

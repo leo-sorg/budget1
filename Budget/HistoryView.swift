@@ -78,7 +78,7 @@ struct HistoryView: View {
             .navigationTitle("History")
             .toolbar { EditButton() } // enables swipe-to-delete / Edit
         }
-        .appBackground()
+        .background(Color.clear)
         .foregroundColor(.appText)
         .tint(.appAccent)
         .navigationBarTitleDisplayMode(.inline)
