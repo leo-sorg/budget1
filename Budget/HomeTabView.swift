@@ -107,7 +107,6 @@ struct HomeTabView: View {
             contentView
             tabBar
         }
-        .appBackground()
         .ignoresSafeArea(.all, edges: .bottom)
     }
 }
