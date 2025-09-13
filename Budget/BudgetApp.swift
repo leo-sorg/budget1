@@ -9,7 +9,7 @@ let SHEETS = SheetsClient(
 
 @main
 struct BudgetApp: App {
-    @StateObject private var backgroundManager = BackgroundManager()
+    @StateObject private var backgroundStore = BackgroundImageStore()
     init() {
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
@@ -28,12 +28,12 @@ struct BudgetApp: App {
     var body: some Scene {
         WindowGroup {
             ZStack {
-                BackgroundView()
+                BackgroundImageView()
                 RootSwitcherView()
             }
             .preferredColorScheme(.dark)
             .tint(.appAccent)
-            .environmentObject(backgroundManager)
+            .environmentObject(backgroundStore)
         }
         .modelContainer(for: [Transaction.self, Category.self, PaymentMethod.self])
     }

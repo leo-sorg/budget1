@@ -1,13 +1,13 @@
 import SwiftUI
 import SwiftData
 import UIKit
-import PhotosUI
 
 @MainActor
 struct ManageView: View {
     @Environment(\.modelContext) private var context
-    @EnvironmentObject private var backgroundManager: BackgroundManager
-    @State private var backgroundItem: PhotosPickerItem?
+    @EnvironmentObject private var backgroundStore: BackgroundImageStore
+    @State private var showingImagePicker = false
+    @State private var pickedImage: UIImage?
 
     init() {
         let segmented = UISegmentedControl.appearance()
@@ -64,8 +64,8 @@ struct ManageView: View {
             .navigationTitle("Manage")
             .toolbar {
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
-                    PhotosPicker(selection: $backgroundItem, matching: .images) {
-                        Image(systemName: "plus")
+                    Button(action: { showingImagePicker = true }) {
+                        Image(systemName: "photo")
                     }
                     EditButton()
                 }
@@ -107,14 +107,12 @@ struct ManageView: View {
             .presentationDragIndicator(.visible)
             .presentationBackground(Color.black)
         }
-        .onChange(of: backgroundItem) { newItem in
-            if let newItem {
-                Task {
-                    if let data = try? await newItem.loadTransferable(type: Data.self) {
-                        await backgroundManager.setImageData(data)
-                    }
-                }
+        .sheet(isPresented: $showingImagePicker, onDismiss: {
+            if let img = pickedImage {
+                backgroundStore.updateImage(img)
             }
+        }) {
+            ImagePicker(image: $pickedImage)
         }
     }
 
