@@ -65,7 +65,7 @@ struct HomeTabView: View {
             .padding(.vertical, 8)
             .frame(width: 80, height: 48)
             .background(
-                Capsule().fill(isSelected ? .thinMaterial : .clear)
+                Capsule().fill(.thinMaterial).opacity(isSelected ? 1 : 0)
             )
             .frame(maxWidth: .infinity)
         }
