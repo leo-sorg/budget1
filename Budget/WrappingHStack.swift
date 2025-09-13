@@ -1,60 +1,51 @@
 import SwiftUI
 
-struct WrappingHStack<Data: RandomAccessCollection, Content: View>: View where Data.Element: Identifiable {
-    let data: Data
-    let spacing: CGFloat
-    let lineSpacing: CGFloat
-    let content: (Data.Element) -> Content
-    @State private var totalHeight: CGFloat = .zero
+/// A simple layout that arranges its subviews in horizontal rows and
+/// automatically wraps to the next line when there is not enough horizontal
+/// space. This is handy for "chip" style collections where each item can
+/// have an intrinsic width.
+struct WrappingHStack: Layout {
+    var spacing: CGFloat = 8
+    var lineSpacing: CGFloat = 8
 
-    init(_ data: Data, spacing: CGFloat = 8, lineSpacing: CGFloat = 8, @ViewBuilder content: @escaping (Data.Element) -> Content) {
-        self.data = data
-        self.spacing = spacing
-        self.lineSpacing = lineSpacing
-        self.content = content
-    }
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let maxWidth = proposal.width ?? .infinity
+        var currentX: CGFloat = 0
+        var currentY: CGFloat = 0
+        var rowHeight: CGFloat = 0
+        var maxX: CGFloat = 0
 
-    var body: some View {
-        GeometryReader { geometry in
-            self.generateContent(in: geometry)
-        }
-        .frame(height: totalHeight)
-    }
-
-    private func generateContent(in geometry: GeometryProxy) -> some View {
-        var width: CGFloat = 0
-        var height: CGFloat = 0
-
-        return ZStack(alignment: .topLeading) {
-            ForEach(data) { item in
-                content(item)
-                    .alignmentGuide(.leading) { d in
-                        if width + d.width > geometry.size.width {
-                            width = 0
-                            height += d.height + lineSpacing
-                        }
-                        let result = width
-                        width += d.width + spacing
-                        return result
-                    }
-                    .alignmentGuide(.top) { _ in
-                        let result = height
-                        return result
-                    }
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if currentX + size.width > maxWidth {
+                currentX = 0
+                currentY += rowHeight + lineSpacing
+                rowHeight = 0
             }
+            rowHeight = max(rowHeight, size.height)
+            currentX += size.width + spacing
+            maxX = max(maxX, currentX)
         }
-        .background(GeometryReader { geo in
-            Color.clear
-                .preference(key: HeightPreferenceKey.self, value: geo.size.height)
-        })
-        .onPreferenceChange(HeightPreferenceKey.self) { totalHeight = $0 }
-    }
-}
 
-private struct HeightPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = .zero
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = max(value, nextValue())
+        return CGSize(width: maxX, height: currentY + rowHeight)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var x = bounds.minX
+        var y = bounds.minY
+        var rowHeight: CGFloat = 0
+
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if x + size.width > bounds.maxX {
+                x = bounds.minX
+                y += rowHeight + lineSpacing
+                rowHeight = 0
+            }
+            subview.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(width: size.width, height: size.height))
+            x += size.width + spacing
+            rowHeight = max(rowHeight, size.height)
+        }
     }
 }
 
