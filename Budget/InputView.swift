@@ -168,6 +168,11 @@ struct InputView: View {
     @State private var showSavedToast = false
     @State private var alertMessage: String?
 
+    private let chipHeight: CGFloat = 40
+    private var chipRows: [GridItem] {
+        Array(repeating: GridItem(.fixed(chipHeight), spacing: 8), count: 2)
+    }
+
     var body: some View {
         NavigationStack {
             formContent
@@ -254,32 +259,23 @@ struct InputView: View {
         if methods.isEmpty {
             Button("Add default payment types") { seedDefaults(paymentsOnly: true) }
         } else {
-            VStack(alignment: .leading, spacing: 8) {
-                Picker("", selection: $selectedMethod) {
-                    Text("Payment Type").tag(PaymentMethod?.none)
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHGrid(rows: chipRows, spacing: 8) {
                     ForEach(methods) { pm in
-                        Text(pm.name).tag(PaymentMethod?.some(pm))
-                    }
-                }
-                .pickerStyle(.menu)
-                .labelsHidden()
-                .onChange(of: selectedMethod) { _ in dismissKeyboard() }
-
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(methods) { pm in
-                            Text(pm.name)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(selectedMethod == pm ? Color.appAccent : Color.appSecondaryBackground)
-                                .foregroundColor(selectedMethod == pm ? Color.appBackground : Color.appText)
-                                .clipShape(Capsule())
-                                .onTapGesture { selectedMethod = pm }
-                        }
+                        Text(pm.name)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                            .background(selectedMethod == pm ? Color.appAccent : Color.appTabBar)
+                            .foregroundColor(selectedMethod == pm ? Color.appBackground : Color.appText)
+                            .clipShape(Capsule())
+                            .onTapGesture {
+                                selectedMethod = pm
+                                dismissKeyboard()
+                            }
                     }
                 }
             }
-            .formField()
+            .frame(height: chipHeight * 2 + 8)
         }
     }
 
@@ -287,33 +283,23 @@ struct InputView: View {
         if categories.isEmpty {
             Button("Add default categories") { seedDefaults(categoriesOnly: true) }
         } else {
-            VStack(alignment: .leading, spacing: 8) {
-                Picker("", selection: $selectedCategory) {
-                    Text("Category").tag(Category?.none)
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHGrid(rows: chipRows, spacing: 8) {
                     ForEach(categories) { cat in
-                        Text("\(cat.emoji ?? "🏷️") \(cat.name)")
-                            .tag(Category?.some(cat))
-                    }
-                }
-                .pickerStyle(.menu)
-                .labelsHidden()
-                .onChange(of: selectedCategory) { _ in dismissKeyboard() }
-
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(categories) { cat in
-                            Text("\(cat.emoji ?? "") \(cat.name)")
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(selectedCategory == cat ? Color.appAccent : Color.appSecondaryBackground)
-                                .foregroundColor(selectedCategory == cat ? Color.appBackground : Color.appText)
-                                .clipShape(Capsule())
-                                .onTapGesture { selectedCategory = cat }
-                        }
+                        Text("\(cat.emoji ?? "") \(cat.name)")
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                            .background(selectedCategory == cat ? Color.appAccent : Color.appTabBar)
+                            .foregroundColor(selectedCategory == cat ? Color.appBackground : Color.appText)
+                            .clipShape(Capsule())
+                            .onTapGesture {
+                                selectedCategory = cat
+                                dismissKeyboard()
+                            }
                     }
                 }
             }
-            .formField()
+            .frame(height: chipHeight * 2 + 8)
         }
     }
 
