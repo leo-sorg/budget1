@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import UIKit
+import PhotosUI
 
 // MARK: - UIKit-powered money field with a guaranteed inputAccessoryView
 struct MoneyTextField: UIViewRepresentable {
@@ -168,14 +169,43 @@ struct InputView: View {
     @State private var showSavedToast = false
     @State private var alertMessage: String?
 
+    @State private var selectedItem: PhotosPickerItem?
+    @State private var backgroundImage: Image?
+
     private let chipHeight: CGFloat = 40
 
     var body: some View {
         NavigationStack {
-            formContent
-                .navigationTitle("Input")
+            ZStack {
+                if let backgroundImage {
+                    backgroundImage
+                        .resizable()
+                        .scaledToFill()
+                        .ignoresSafeArea()
+                } else {
+                    Color.black.ignoresSafeArea()
+                }
+                formContent
+            }
+            .navigationTitle("Input")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    PhotosPicker(selection: $selectedItem, matching: .images) {
+                        Image(systemName: "plus")
+                    }
+                }
+            }
         }
-        .background(Color.clear)
+        .onChange(of: selectedItem) { newItem in
+            if let newItem {
+                Task {
+                    if let data = try? await newItem.loadTransferable(type: Data.self),
+                       let uiImage = UIImage(data: data) {
+                        backgroundImage = Image(uiImage: uiImage)
+                    }
+                }
+            }
+        }
         .foregroundColor(.appText)
         .tint(.appAccent)
         .navigationBarTitleDisplayMode(.inline)
