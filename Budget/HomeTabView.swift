@@ -37,25 +37,7 @@ struct HomeTabView: View {
     private var tabBar: some View {
         HStack(spacing: 0) {
             ForEach(Tab.allCases, id: \.self) { tab in
-                Button {
-                    selection = tab
-                } label: {
-                    VStack(spacing: 4) {
-                        Image(systemName: tab.systemImage)
-                            .font(.system(size: 16, weight: .semibold))
-                        Text(tab.title)
-                            .font(.caption2.bold())
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .frame(width: 80, height: 48)
-                    .background(
-                        Capsule().fill(selection == tab ? .thinMaterial : .clear)
-                    )
-                    .frame(maxWidth: .infinity)
-                }
-                .frame(maxWidth: .infinity)
-                .foregroundColor(selection == tab ? Color.appBackground : Color.appText)
+                tabButton(for: tab)
             }
         }
         .padding(.horizontal, 12)
@@ -65,6 +47,30 @@ struct HomeTabView: View {
         )
         .padding(.horizontal, 16)
         .padding(.bottom, 16)
+    }
+
+    @ViewBuilder
+    private func tabButton(for tab: Tab) -> some View {
+        let isSelected = selection == tab
+        Button {
+            selection = tab
+        } label: {
+            VStack(spacing: 4) {
+                Image(systemName: tab.systemImage)
+                    .font(.system(size: 16, weight: .semibold))
+                Text(tab.title)
+                    .font(.caption2.bold())
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .frame(width: 80, height: 48)
+            .background(
+                Capsule().fill(isSelected ? .thinMaterial : .clear)
+            )
+            .frame(maxWidth: .infinity)
+        }
+        .frame(maxWidth: .infinity)
+        .foregroundColor(isSelected ? Color.appBackground : Color.appText)
     }
 
     var body: some View {
