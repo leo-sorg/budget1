@@ -282,12 +282,14 @@ struct InputView: View {
         if categories.isEmpty {
             Button("Add default categories") { seedDefaults(categoriesOnly: true) }
         } else {
-            WrappingHStack(spacing: 8, lineSpacing: 8) {
-                ForEach(categories) { cat in
-                    categoryChip(for: cat)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(categories) { cat in
+                        categoryChip(for: cat)
+                    }
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(height: chipHeight)
         }
     }
 

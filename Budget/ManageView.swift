@@ -30,7 +30,7 @@ struct ManageView: View {
 
     @State private var newCategory = ""
     @State private var newCategoryEmoji = ""
-    @State private var newCategoryIsIncome: Bool? = nil
+    @State private var newCategoryIsIncome = false
     @State private var newPayment = ""
     @State private var alertMessage: String?
 
@@ -198,14 +198,12 @@ struct ManageView: View {
             return
         }
 
-        guard let isIncome = newCategoryIsIncome else { return }
-
         let next = (categories.map { $0.sortIndex }.max() ?? -1) + 1
         let newCat = Category(
             name: name,
             emoji: emoji.isEmpty ? nil : emoji,
             sortIndex: next,
-            isIncome: isIncome
+            isIncome: newCategoryIsIncome
         )
 
         do {
@@ -268,7 +266,7 @@ struct ManageView: View {
         dismissKeyboard()
         newCategory = ""
         newCategoryEmoji = ""
-        newCategoryIsIncome = nil
+        newCategoryIsIncome = false
         showCategoryForm = false
     }
 
@@ -326,7 +324,7 @@ struct ManageView: View {
 private struct CategoryFormSheet: View {
     @Binding var newCategory: String
     @Binding var newCategoryEmoji: String
-    @Binding var newCategoryIsIncome: Bool?
+    @Binding var newCategoryIsIncome: Bool
     var onAdd: () -> Void
     var onClose: () -> Void
 
@@ -359,11 +357,8 @@ private struct CategoryFormSheet: View {
             .formField()
 
             Picker("Type", selection: $newCategoryIsIncome) {
-                Text("Choose…").tag(Bool?.none)
-                ForEach([false, true], id: \.self) { isIncome in
-                    Text(isIncome ? "Income" : "Expense")
-                        .tag(Bool?.some(isIncome))
-                }
+                Text("Expense").tag(false)
+                Text("Income").tag(true)
             }
             .pickerStyle(.segmented)
             .onChange(of: newCategoryIsIncome) { _ in dismissKeyboard() }
@@ -373,7 +368,7 @@ private struct CategoryFormSheet: View {
                 Text("Add Category")
             }
             .buttonStyle(AppButtonStyle())
-            .disabled(newCategory.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || newCategoryIsIncome == nil)
+            .disabled(newCategory.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
         .padding()
     }
