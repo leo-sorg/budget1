@@ -9,6 +9,8 @@ struct BackgroundView: View {
             Image(uiImage: uiImage)
                 .resizable()
                 .scaledToFill()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipped()
                 .ignoresSafeArea()
         } else {
             Color.appBackground.ignoresSafeArea()
