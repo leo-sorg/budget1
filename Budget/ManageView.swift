@@ -1,10 +1,12 @@
 import SwiftUI
 import SwiftData
 import UIKit
+import PhotosUI
 
 @MainActor
 struct ManageView: View {
     @Environment(\.modelContext) private var context
+    @EnvironmentObject private var store: BackgroundImageStore
 
     // Order by sortIndex, then name
     @Query(sort: [
@@ -26,6 +28,7 @@ struct ManageView: View {
     @State private var showingCategories = true
     @State private var showCategoryForm = false
     @State private var showPaymentForm = false
+    @State private var pickerItem: PhotosPickerItem?
 
     var body: some View {
         NavigationStack {
@@ -41,6 +44,20 @@ struct ManageView: View {
                     categorySection
                 } else {
                     paymentSection
+                }
+
+                Section("Background") {
+                    PhotosPicker(selection: $pickerItem, matching: .images, photoLibrary: .shared()) {
+                        Text("Choose Background")
+                    }
+                    .onChange(of: pickerItem) { oldValue, newValue in
+                        Task { await loadSelection(newValue) }
+                    }
+                    .task(id: pickerItem) { await loadSelection(pickerItem) }
+
+                    if store.image != nil {
+                        Button("Remove Background") { store.setImage(nil) }
+                    }
                 }
             }
             .scrollContentBackground(.hidden)
@@ -305,6 +322,18 @@ struct ManageView: View {
     }
 
     // MARK: - Helpers
+    private func loadSelection(_ item: PhotosPickerItem?) async {
+        guard let item else { return }
+        do {
+            if let data = try await item.loadTransferable(type: Data.self),
+               let ui = UIImage(data: data) {
+                await MainActor.run { store.setImage(ui) }
+            }
+        } catch {
+            // Ignore; keep previous background
+        }
+    }
+
     private func trimmed(_ s: String) -> String {
         s.trimmingCharacters(in: .whitespacesAndNewlines)
     }
