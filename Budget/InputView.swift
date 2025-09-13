@@ -149,7 +149,7 @@ struct AccessoryTextField: UIViewRepresentable {
 @MainActor
 struct InputView: View {
     @Environment(\.modelContext) private var context
-    @EnvironmentObject private var bgStore: BackgroundImageStore
+    @EnvironmentObject private var store: BackgroundImageStore
 
     @Query(sort: [
         SortDescriptor(\Category.sortIndex, order: .forward),
@@ -182,8 +182,13 @@ struct InputView: View {
                 .navigationTitle("Input")
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button {
-                            showingImagePicker = true
+                        Menu {
+                            Button("Choose Background") {
+                                showingImagePicker = true
+                            }
+                            Button("Remove Background") {
+                                store.image = nil
+                            }
                         } label: {
                             Image(systemName: "plus")
                         }
@@ -199,7 +204,7 @@ struct InputView: View {
             Task {
                 if let data = try? await newItem?.loadTransferable(type: Data.self),
                    let uiImage = UIImage(data: data) {
-                    await MainActor.run { bgStore.image = uiImage }
+                    await MainActor.run { store.image = uiImage }
                 }
             }
         }

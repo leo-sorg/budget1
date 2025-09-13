@@ -10,7 +10,7 @@ struct ContentView: View {
                 .foregroundColor(.appText)
         }
         .padding()
-        .appBackground()
+        .background(Color.clear)
     }
 }
 
