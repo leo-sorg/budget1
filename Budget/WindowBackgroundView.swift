@@ -22,7 +22,7 @@ struct WindowBackgroundView: View {
             .blur(radius: store.blur)
             .ignoresSafeArea()
         }
-        .allowsHitTesting(false)
+        .allowsHitTesting(false)      // can’t block taps
         .accessibilityHidden(true)
     }
 }
