@@ -49,7 +49,7 @@ struct HomeTabView: View {
                         .padding(.vertical, 8)
                         .frame(width: 80, height: 48)
                         .background(
-                            Capsule().fill(selection == tab ? Color.appAccent : Color.clear)
+                            Capsule().fill(selection == tab ? .thinMaterial : .clear)
                         )
                         .frame(maxWidth: .infinity)
                     }
@@ -60,7 +60,7 @@ struct HomeTabView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .background(
-                Capsule().fill(Color.appTabBar)
+                Capsule().fill(.ultraThinMaterial)
             )
             .padding(.horizontal, 16)
             .padding(.bottom, 16)
