@@ -5,18 +5,6 @@ import UIKit
 @MainActor
 struct ManageView: View {
     @Environment(\.modelContext) private var context
-    @AppStorage("backgroundImage") private var backgroundImageData: Data?
-
-    init() {
-        let segmented = UISegmentedControl.appearance()
-        segmented.selectedSegmentTintColor = UIColor(Color.appAccent)
-        segmented.setTitleTextAttributes([
-            .foregroundColor: UIColor(Color.appText)
-        ], for: .normal)
-        segmented.setTitleTextAttributes([
-            .foregroundColor: UIColor(Color.appBackground)
-        ], for: .selected)
-    }
 
     // Order by sortIndex, then name
     @Query(sort: [
@@ -88,9 +76,7 @@ struct ManageView: View {
                 onAdd: addCategory,
                 onClose: closeCategorySheet
             )
-            .presentationDetents([.fraction(0.5)])
-            .presentationDragIndicator(.visible)
-            .presentationBackground(Color.appBackground)
+            .appSheetStyle()
         }
         .sheet(isPresented: $showPaymentForm) {
             PaymentFormSheet(
@@ -98,9 +84,7 @@ struct ManageView: View {
                 onAdd: addPayment,
                 onClose: closePaymentSheet
             )
-            .presentationDetents([.fraction(0.5)])
-            .presentationDragIndicator(.visible)
-            .presentationBackground(Color.appBackground)
+            .appSheetStyle()
         }
     }
 
@@ -109,7 +93,7 @@ struct ManageView: View {
         Section {
             if categories.isEmpty {
                 Text("No categories yet. Add one below.")
-                    .foregroundStyle(.secondary)
+                    .foregroundColor(Color.appText.opacity(0.6))
             } else {
                 ForEach(categories) { c in
                     HStack {
@@ -117,7 +101,7 @@ struct ManageView: View {
                         Text(c.name)
                         Spacer()
                         Text(c.isIncome ? "+" : "-")
-                            .foregroundStyle(c.isIncome ? .green : .red)
+                            .foregroundColor(Color.appAccent)
                         Button(role: .destructive) {
                             context.delete(c)
                             try? context.save()
@@ -153,7 +137,7 @@ struct ManageView: View {
         Section {
             if methods.isEmpty {
                 Text("No payment methods yet. Add one below.")
-                    .foregroundStyle(.secondary)
+                    .foregroundColor(Color.appText.opacity(0.6))
             } else {
                 ForEach(methods) { m in
                     HStack {
@@ -350,7 +334,7 @@ private struct CategoryFormSheet: View {
                 onDone: { },
                 autocapitalization: .words
             )
-            .formField()
+            .appTextField()
 
             AccessoryTextField(
                 text: $newCategoryEmoji,
@@ -359,7 +343,7 @@ private struct CategoryFormSheet: View {
                 onDone: { },
                 prefersEmoji: true
             )
-            .formField()
+            .appTextField()
 
             Picker("Type", selection: $newCategoryIsIncome) {
                 Text("Expense").tag(false)
@@ -367,7 +351,7 @@ private struct CategoryFormSheet: View {
             }
             .pickerStyle(.segmented)
             .onChange(of: newCategoryIsIncome) { _ in dismissKeyboard() }
-            .formField()
+            .appTextField()
 
             Button(action: onAdd) {
                 Text("Add Category")
@@ -401,7 +385,7 @@ private struct PaymentFormSheet: View {
                 onDone: { },
                 autocapitalization: .words
             )
-            .formField()
+            .appTextField()
 
             Button(action: onAdd) {
                 Text("Add Payment Type")
@@ -413,14 +397,4 @@ private struct PaymentFormSheet: View {
     }
 }
 
-extension View {
-    func formField() -> some View {
-        self
-            .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.appTabBar)
-            )
-    }
-}
 

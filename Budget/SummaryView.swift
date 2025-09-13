@@ -4,7 +4,6 @@ import SwiftData
 struct SummaryView: View {
     @Query(sort: \Transaction.date, order: .reverse)
     private var txs: [Transaction]
-    @AppStorage("backgroundImage") private var backgroundImageData: Data?
 
     // Month/Year selection (defaults to current)
     @State private var selectedMonth: Int = Calendar.current.component(.month, from: Date())
@@ -57,7 +56,7 @@ struct SummaryView: View {
 
                 Section(header: Text("By category")) {
                     if byCategory.isEmpty {
-                        Text("No data for this month").foregroundStyle(.secondary)
+                        Text("No data for this month").foregroundColor(Color.appText.opacity(0.6))
                     } else {
                         ForEach(byCategoryKeys, id: \.self) { key in
                             HStack {
@@ -71,7 +70,7 @@ struct SummaryView: View {
 
                 Section(header: Text("By payment method")) {
                     if byPayment.isEmpty {
-                        Text("No data for this month").foregroundStyle(.secondary)
+                        Text("No data for this month").foregroundColor(Color.appText.opacity(0.6))
                     } else {
                         ForEach(byPaymentKeys, id: \.self) { key in
                             HStack {

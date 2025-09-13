@@ -3,7 +3,6 @@ import SwiftData
 
 struct HistoryView: View {
     @Environment(\.modelContext) private var context
-    @AppStorage("backgroundImage") private var backgroundImageData: Data?
 
     // Fetch all transactions, newest first
     @Query(sort: \Transaction.date, order: .reverse)
@@ -18,7 +17,7 @@ struct HistoryView: View {
                             Text("No transactions yet")
                                 .font(.headline)
                             Text("Add one in the Input tab. It will appear here.")
-                                .foregroundStyle(.secondary)
+                                .foregroundColor(Color.appText.opacity(0.6))
                         }
                         .padding(.vertical, 8)
                     }
@@ -65,7 +64,7 @@ struct HistoryView: View {
                                         Text("• \(note)")
                                     }
                                 }
-                                .foregroundStyle(.secondary)
+                                .foregroundColor(Color.appText.opacity(0.6))
                                 .font(.caption)
                             }
                         }

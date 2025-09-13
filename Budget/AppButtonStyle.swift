@@ -12,7 +12,7 @@ struct AppButtonStyle: ButtonStyle {
         var body: some View {
             configuration.label
                 .fontWeight(.semibold)
-                .foregroundColor(isEnabled ? .appAccent : .gray)
+                .foregroundColor(isEnabled ? .appAccent : Color.appText.opacity(0.5))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
                 .background(

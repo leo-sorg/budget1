@@ -22,16 +22,19 @@ struct BudgetApp: App {
         let segmented = UISegmentedControl.appearance()
         segmented.backgroundColor = UIColor(Color.appBackground)
         segmented.selectedSegmentTintColor = UIColor(Color.appAccent)
+        segmented.setTitleTextAttributes([
+            .foregroundColor: UIColor(Color.appText)
+        ], for: .normal)
+        segmented.setTitleTextAttributes([
+            .foregroundColor: UIColor(Color.appBackground)
+        ], for: .selected)
     }
 
     var body: some Scene {
         WindowGroup {
-            ZStack {
-                BackgroundImageView()
-                RootSwitcherView()
-            }
-            .preferredColorScheme(.dark)
-            .tint(.appAccent)
+            RootSwitcherView()
+                .preferredColorScheme(.dark)
+                .tint(.appAccent)
         }
         .modelContainer(for: [Transaction.self, Category.self, PaymentMethod.self])
     }
