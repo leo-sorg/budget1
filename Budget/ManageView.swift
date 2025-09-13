@@ -1,6 +1,5 @@
 import SwiftUI
 import SwiftData
-import UIKit
 import PhotosUI
 
 @MainActor
@@ -34,13 +33,21 @@ struct ManageView: View {
         ScrollView {
             VStack(spacing: 24) {
                 // Tab Selector
-                SectionContainer("Manage") {
-                    Picker("", selection: $showingCategories) {
-                        Text("Categories").tag(true)
-                        Text("Payment Types").tag(false)
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("MANAGE")
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .foregroundColor(.white.opacity(0.6))
+                        .padding(.horizontal, 16)
+                    
+                    VStack(spacing: 12) {
+                        Picker("", selection: $showingCategories) {
+                            Text("Categories").tag(true)
+                            Text("Payment Types").tag(false)
+                        }
+                        .pickerStyle(.segmented)
+                        .padding(.vertical, 8)
                     }
-                    .pickerStyle(.segmented)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, 16)
                 }
 
                 if showingCategories {
@@ -86,7 +93,12 @@ struct ManageView: View {
 
     // MARK: - Sections
     @ViewBuilder private var categorySection: some View {
-        SectionContainer("Categories") {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("CATEGORIES")
+                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .foregroundColor(.white.opacity(0.6))
+                .padding(.horizontal, 16)
+            
             VStack(spacing: 12) {
                 HStack {
                     Text("Drag to reorder")
@@ -101,6 +113,7 @@ struct ManageView: View {
                             .foregroundColor(.appAccent)
                     }
                 }
+                .padding(.horizontal, 16)
                 
                 if categories.isEmpty {
                     Text("No categories yet. Add one above.")
@@ -131,13 +144,19 @@ struct ManageView: View {
                             .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
                         }
                     }
+                    .padding(.horizontal, 16)
                 }
             }
         }
     }
 
     @ViewBuilder private var paymentSection: some View {
-        SectionContainer("Payment Methods") {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("PAYMENT METHODS")
+                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .foregroundColor(.white.opacity(0.6))
+                .padding(.horizontal, 16)
+            
             VStack(spacing: 12) {
                 HStack {
                     Text("Drag to reorder")
@@ -152,6 +171,7 @@ struct ManageView: View {
                             .foregroundColor(.appAccent)
                     }
                 }
+                .padding(.horizontal, 16)
                 
                 if methods.isEmpty {
                     Text("No payment methods yet. Add one above.")
@@ -179,18 +199,24 @@ struct ManageView: View {
                             .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
                         }
                     }
+                    .padding(.horizontal, 16)
                 }
             }
         }
     }
 
     @ViewBuilder private var backgroundSection: some View {
-        SectionContainer("Background") {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("BACKGROUND")
+                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .foregroundColor(.white.opacity(0.6))
+                .padding(.horizontal, 16)
+            
             VStack(spacing: 12) {
                 PhotosPicker(selection: $pickerItem, matching: .images, photoLibrary: .shared()) {
                     Text("Choose Background")
                 }
-                .appMaterialButton()
+                .buttonStyle(AppButtonStyle())
                 .onChange(of: pickerItem) { oldValue, newValue in
                     Task { await loadSelection(newValue) }
                 }
@@ -202,9 +228,10 @@ struct ManageView: View {
                     Button("Remove Background") {
                         store.setImage(nil)
                     }
-                    .appMaterialButton(isDestructive: true)
+                    .buttonStyle(AppButtonStyle())
                 }
             }
+            .padding(.horizontal, 16)
         }
     }
 
@@ -340,7 +367,7 @@ struct ManageView: View {
     }
 }
 
-// Form sheets with consistent button styling
+// MARK: - Form sheets with glass styling
 private struct CategoryFormSheet: View {
     @Binding var newCategory: String
     @Binding var newCategoryEmoji: String
@@ -358,23 +385,12 @@ private struct CategoryFormSheet: View {
                         .padding(4)
                 }
             }
-            AccessoryTextField(
-                text: $newCategory,
-                placeholder: "Name (e.g. Food)",
-                onCancel: { newCategory = "" },
-                onDone: { },
-                autocapitalization: .words
-            )
-            .materialContainer()
+            
+            TextField("Name (e.g. Food)", text: $newCategory)
+                .textFieldStyle(GlassTextFieldStyle())
 
-            AccessoryTextField(
-                text: $newCategoryEmoji,
-                placeholder: "Emoji (optional)",
-                onCancel: { newCategoryEmoji = "" },
-                onDone: { },
-                prefersEmoji: true
-            )
-            .materialContainer()
+            TextField("Emoji (optional)", text: $newCategoryEmoji)
+                .textFieldStyle(GlassTextFieldStyle())
 
             Picker("Type", selection: $newCategoryIsIncome) {
                 Text("Expense").tag(false)
@@ -382,12 +398,21 @@ private struct CategoryFormSheet: View {
             }
             .pickerStyle(.segmented)
             .onChange(of: newCategoryIsIncome) { _ in dismissKeyboard() }
-            .materialContainer()
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(.ultraThinMaterial)
+                    .opacity(0.5)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                    )
+            )
 
             Button("Add Category") {
                 onAdd()
             }
-            .appMaterialButton()
+            .buttonStyle(AppButtonStyle())
             .disabled(newCategory.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
         .padding()
@@ -410,19 +435,14 @@ private struct PaymentFormSheet: View {
                         .padding(4)
                 }
             }
-            AccessoryTextField(
-                text: $newPayment,
-                placeholder: "Name (e.g. Credit Card, Pix)",
-                onCancel: { newPayment = "" },
-                onDone: { },
-                autocapitalization: .words
-            )
-            .materialContainer()
+            
+            TextField("Name (e.g. Credit Card, Pix)", text: $newPayment)
+                .textFieldStyle(GlassTextFieldStyle())
 
             Button("Add Payment Type") {
                 onAdd()
             }
-            .appMaterialButton()
+            .buttonStyle(AppButtonStyle())
             .disabled(newPayment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
         .padding()

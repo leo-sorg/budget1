@@ -1,145 +1,5 @@
 import SwiftUI
 import SwiftData
-import UIKit
-
-// MARK: - UIKit-powered money field with a guaranteed inputAccessoryView
-struct MoneyTextField: UIViewRepresentable {
-    @Binding var text: String
-    var placeholder: String
-    var onCancel: () -> Void
-    var onDone: () -> Void
-
-    class Coordinator: NSObject, UITextFieldDelegate {
-        var parent: MoneyTextField
-        init(_ parent: MoneyTextField) { self.parent = parent }
-
-        @objc func editingChanged(_ tf: UITextField) {
-            let digits = (tf.text ?? "").filter(\.isNumber)
-            let intVal = NSDecimalNumber(string: digits.isEmpty ? "0" : digits)
-            let value = intVal.dividing(by: 100)
-            let f = NumberFormatter()
-            f.numberStyle = .currency
-            f.locale = Locale(identifier: "pt_BR")
-            tf.text = f.string(from: value) ?? ""
-            parent.text = tf.text ?? ""
-        }
-
-        @objc func tapCancel(_ sender: UIBarButtonItem) {
-            parent.text = ""
-            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-            parent.onCancel()
-        }
-
-        @objc func tapDone(_ sender: UIBarButtonItem) {
-            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-            parent.onDone()
-        }
-    }
-
-    func makeCoordinator() -> Coordinator { Coordinator(self) }
-
-    func makeUIView(context: Context) -> UITextField {
-        let tf = UITextField(frame: .zero)
-        tf.placeholder = placeholder
-        tf.keyboardType = .numberPad
-        tf.delegate = context.coordinator
-        tf.borderStyle = .none
-        tf.backgroundColor = .clear
-        tf.textColor = UIColor(Color.appText)
-        tf.tintColor = UIColor(Color.appAccent)
-        tf.addTarget(context.coordinator, action: #selector(Coordinator.editingChanged(_:)), for: .editingChanged)
-
-        let bar = UIToolbar()
-        bar.sizeToFit()
-        let cancel = UIBarButtonItem(title: "Cancel", style: .plain, target: context.coordinator, action: #selector(Coordinator.tapCancel(_:)))
-        let flex = UIBarButtonItem(systemItem: .flexibleSpace)
-        let done = UIBarButtonItem(title: "Done", style: .done, target: context.coordinator, action: #selector(Coordinator.tapDone(_:)))
-        bar.items = [cancel, flex, done]
-        bar.barTintColor = UIColor(Color.appSecondaryBackground)
-        bar.tintColor = UIColor(Color.appAccent)
-        tf.inputAccessoryView = bar
-
-        context.coordinator.editingChanged(tf)
-        return tf
-    }
-
-    func updateUIView(_ uiView: UITextField, context: Context) {
-        if uiView.text != text { uiView.text = text }
-    }
-}
-
-// MARK: - Generic text field with Cancel / Done toolbar
-struct AccessoryTextField: UIViewRepresentable {
-    @Binding var text: String
-    var placeholder: String
-    var onCancel: () -> Void
-    var onDone: () -> Void
-    var keyboardType: UIKeyboardType = .default
-    var prefersEmoji: Bool = false
-    var autocapitalization: UITextAutocapitalizationType = .sentences
-
-    class Coordinator: NSObject, UITextFieldDelegate {
-        var parent: AccessoryTextField
-        init(_ parent: AccessoryTextField) { self.parent = parent }
-
-        @objc func editingChanged(_ tf: UITextField) {
-            parent.text = tf.text ?? ""
-        }
-
-        @objc func tapCancel(_ sender: UIBarButtonItem) {
-            parent.text = ""
-            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-            parent.onCancel()
-        }
-
-        @objc func tapDone(_ sender: UIBarButtonItem) {
-            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-            parent.onDone()
-        }
-    }
-
-    func makeCoordinator() -> Coordinator { Coordinator(self) }
-
-    private class EmojiTextField: UITextField {
-        override var textInputMode: UITextInputMode? {
-            for mode in UITextInputMode.activeInputModes {
-                if mode.primaryLanguage == "emoji" { return mode }
-            }
-            return super.textInputMode
-        }
-    }
-
-    func makeUIView(context: Context) -> UITextField {
-        let tf: UITextField = prefersEmoji ? EmojiTextField(frame: .zero) : UITextField(frame: .zero)
-        tf.placeholder = placeholder
-        tf.delegate = context.coordinator
-        tf.borderStyle = .none
-        tf.keyboardType = keyboardType
-        tf.autocapitalizationType = autocapitalization
-        tf.backgroundColor = .clear
-        tf.textColor = UIColor(Color.appText)
-        tf.tintColor = UIColor(Color.appAccent)
-        tf.addTarget(context.coordinator, action: #selector(Coordinator.editingChanged(_:)), for: .editingChanged)
-
-        let bar = UIToolbar()
-        bar.sizeToFit()
-        let cancel = UIBarButtonItem(title: "Cancel", style: .plain, target: context.coordinator, action: #selector(Coordinator.tapCancel(_:)))
-        let flex = UIBarButtonItem(systemItem: .flexibleSpace)
-        let done = UIBarButtonItem(title: "Done", style: .done, target: context.coordinator, action: #selector(Coordinator.tapDone(_:)))
-        bar.items = [cancel, flex, done]
-        bar.barTintColor = UIColor(Color.appSecondaryBackground)
-        bar.tintColor = UIColor(Color.appAccent)
-        tf.inputAccessoryView = bar
-
-        return tf
-    }
-
-    func updateUIView(_ uiView: UITextField, context: Context) {
-        if uiView.text != text { uiView.text = text }
-    }
-}
-
-// NO CHIP VIEW DEFINITIONS HERE AT ALL - ALL CHIP VIEWS ARE IN ChipScrollStyles.swift
 
 // MARK: - Main InputView
 @MainActor
@@ -191,13 +51,12 @@ struct InputView: View {
                 .font(.headline)
                 .foregroundColor(.appText)
             
-            MoneyTextField(
-                text: $amountText,
-                placeholder: "R$ 0,00",
-                onCancel: { },
-                onDone: { }
-            )
-            .materialContainer()
+            TextField("R$ 0,00", text: $amountText)
+                .keyboardType(.decimalPad)
+                .textFieldStyle(GlassTextFieldStyle())
+                .onChange(of: amountText) { _, newValue in
+                    formatCurrency(newValue)
+                }
         }
     }
     
@@ -207,13 +66,8 @@ struct InputView: View {
                 .font(.headline)
                 .foregroundColor(.appText)
             
-            AccessoryTextField(
-                text: $descriptionText,
-                placeholder: "Optional description",
-                onCancel: { },
-                onDone: { }
-            )
-            .materialContainer()
+            TextField("Optional description", text: $descriptionText)
+                .textFieldStyle(GlassTextFieldStyle())
         }
     }
     
@@ -227,7 +81,7 @@ struct InputView: View {
                 Button("Add default payment types") {
                     seedDefaults(paymentsOnly: true)
                 }
-                .appMaterialButton()
+                .buttonStyle(AppButtonStyle())
             } else {
                 Color.clear
                     .frame(height: 50)
@@ -259,7 +113,7 @@ struct InputView: View {
                 Button("Add default categories") {
                     seedDefaults(categoriesOnly: true)
                 }
-                .appMaterialButton()
+                .buttonStyle(AppButtonStyle())
             } else {
                 Color.clear
                     .frame(height: categories.count > 1 ? 100 : 50)
@@ -307,10 +161,7 @@ struct InputView: View {
                 .font(.headline)
                 .foregroundColor(.appText)
             
-            DatePicker("", selection: $date, displayedComponents: .date)
-                .labelsHidden()
-                .datePickerStyle(.compact)
-                .materialContainer()
+            GlassDatePicker(selection: $date)
         }
     }
     
@@ -318,7 +169,7 @@ struct InputView: View {
         Button("Save Entry") {
             save()
         }
-        .appMaterialButton()
+        .buttonStyle(AppButtonStyle())
         .disabled(!canSave)
         .opacity(canSave ? 1.0 : 0.5)
     }
@@ -346,9 +197,21 @@ struct InputView: View {
     private var canSave: Bool { amountDecimal != nil }
     
     private var amountDecimal: Decimal? {
-        let digits = amountText.filter(\.isNumber)
-        guard !digits.isEmpty, let intVal = Decimal(string: digits) else { return nil }
-        return intVal / 100
+        let cleanString = amountText.replacingOccurrences(of: "R$", with: "").replacingOccurrences(of: " ", with: "").replacingOccurrences(of: ",", with: ".")
+        return Decimal(string: cleanString)
+    }
+    
+    // MARK: - Currency Formatting
+    private func formatCurrency(_ value: String) {
+        let digits = value.filter { $0.isNumber || $0 == "." || $0 == "," }
+        if let decimal = Decimal(string: digits.replacingOccurrences(of: ",", with: ".")), decimal > 0 {
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .currency
+            formatter.locale = Locale(identifier: "pt_BR")
+            if let formatted = formatter.string(for: NSDecimalNumber(decimal: decimal)) {
+                amountText = formatted
+            }
+        }
     }
 
     // MARK: - Actions
@@ -388,7 +251,7 @@ struct InputView: View {
                 withAnimation { showSavedToast = false }
             }
 
-            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            dismissKeyboard()
         } catch {
             alertMessage = "Could not save entry: \(error.localizedDescription)"
             print("SAVE ERROR (Transaction):", error)

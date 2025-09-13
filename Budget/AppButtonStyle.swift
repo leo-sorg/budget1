@@ -18,7 +18,7 @@ private struct GlassButtonBackground: View {
                         LinearGradient(
                             colors: [
                                 Color.white.opacity(isPressed ? 0.35 : 0.25),
-                                Color.white.opacity(isPressed ? 0.15 : 0.05),
+                                Color.white.opacity(isPressed ? 0.25 : 0.15),
                                 Color.white.opacity(isPressed ? 0.25 : 0.15)
                             ],
                             startPoint: .topLeading,
