@@ -169,9 +169,6 @@ struct InputView: View {
     @State private var alertMessage: String?
 
     private let chipHeight: CGFloat = 40
-    private var chipRows: [GridItem] {
-        Array(repeating: GridItem(.fixed(chipHeight), spacing: 8), count: 2)
-    }
 
     var body: some View {
         NavigationStack {
@@ -198,6 +195,8 @@ struct InputView: View {
                 paymentSection
                 fieldTitle("Category")
                 categorySection
+                fieldTitle("Date")
+                dateSection
                 saveSection
             }
             .padding()
@@ -260,7 +259,7 @@ struct InputView: View {
             Button("Add default payment types") { seedDefaults(paymentsOnly: true) }
         } else {
             ScrollView(.horizontal, showsIndicators: false) {
-                LazyHGrid(rows: chipRows, spacing: 8) {
+                HStack(spacing: 8) {
                     ForEach(methods) { pm in
                         Text(pm.name)
                             .padding(.horizontal, 16)
@@ -275,7 +274,7 @@ struct InputView: View {
                     }
                 }
             }
-            .frame(height: chipHeight * 2 + 8)
+            .frame(height: chipHeight)
         }
     }
 
@@ -283,24 +282,26 @@ struct InputView: View {
         if categories.isEmpty {
             Button("Add default categories") { seedDefaults(categoriesOnly: true) }
         } else {
-            ScrollView(.horizontal, showsIndicators: false) {
-                LazyHGrid(rows: chipRows, spacing: 8) {
-                    ForEach(categories) { cat in
-                        Text("\(cat.emoji ?? "") \(cat.name)")
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 10)
-                            .background(selectedCategory == cat ? Color.appAccent : Color.appTabBar)
-                            .foregroundColor(selectedCategory == cat ? Color.appBackground : Color.appText)
-                            .clipShape(Capsule())
-                            .onTapGesture {
-                                selectedCategory = cat
-                                dismissKeyboard()
-                            }
+            WrappingHStack(categories, spacing: 8, lineSpacing: 8) { cat in
+                Text("\(cat.emoji ?? "") \(cat.name)")
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .background(selectedCategory == cat ? Color.appAccent : Color.appTabBar)
+                    .foregroundColor(selectedCategory == cat ? Color.appBackground : Color.appText)
+                    .clipShape(Capsule())
+                    .onTapGesture {
+                        selectedCategory = cat
+                        dismissKeyboard()
                     }
-                }
             }
-            .frame(height: chipHeight * 2 + 8)
         }
+    }
+
+    @ViewBuilder private var dateSection: some View {
+        DatePicker("", selection: $date, displayedComponents: .date)
+            .labelsHidden()
+            .datePickerStyle(.compact)
+            .formField()
     }
 
     @ViewBuilder private var descriptionSection: some View {
