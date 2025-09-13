@@ -20,6 +20,7 @@ struct HomeTabView: View {
     }
 
     @State private var selection: Tab = .input
+    @Namespace private var animation
 
     private var contentView: some View {
         Group {
@@ -68,7 +69,9 @@ struct HomeTabView: View {
     private func tabButton(for tab: Tab) -> some View {
         let isSelected = selection == tab
         Button {
-            selection = tab
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                selection = tab
+            }
         } label: {
             VStack(spacing: 4) {
                 Image(systemName: tab.systemImage)
@@ -76,24 +79,28 @@ struct HomeTabView: View {
                 Text(tab.title)
                     .font(.caption2.bold())
             }
+            .foregroundColor(isSelected ? .black : .gray)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .frame(width: 80, height: 48)
             .background(
-                Capsule()
-                    .fill(.ultraThinMaterial)
-                    .overlay(
+                ZStack {
+                    if isSelected {
                         Capsule()
-                            .stroke(Color.white.opacity(0.6), lineWidth: 1)
-                            .blendMode(.overlay)
-                    )
-                    .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
-                    .opacity(isSelected ? 1 : 0)
+                            .fill(.ultraThinMaterial)
+                            .overlay(
+                                Capsule()
+                                    .stroke(Color.white.opacity(0.6), lineWidth: 1)
+                                    .blendMode(.overlay)
+                            )
+                            .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+                            .matchedGeometryEffect(id: "TAB", in: animation)
+                    }
+                }
             )
             .frame(maxWidth: .infinity)
         }
         .frame(maxWidth: .infinity)
-        .foregroundColor(isSelected ? .black : .gray)
     }
 
     var body: some View {
