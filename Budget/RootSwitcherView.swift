@@ -12,6 +12,7 @@ struct RootSwitcherView: View {
             }
         }
         .animation(.easeInOut(duration: 0.3), value: showSplash)
+        .background(Color.clear)
         .task {
             // Simulate small load, then switch to Home
             try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
