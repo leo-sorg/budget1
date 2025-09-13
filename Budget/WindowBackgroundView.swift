@@ -14,7 +14,7 @@ struct WindowBackgroundView: View {
                         .frame(width: size.width, height: size.height)
                         .clipped()
                 } else {
-                    Color.black
+                    Color.appBackground
                 }
             }
             .frame(width: size.width, height: size.height)
@@ -22,7 +22,7 @@ struct WindowBackgroundView: View {
             .blur(radius: store.blur)
             .ignoresSafeArea()
         }
-        .allowsHitTesting(false)
+        .allowsHitTesting(false)      // can’t block taps
         .accessibilityHidden(true)
     }
 }
