@@ -273,7 +273,9 @@ struct InputView: View {
                             }
                     }
                 }
+                .padding(.horizontal)
             }
+            .padding(.horizontal, -16)
             .frame(height: chipHeight)
         }
     }
@@ -288,7 +290,9 @@ struct InputView: View {
                         categoryChip(for: cat)
                     }
                 }
+                .padding(.horizontal)
             }
+            .padding(.horizontal, -16)
             .frame(height: chipHeight)
         }
     }
