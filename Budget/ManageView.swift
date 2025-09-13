@@ -53,7 +53,9 @@ struct ManageView: View {
                     .onChange(of: pickerItem) { oldValue, newValue in
                         Task { await loadSelection(newValue) }
                     }
-                    .task(id: pickerItem) { await loadSelection(pickerItem) }
+                    .task(id: pickerItem) {
+                        await loadSelection(pickerItem)
+                    }
 
                     if store.image != nil {
                         Button("Remove Background") { store.setImage(nil) }
@@ -322,12 +324,17 @@ struct ManageView: View {
     }
 
     // MARK: - Helpers
+    @MainActor
+    private func setBackground(_ ui: UIImage?) {
+        store.setImage(ui)
+    }
+
     private func loadSelection(_ item: PhotosPickerItem?) async {
         guard let item else { return }
         do {
             if let data = try await item.loadTransferable(type: Data.self),
                let ui = UIImage(data: data) {
-                await MainActor.run { store.setImage(ui) }
+                await MainActor.run { setBackground(ui) }
             }
         } catch {
             // Ignore; keep previous background
