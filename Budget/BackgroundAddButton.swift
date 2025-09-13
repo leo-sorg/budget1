@@ -3,10 +3,10 @@ import PhotosUI
 
 struct BackgroundAddButton: View {
     @EnvironmentObject private var store: BackgroundImageStore
-    @State private var item: PhotosPickerItem?
+    @State private var pickerItem: PhotosPickerItem?
 
     var body: some View {
-        PhotosPicker(selection: $item, matching: .images, photoLibrary: .shared()) {
+        PhotosPicker(selection: $pickerItem, matching: .images, photoLibrary: .shared()) {
             // Circular “+” with material background
             Image(systemName: "plus.circle.fill")
                 .font(.system(size: 28, weight: .semibold))
@@ -18,23 +18,28 @@ struct BackgroundAddButton: View {
         }
         .accessibilityLabel("Add Background Image")
         // Use both onChange and task(id:) so selection always processes
-        .onChange(of: item) { oldValue, newValue in
+        .onChange(of: pickerItem) { oldValue, newValue in
             Task { await loadSelection(newValue) }
         }
-        .task(id: item) {
-            await loadSelection(item)
+        .task(id: pickerItem) {
+            await loadSelection(pickerItem)
         }
     }
 
-    private func loadSelection(_ selection: PhotosPickerItem?) async {
-        guard let selection else { return }
+    @MainActor
+    private func setBackground(_ ui: UIImage?) {
+        store.setImage(ui)
+    }
+
+    private func loadSelection(_ item: PhotosPickerItem?) async {
+        guard let item else { return }
         do {
-            if let data = try await selection.loadTransferable(type: Data.self),
-               let img  = UIImage(data: data) {
-                await MainActor.run { store.setImage(img) }
+            if let data = try await item.loadTransferable(type: Data.self),
+               let ui   = UIImage(data: data) {
+                await MainActor.run { setBackground(ui) }
             }
         } catch {
-            // ignore failures; keep previous background
+            // ignore failures
         }
     }
 }
