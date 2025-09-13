@@ -46,7 +46,7 @@ private struct GlassTextFieldBackground: View {
     }
 }
 
-// MARK: - Glass Text Field Style
+// MARK: - Glass Text Field Style with Toolbar
 struct GlassTextFieldStyle: TextFieldStyle {
     @FocusState private var isFocused: Bool
     
@@ -56,6 +56,67 @@ struct GlassTextFieldStyle: TextFieldStyle {
             .foregroundColor(.white)
             .padding(12)
             .background(GlassTextFieldBackground(isFocused: isFocused))
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Button("Cancel") {
+                        isFocused = false
+                        hideKeyboard()
+                    }
+                    Spacer()
+                    Button("Done") {
+                        isFocused = false
+                        hideKeyboard()
+                    }
+                }
+            }
+    }
+}
+
+// MARK: - Currency Text Field with Proper Formatting
+struct CurrencyTextField: View {
+    @Binding var text: String
+    let placeholder: String
+    @FocusState private var isFocused: Bool
+    @State private var displayText: String = ""
+    
+    var body: some View {
+        TextField(placeholder, text: $displayText)
+            .focused($isFocused)
+            .foregroundColor(.white)
+            .keyboardType(.numberPad)
+            .padding(12)
+            .background(GlassTextFieldBackground(isFocused: isFocused))
+            .onChange(of: displayText) { _, newValue in
+                formatCurrency(newValue)
+            }
+            .onChange(of: text) { _, newValue in
+                if newValue.isEmpty {
+                    displayText = ""
+                }
+            }
+            .onAppear {
+                displayText = text
+            }
+    }
+    
+    private func formatCurrency(_ value: String) {
+        let digits = value.filter { $0.isNumber }
+        guard !digits.isEmpty else {
+            text = ""
+            return
+        }
+        
+        if let intValue = Int(digits) {
+            let decimalValue = Decimal(intValue) / 100
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .currency
+            formatter.locale = Locale(identifier: "pt_BR")
+            
+            if let formatted = formatter.string(for: NSDecimalNumber(decimal: decimalValue)) {
+                displayText = formatted
+                text = formatted
+            }
+        }
     }
 }
 
@@ -76,4 +137,9 @@ struct GlassDatePicker: View {
                 }
             }
     }
+}
+
+// MARK: - Helper function
+private func hideKeyboard() {
+    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
 }

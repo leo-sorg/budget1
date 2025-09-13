@@ -51,12 +51,7 @@ struct InputView: View {
                 .font(.headline)
                 .foregroundColor(.appText)
             
-            TextField("R$ 0,00", text: $amountText)
-                .keyboardType(.decimalPad)
-                .textFieldStyle(GlassTextFieldStyle())
-                .onChange(of: amountText) { _, newValue in
-                    formatCurrency(newValue)
-                }
+            CurrencyTextField(text: $amountText, placeholder: "R$ 0,00")
         }
     }
     
@@ -199,19 +194,6 @@ struct InputView: View {
     private var amountDecimal: Decimal? {
         let cleanString = amountText.replacingOccurrences(of: "R$", with: "").replacingOccurrences(of: " ", with: "").replacingOccurrences(of: ",", with: ".")
         return Decimal(string: cleanString)
-    }
-    
-    // MARK: - Currency Formatting
-    private func formatCurrency(_ value: String) {
-        let digits = value.filter { $0.isNumber || $0 == "." || $0 == "," }
-        if let decimal = Decimal(string: digits.replacingOccurrences(of: ",", with: ".")), decimal > 0 {
-            let formatter = NumberFormatter()
-            formatter.numberStyle = .currency
-            formatter.locale = Locale(identifier: "pt_BR")
-            if let formatted = formatter.string(for: NSDecimalNumber(decimal: decimal)) {
-                amountText = formatted
-            }
-        }
     }
 
     // MARK: - Actions
