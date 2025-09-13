@@ -9,10 +9,12 @@ let SHEETS = SheetsClient(
 
 @main
 struct BudgetApp: App {
+    @AppStorage("backgroundImageData") private var backgroundImageData: Data?
+
     init() {
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor(Color.appBackground)
+        appearance.backgroundColor = UIColor.black
         appearance.titleTextAttributes = [.foregroundColor: UIColor(Color.appText)]
         appearance.largeTitleTextAttributes = [.foregroundColor: UIColor(Color.appText)]
         UINavigationBar.appearance().standardAppearance = appearance
@@ -27,7 +29,16 @@ struct BudgetApp: App {
     var body: some Scene {
         WindowGroup {
             ZStack {
-                Color.appBackground.ignoresSafeArea()
+                if let data = backgroundImageData,
+                   let uiImage = UIImage(data: data) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFill()
+                        .ignoresSafeArea()
+                } else {
+                    Color.black.ignoresSafeArea()
+                }
+
                 RootSwitcherView()
             }
             .preferredColorScheme(.dark)
