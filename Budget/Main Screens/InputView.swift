@@ -30,21 +30,11 @@ struct InputView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // More spacing at top, then date section
-            Spacer()
-                .frame(height: 40)
-            
             // Date at the top
             topDateSection
             
-            // Add similar spacing at bottom of date section
-            Spacer()
-                .frame(height: 40)
-            
             ScrollView {
                 VStack(spacing: 24) {
-
-                    
                     // 1. Payment Type section
                     paymentTypeSection
                     
@@ -128,38 +118,48 @@ struct InputView: View {
     
     // MARK: - Date Section with inline calendar
     @ViewBuilder private var topDateSection: some View {
-        VStack(spacing: 16) {
-            // Date header with dropdown arrow
-            Button(action: {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    showDatePicker.toggle()
-                }
-                dismissKeyboard()
-            }) {
-                HStack(spacing: 8) {
-                    Text(formatFullDate(date))
-                        .font(.headline)
-                        .foregroundColor(.appText)
-                    
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.appText.opacity(0.7))
-                        .rotationEffect(.degrees(showDatePicker ? 180 : 0))
-                        .animation(.easeInOut(duration: 0.2), value: showDatePicker)
-                }
-            }
-            .buttonStyle(PlainButtonStyle())
+        VStack(spacing: 0) {
+            // Top spacing
+            Spacer()
+                .frame(height: 40)
             
-            // Calendar appears directly here when showDatePicker is true
-            if showDatePicker {
-                CalendarView(selectedDate: $date)
-                    .transition(.asymmetric(
-                        insertion: .opacity.combined(with: .scale(scale: 0.9)),
-                        removal: .opacity.combined(with: .scale(scale: 0.9))
-                    ))
+            VStack(spacing: 16) {
+                // Date header with dropdown arrow
+                Button(action: {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        showDatePicker.toggle()
+                    }
+                    dismissKeyboard()
+                }) {
+                    HStack(spacing: 8) {
+                        Text(formatFullDate(date))
+                            .font(.headline)
+                            .foregroundColor(.appText)
+                        
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.appText.opacity(0.7))
+                            .rotationEffect(.degrees(showDatePicker ? 180 : 0))
+                            .animation(.easeInOut(duration: 0.2), value: showDatePicker)
+                    }
+                }
+                .buttonStyle(PlainButtonStyle())
+                
+                // Calendar appears directly here when showDatePicker is true
+                if showDatePicker {
+                    CalendarView(selectedDate: $date)
+                        .transition(.asymmetric(
+                            insertion: .opacity.combined(with: .scale(scale: 0.9)),
+                            removal: .opacity.combined(with: .scale(scale: 0.9))
+                        ))
+                }
             }
+            .padding(.horizontal, 16)
+            
+            // Bottom spacing
+            Spacer()
+                .frame(height: 40)
         }
-        .padding(.horizontal, 16)
     }
     
     // MARK: - Rest of the sections

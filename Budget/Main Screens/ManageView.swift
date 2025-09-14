@@ -24,44 +24,60 @@ struct ManageView: View {
     @State private var newPayment = ""
     @State private var alertMessage: String?
 
-    @State private var showingCategories = true
+    // Updated to support 3 sections
+    enum ManageSection: String, CaseIterable {
+        case categories = "Categories"
+        case payments = "Payment Types"
+        case background = "Background"
+    }
+    
+    @State private var selectedSection: ManageSection = .categories
     @State private var showCategoryForm = false
     @State private var showPaymentForm = false
     @State private var pickerItem: PhotosPickerItem?
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                // Tab Selector
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("MANAGE")
-                        .font(.system(size: 14, weight: .semibold, design: .rounded))
-                        .foregroundColor(.white.opacity(0.6))
-                        .padding(.horizontal, 16)
-                    
-                    VStack(spacing: 12) {
-                        Picker("", selection: $showingCategories) {
-                            Text("Categories").tag(true)
-                            Text("Payment Types").tag(false)
+        VStack(spacing: 0) {
+            // Header using reusable component
+            AppHeader(title: "MANAGE")
+            
+            // Chip navigation with InputView-style padding
+            VStack(alignment: .leading, spacing: 12) {
+                Color.clear
+                    .frame(height: 50)
+                    .singleRowChipScroll {
+                        ForEach(ManageSection.allCases, id: \.self) { section in
+                            ManageSectionChip(
+                                section: section,
+                                isSelected: selectedSection == section,
+                                onTap: {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        selectedSection = section
+                                    }
+                                }
+                            )
                         }
-                        .pickerStyle(.segmented)
-                        .padding(.vertical, 8)
                     }
-                    .padding(.horizontal, 16)
-                }
-
-                if showingCategories {
-                    categorySection
-                } else {
-                    paymentSection
-                }
-
-                backgroundSection
             }
-            .padding()
+            .padding() // Same as InputView sections
+            
+            // Content based on selected section
+            ScrollView {
+                VStack(spacing: 24) {
+                    switch selectedSection {
+                    case .categories:
+                        categorySection
+                    case .payments:
+                        paymentSection
+                    case .background:
+                        backgroundSection
+                    }
+                }
+                .padding()
+            }
+            .scrollContentBackground(.hidden)
+            .background(Color.clear)
         }
-        .scrollContentBackground(.hidden)
-        .background(Color.clear)
         .task { normalizeSortIndicesIfNeeded() }
         .alert("Oops", isPresented: Binding(
             get: { alertMessage != nil },
@@ -91,127 +107,51 @@ struct ManageView: View {
         }
     }
 
-    // MARK: - Sections
+    // MARK: - Sections using new list components
     @ViewBuilder private var categorySection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("CATEGORIES")
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
-                .foregroundColor(.white.opacity(0.6))
-                .padding(.horizontal, 16)
-            
-            VStack(spacing: 12) {
-                HStack {
-                    Text("Drag to reorder")
-                        .font(.caption)
-                        .foregroundColor(.appText.opacity(0.6))
-                    Spacer()
-                    Button {
-                        showCategoryForm = true
-                        showPaymentForm = false
-                    } label: {
-                        Image(systemName: "plus")
-                            .foregroundColor(.appAccent)
-                    }
-                }
-                .padding(.horizontal, 16)
-                
-                if categories.isEmpty {
-                    Text("No categories yet. Add one above.")
-                        .foregroundColor(.appText.opacity(0.6))
-                        .padding()
-                } else {
-                    VStack(spacing: 8) {
-                        ForEach(categories) { c in
-                            HStack {
-                                Text(c.emoji ?? "🏷️")
-                                Text(c.name)
-                                    .foregroundColor(.appText)
-                                Spacer()
-                                Text(c.isIncome ? "+" : "-")
-                                    .foregroundColor(.appAccent)
-                                Button(role: .destructive) {
-                                    context.delete(c)
-                                    try? context.save()
-                                    renumberCategories()
-                                } label: {
-                                    Image(systemName: "trash")
-                                        .foregroundColor(.red)
-                                }
-                                .buttonStyle(.borderless)
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
-                        }
-                    }
-                    .padding(.horizontal, 16)
-                }
+        AppListSection(
+            title: "Category List",
+            emptyMessage: "No categories yet. Add one above.",
+            items: categories,
+            onAdd: {
+                showCategoryForm = true
+                showPaymentForm = false
             }
+        ) { category in
+            CategoryListItem(
+                category: category,
+                onDelete: {
+                    context.delete(category)
+                    try? context.save()
+                    renumberCategories()
+                }
+            )
         }
     }
 
     @ViewBuilder private var paymentSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("PAYMENT METHODS")
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
-                .foregroundColor(.white.opacity(0.6))
-                .padding(.horizontal, 16)
-            
-            VStack(spacing: 12) {
-                HStack {
-                    Text("Drag to reorder")
-                        .font(.caption)
-                        .foregroundColor(.appText.opacity(0.6))
-                    Spacer()
-                    Button {
-                        showPaymentForm = true
-                        showCategoryForm = false
-                    } label: {
-                        Image(systemName: "plus")
-                            .foregroundColor(.appAccent)
-                    }
-                }
-                .padding(.horizontal, 16)
-                
-                if methods.isEmpty {
-                    Text("No payment methods yet. Add one above.")
-                        .foregroundColor(.appText.opacity(0.6))
-                        .padding()
-                } else {
-                    VStack(spacing: 8) {
-                        ForEach(methods) { m in
-                            HStack {
-                                Text(m.name)
-                                    .foregroundColor(.appText)
-                                Spacer()
-                                Button(role: .destructive) {
-                                    context.delete(m)
-                                    try? context.save()
-                                    renumberMethods()
-                                } label: {
-                                    Image(systemName: "trash")
-                                        .foregroundColor(.red)
-                                }
-                                .buttonStyle(.borderless)
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
-                        }
-                    }
-                    .padding(.horizontal, 16)
-                }
+        AppListSection(
+            title: "Payment Type List",
+            emptyMessage: "No payment methods yet. Add one above.",
+            items: methods,
+            onAdd: {
+                showPaymentForm = true
+                showCategoryForm = false
             }
+        ) { method in
+            PaymentMethodListItem(
+                paymentMethod: method,
+                onDelete: {
+                    context.delete(method)
+                    try? context.save()
+                    renumberMethods()
+                }
+            )
         }
     }
 
     @ViewBuilder private var backgroundSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("BACKGROUND")
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
-                .foregroundColor(.white.opacity(0.6))
-                .padding(.horizontal, 16)
-            
             VStack(spacing: 12) {
                 PhotosPicker(selection: $pickerItem, matching: .images, photoLibrary: .shared()) {
                     Text("Choose Background")
@@ -231,7 +171,6 @@ struct ManageView: View {
                     .buttonStyle(AppButtonStyle())
                 }
             }
-            .padding(.horizontal, 16)
         }
     }
 
@@ -364,6 +303,26 @@ struct ManageView: View {
 
     private func trimmed(_ s: String) -> String {
         s.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
+// MARK: - Custom Manage Section Chip
+struct ManageSectionChip: View {
+    let section: ManageView.ManageSection
+    let isSelected: Bool
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: onTap) {
+            Text(section.rawValue)
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(.white)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+        }
+        // Using the public GlassChipBackground from ChipScrollStyles.swift
+        .background(GlassChipBackground(isSelected: isSelected))
+        .buttonStyle(PlainButtonStyle())
     }
 }
 

@@ -58,3 +58,16 @@ struct AppButtonStyle: ButtonStyle {
             .buttonStyle(PlainButtonStyle())
     }
 }
+
+// MARK: - Small Button Style - Same as main button but smaller
+struct AppSmallButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundColor(.white)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(GlassButtonBackground(isPressed: configuration.isPressed))
+            .buttonStyle(PlainButtonStyle())
+    }
+}

@@ -1,10 +1,14 @@
 import SwiftUI
 
-// MARK: - Shared Glass Background Component
-private struct GlassChipBackground: View {
-    let isSelected: Bool
+// MARK: - Shared Glass Background Component (Public for reuse)
+public struct GlassChipBackground: View {
+    public let isSelected: Bool
     
-    var body: some View {
+    public init(isSelected: Bool) {
+        self.isSelected = isSelected
+    }
+    
+    public var body: some View {
         RoundedRectangle(cornerRadius: 20)
             .fill(.clear)
             .background(
@@ -83,7 +87,7 @@ struct CategoryChipView: View {
     }
 }
 
-// MARK: - Single Row Chip Scroll Style
+// MARK: - Single Row Chip Scroll Style (Left-aligned)
 struct SingleRowChipScrollModifier<ChipContent: View>: ViewModifier {
     let chips: ChipContent
     
@@ -101,6 +105,30 @@ struct SingleRowChipScrollModifier<ChipContent: View>: ViewModifier {
                 .padding(.trailing, 16)
                 .scrollContentBackground(.hidden)
                 .scrollClipDisabled()
+            )
+    }
+}
+
+// MARK: - Single Row Chip Scroll Style (Right-aligned, scrolls left)
+struct SingleRowChipScrollRightModifier<ChipContent: View>: ViewModifier {
+    let chips: ChipContent
+    
+    func body(content: Content) -> some View {
+        content
+            .overlay(
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        chips
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.horizontal, 0)
+                }
+                .padding(.horizontal, -16)
+                .padding(.leading, 16)
+                .padding(.trailing, 16)
+                .scrollContentBackground(.hidden)
+                .scrollClipDisabled()
+                .environment(\.layoutDirection, .rightToLeft) // Makes scroll start from right
             )
     }
 }
@@ -147,6 +175,10 @@ struct DoubleRowChipScrollModifier<FirstRowContent: View, SecondRowContent: View
 extension View {
     func singleRowChipScroll<ChipContent: View>(@ViewBuilder chips: () -> ChipContent) -> some View {
         self.modifier(SingleRowChipScrollModifier(chips: chips()))
+    }
+    
+    func singleRowChipScrollRight<ChipContent: View>(@ViewBuilder chips: () -> ChipContent) -> some View {
+        self.modifier(SingleRowChipScrollRightModifier(chips: chips()))
     }
     
     func doubleRowChipScroll<FirstRowContent: View, SecondRowContent: View>(

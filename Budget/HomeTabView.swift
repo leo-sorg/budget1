@@ -152,18 +152,6 @@ struct HomeTabView: View {
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 32)
-            
-            // Background add button
-            VStack {
-                HStack {
-                    Spacer()
-                    BackgroundAddButton()
-                        .padding(.trailing, 16)
-                }
-                .padding(.top, 8)
-                Spacer()
-            }
-            .allowsHitTesting(true)
         }
         .background(Color.clear)
         .ignoresSafeArea(.all, edges: .bottom)
