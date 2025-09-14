@@ -88,22 +88,34 @@ struct ManageView: View {
             Text(alertMessage ?? "")
         }
         .sheet(isPresented: $showCategoryForm) {
-            CategoryFormSheet(
-                newCategory: $newCategory,
-                newCategoryEmoji: $newCategoryEmoji,
-                newCategoryIsIncome: $newCategoryIsIncome,
-                onAdd: addCategory,
-                onClose: closeCategorySheet
-            )
-            .appSheetStyle()
+            BottomSheet(
+                buttonTitle: "Add Category",
+                buttonAction: addCategory,
+                onClose: closeCategorySheet,
+                isButtonDisabled: newCategory.isEmpty
+            ) {
+                CategorySheetContent(
+                    name: $newCategory,
+                    emoji: $newCategoryEmoji,
+                    isIncome: $newCategoryIsIncome
+                )
+            }
+            .presentationDetents([.height(420)])
+            .presentationBackground(Color.clear)
+            .presentationDragIndicator(.hidden)
         }
         .sheet(isPresented: $showPaymentForm) {
-            PaymentFormSheet(
-                newPayment: $newPayment,
-                onAdd: addPayment,
-                onClose: closePaymentSheet
-            )
-            .appSheetStyle()
+            BottomSheet(
+                buttonTitle: "Add Payment Type",
+                buttonAction: addPayment,
+                onClose: closePaymentSheet,
+                isButtonDisabled: newPayment.isEmpty
+            ) {
+                PaymentSheetContent(name: $newPayment)
+            }
+            .presentationDetents([.height(280)])
+            .presentationBackground(Color.clear)
+            .presentationDragIndicator(.hidden)
         }
     }
 
@@ -323,88 +335,5 @@ struct ManageSectionChip: View {
         // Using the public GlassChipBackground from ChipScrollStyles.swift
         .background(GlassChipBackground(isSelected: isSelected))
         .buttonStyle(PlainButtonStyle())
-    }
-}
-
-// MARK: - Form sheets with glass styling
-private struct CategoryFormSheet: View {
-    @Binding var newCategory: String
-    @Binding var newCategoryEmoji: String
-    @Binding var newCategoryIsIncome: Bool
-    var onAdd: () -> Void
-    var onClose: () -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Spacer()
-                Button(action: onClose) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.title2)
-                        .padding(4)
-                }
-            }
-            
-            TextField("Name (e.g. Food)", text: $newCategory)
-                .textFieldStyle(GlassTextFieldStyle())
-
-            TextField("Emoji (optional)", text: $newCategoryEmoji)
-                .textFieldStyle(GlassTextFieldStyle())
-
-            Picker("Type", selection: $newCategoryIsIncome) {
-                Text("Expense").tag(false)
-                Text("Income").tag(true)
-            }
-            .pickerStyle(.segmented)
-            .onChange(of: newCategoryIsIncome) { _ in dismissKeyboard() }
-            .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(.ultraThinMaterial)
-                    .opacity(0.5)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                    )
-            )
-
-            Button("Add Category") {
-                onAdd()
-            }
-            .buttonStyle(AppButtonStyle())
-            .disabled(newCategory.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-        }
-        .padding()
-        .background(Color.clear)
-    }
-}
-
-private struct PaymentFormSheet: View {
-    @Binding var newPayment: String
-    var onAdd: () -> Void
-    var onClose: () -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Spacer()
-                Button(action: onClose) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.title2)
-                        .padding(4)
-                }
-            }
-            
-            TextField("Name (e.g. Credit Card, Pix)", text: $newPayment)
-                .textFieldStyle(GlassTextFieldStyle())
-
-            Button("Add Payment Type") {
-                onAdd()
-            }
-            .buttonStyle(AppButtonStyle())
-            .disabled(newPayment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-        }
-        .padding()
-        .background(Color.clear)
     }
 }
