@@ -26,17 +26,20 @@ struct HistoryView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                 .background(Color.clear)
             } else {
-                ScrollView {
+                ScrollView(.vertical, showsIndicators: true) {
                     VStack(spacing: 24) {
                         // Monthly total section with liquid glass style
                         monthlyTotalSection
                         
                         // All transactions section using the list component
                         transactionsSection
+                        
+                        // Extra padding at bottom for tab bar
+                        Spacer()
+                            .frame(height: 100)
                     }
                     .padding()
                 }
-                .scrollContentBackground(.hidden)
                 .background(Color.clear)
             }
         }
@@ -56,7 +59,7 @@ struct HistoryView: View {
                     GlassCardRow(
                         label: "Income",
                         value: formatCurrency(incomeThisMonth),
-                        valueColor: .green
+                        valueColor: .white
                     )
                     
                     Divider()
@@ -65,7 +68,7 @@ struct HistoryView: View {
                     GlassCardRow(
                         label: "Expenses",
                         value: formatCurrency(expensesThisMonth),
-                        valueColor: .red
+                        valueColor: .white
                     )
                     
                     Divider()
@@ -74,7 +77,7 @@ struct HistoryView: View {
                     GlassCardRow(
                         label: "Net",
                         value: formatCurrency(netThisMonth),
-                        valueColor: netThisMonth >= 0 ? .green : .red,
+                        valueColor: .white,
                         isEmphasized: true
                     )
                 }

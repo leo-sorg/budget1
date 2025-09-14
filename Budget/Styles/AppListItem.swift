@@ -151,7 +151,7 @@ struct GlassCardRow: View {
 
 // MARK: - Specific List Item Types
 
-// Category List Item
+// Category List Item - WITH LIGHT COLORS FIX
 struct CategoryListItem: View {
     let category: Category
     let onDelete: () -> Void
@@ -169,16 +169,18 @@ struct CategoryListItem: View {
                     .foregroundColor(.white)
             },
             trailing: {
-                // Income/Expense indicator
-                Text(category.isIncome ? "Income" : "Expense")
-                    .font(.caption.weight(.medium))
-                    .foregroundColor(.white.opacity(0.6))
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(
-                        Capsule()
-                            .fill(category.isIncome ? Color.green.opacity(0.2) : Color.red.opacity(0.2))
-                    )
+                // Income/Expense indicator with light colors
+                HStack {
+                    Text(category.isIncome ? "Income" : "Expense")
+                        .font(.caption.weight(.medium))
+                        .foregroundColor(category.isIncome ? Color(red: 0.6, green: 0.9, blue: 0.6) : Color(red: 1.0, green: 0.7, blue: 0.7))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(
+                            Capsule()
+                                .fill(category.isIncome ? Color(red: 0.6, green: 0.9, blue: 0.6).opacity(0.3) : Color(red: 1.0, green: 0.7, blue: 0.7).opacity(0.3))
+                        )
+                }
             },
             onDelete: onDelete
         )

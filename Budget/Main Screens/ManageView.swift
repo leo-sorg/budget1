@@ -72,6 +72,10 @@ struct ManageView: View {
                     case .background:
                         backgroundSection
                     }
+                    
+                    // Extra padding at bottom to ensure scrollability
+                    Spacer()
+                        .frame(height: 150)
                 }
                 .padding()
             }

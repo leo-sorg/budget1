@@ -365,13 +365,29 @@ struct InputView: View {
         if !paymentsOnly && categories.isEmpty {
             let base = (categories.map { $0.sortIndex }.max() ?? -1) + 1
             let seeds: [(String, String?, Bool)] = [
-                ("Food", "🍽️", false),
-                ("Transport", "🚕", false),
-                ("Bills", "💡", false),
-                ("Shopping", "🛍️", false),
-                ("Leisure", "🎬", false),
-                ("Salary", "💼", true),
-                ("Gifts", "🎁", true)
+                // Expenses (14 categories)
+                               ("Food", "🍽️", false),
+                               ("Transport", "🚕", false),
+                               ("Bills", "💡", false),
+                               ("Shopping", "🛍️", false),
+                               ("Leisure", "🎬", false),
+                               ("Groceries", "🛒", false),
+                               ("Healthcare", "🏥", false),
+                               ("Education", "📚", false),
+                               ("Rent", "🏠", false),
+                               ("Insurance", "🛡️", false),
+                               ("Pets", "🐾", false),
+                               ("Gym", "💪", false),
+                               ("Subscriptions", "📱", false),
+                               ("Coffee", "☕", false),
+                               
+                               // Income (6 categories)
+                               ("Salary", "💼", true),
+                               ("Gifts", "🎁", true),
+                               ("Freelance", "💻", true),
+                               ("Investments", "📈", true),
+                               ("Bonus", "💰", true),
+                               ("Refunds", "💵", true)
             ]
             for (offset, seed) in seeds.enumerated() {
                 let (name, emoji, isIncome) = seed

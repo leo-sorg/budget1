@@ -37,7 +37,7 @@ struct SummaryView: View {
             }
             .padding() // Same padding as InputView and ManageView sections
             
-            ScrollView {
+            ScrollView(.vertical, showsIndicators: true) {
                 VStack(spacing: 24) {
                     // Totals Section with liquid glass
                     totalsSection
@@ -47,10 +47,13 @@ struct SummaryView: View {
                     
                     // By Payment Method Section with list component
                     byPaymentSection
+                    
+                    // Extra padding at bottom for tab bar
+                    Spacer()
+                        .frame(height: 100)
                 }
                 .padding()
             }
-            .scrollContentBackground(.hidden)
             .background(Color.clear)
         }
     }
