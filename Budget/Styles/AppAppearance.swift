@@ -3,7 +3,7 @@ import UIKit
 
 enum AppAppearance {
     static func configure() {
-        // Make ALL system backgrounds completely transparent
+        // Make ALL system backgrounds completely transparent so our custom background shows through
         UIView.appearance().backgroundColor = .clear
         UITableView.appearance().backgroundColor = .clear
         UITableViewCell.appearance().backgroundColor = .clear
@@ -40,14 +40,15 @@ enum AppAppearance {
         UIToolbar.appearance().barTintColor = .clear
         UIToolbar.appearance().isTranslucent = true
         
-        // Make sure window backgrounds are clear
+        // Make sure window backgrounds use our default color
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
                 for window in windowScene.windows {
-                    window.backgroundColor = UIColor.clear
-                    window.isOpaque = false
+                    // Set window background to our default color
+                    window.backgroundColor = UIColor(Color.appDefaultBackground)
+                    window.isOpaque = true
                     if let rootVC = window.rootViewController {
-                        rootVC.view.backgroundColor = UIColor.clear
+                        rootVC.view.backgroundColor = .clear
                     }
                 }
             }

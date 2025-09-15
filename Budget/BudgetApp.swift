@@ -12,6 +12,10 @@ struct BudgetApp: App {
     var body: some Scene {
         WindowGroup {
             ZStack {
+                // Use the centralized default background color
+                Color.appDefaultBackground
+                    .ignoresSafeArea(.all)
+                
                 WindowBackgroundView()
                     .ignoresSafeArea(.all)
                 

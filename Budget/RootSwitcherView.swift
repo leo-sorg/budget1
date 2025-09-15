@@ -29,8 +29,8 @@ struct RootSwitcherView: View {
 struct SplashView: View {
     var body: some View {
         ZStack {
-            // Black background
-            Color.black
+            // Use the app's default background color instead of black
+            Color.appDefaultBackground
                 .ignoresSafeArea(.all)
             
             // Liquid glass square with "Budget" text
@@ -80,7 +80,7 @@ struct SplashView: View {
                 )
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.black)
+        .background(Color.appDefaultBackground)
         .ignoresSafeArea(.all)
     }
 }

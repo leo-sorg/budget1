@@ -23,6 +23,23 @@ struct ManageView: View {
     @State private var newCategoryIsIncome = false
     @State private var newPayment = ""
     @State private var alertMessage: String?
+    @State private var showHexColorSheet = false
+    @State private var hexColorInput = ""
+
+    // Preset colors for background picker - Using explicit Color values (11 colors + 1 custom slot)
+    let presetColors: [(Color, String)] = [
+        (Color(red: 0.1, green: 0.1, blue: 0.2), "Dark Blue"),
+        (Color(red: 0.0, green: 0.0, blue: 0.0), "Black"),
+        (Color(red: 0.15, green: 0.15, blue: 0.15), "Dark Gray"),
+        (Color(red: 0.2, green: 0.05, blue: 0.05), "Dark Red"),
+        (Color(red: 0.05, green: 0.2, blue: 0.05), "Dark Green"),
+        (Color(red: 0.2, green: 0.15, blue: 0.05), "Dark Brown"),
+        (Color(red: 0.15, green: 0.05, blue: 0.2), "Dark Purple"),
+        (Color(red: 0.05, green: 0.1, blue: 0.2), "Navy"),
+        (Color(red: 0.2, green: 0.2, blue: 0.05), "Dark Yellow"),
+        (Color(red: 0.05, green: 0.15, blue: 0.15), "Dark Cyan"),
+        (Color(red: 0.2, green: 0.05, blue: 0.15), "Dark Magenta"),
+    ]
 
     // Updated to support 3 sections
     enum ManageSection: String, CaseIterable {
@@ -121,6 +138,19 @@ struct ManageView: View {
             .presentationBackground(Color.clear)
             .presentationDragIndicator(.hidden)
         }
+        .sheet(isPresented: $showHexColorSheet) {
+            BottomSheet(
+                buttonTitle: "Set Color",
+                buttonAction: applyHexColor,
+                onClose: { showHexColorSheet = false },
+                isButtonDisabled: !isValidHex(hexColorInput)
+            ) {
+                HexColorSheetContent(hexInput: $hexColorInput)
+            }
+            .presentationDetents([.height(280)])
+            .presentationBackground(Color.clear)
+            .presentationDragIndicator(.hidden)
+        }
     }
 
     // MARK: - Sections using new list components
@@ -168,9 +198,57 @@ struct ManageView: View {
 
     @ViewBuilder private var backgroundSection: some View {
         VStack(alignment: .leading, spacing: 16) {
+            Text("Background Options")
+                .font(.headline)
+                .foregroundColor(.appText)
+            
+            // Color grid directly on screen
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Choose Color")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.white.opacity(0.6))
+                
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 4), spacing: 10) {
+                    // Show the 11 preset colors
+                    ForEach(Array(presetColors.enumerated()), id: \.offset) { index, colorTuple in
+                        let (color, _) = colorTuple
+                        ColorSquare(
+                            color: color,
+                            isSelected: store.useCustomColor && store.backgroundColor == color,
+                            action: {
+                                store.setColor(color)
+                            }
+                        )
+                    }
+                    
+                    // Custom hex color button (12th square)
+                    Button(action: {
+                        hexColorInput = ""
+                        showHexColorSheet = true
+                    }) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color.white.opacity(0.05))
+                                .frame(height: 50)
+                            
+                            Image(systemName: "plus")
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundColor(.white.opacity(0.6))
+                        }
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                        )
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+            }
+            
+            // Buttons below the color grid
             VStack(spacing: 12) {
+                // Image picker
                 PhotosPicker(selection: $pickerItem, matching: .images, photoLibrary: .shared()) {
-                    Text("Choose Background")
+                    Text("Choose Image")
                 }
                 .buttonStyle(AppButtonStyle())
                 .onChange(of: pickerItem) { oldValue, newValue in
@@ -180,12 +258,29 @@ struct ManageView: View {
                     await loadSelection(pickerItem)
                 }
 
-                if store.image != nil {
-                    Button("Remove Background") {
-                        store.setImage(nil)
+                // Reset to default button
+                if store.image != nil || store.useCustomColor {
+                    Button("Reset to Default") {
+                        store.resetToDefault()
                     }
                     .buttonStyle(AppButtonStyle())
                 }
+                
+                // Current status indicator
+                HStack {
+                    Text("Current:")
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.6))
+                    Text(
+                        store.image != nil ? "Custom Image" :
+                        store.useCustomColor ? "Custom Color" :
+                        "Default Color"
+                    )
+                    .font(.caption.bold())
+                    .foregroundColor(.white.opacity(0.8))
+                    Spacer()
+                }
+                .padding(.top, 8)
             }
         }
     }
@@ -320,6 +415,20 @@ struct ManageView: View {
     private func trimmed(_ s: String) -> String {
         s.trimmingCharacters(in: .whitespacesAndNewlines)
     }
+    
+    private func isValidHex(_ hex: String) -> Bool {
+        let cleanHex = hex.replacingOccurrences(of: "#", with: "")
+        return cleanHex.count == 6 && cleanHex.allSatisfy { $0.isHexDigit }
+    }
+    
+    private func applyHexColor() {
+        let cleanHex = hexColorInput.replacingOccurrences(of: "#", with: "")
+        if let color = Color(hex: cleanHex) {
+            store.setColor(color)
+            showHexColorSheet = false
+            hexColorInput = ""
+        }
+    }
 }
 
 // MARK: - Custom Manage Section Chip
@@ -339,5 +448,125 @@ struct ManageSectionChip: View {
         // Using the public GlassChipBackground from ChipScrollStyles.swift
         .background(GlassChipBackground(isSelected: isSelected))
         .buttonStyle(PlainButtonStyle())
+    }
+}
+
+// MARK: - Custom Color Square Component using UIKit
+struct ColorSquare: View {
+    let color: Color
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            ColorBoxView(color: color)
+                .frame(height: 50)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(
+                            isSelected ? Color.white : Color.white.opacity(0.3),
+                            lineWidth: isSelected ? 2 : 1
+                        )
+                )
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
+// UIKit-based color view to bypass SwiftUI rendering issues
+struct ColorBoxView: UIViewRepresentable {
+    let color: Color
+    
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView()
+        view.layer.cornerRadius = 4  // Can be adjusted via parameter if needed
+        view.clipsToBounds = true
+        return view
+    }
+    
+    func updateUIView(_ uiView: UIView, context: Context) {
+        uiView.backgroundColor = UIColor(color)
+    }
+}
+
+// MARK: - Hex Color Input Sheet Content
+struct HexColorSheetContent: View {
+    @Binding var hexInput: String
+    @FocusState private var isFocused: Bool
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Hex Color Code")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.white.opacity(0.6))
+            
+            HStack(spacing: 8) {
+                Text("#")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(.white.opacity(0.5))
+                
+                TextField("000000", text: $hexInput)
+                    .focused($isFocused)
+                    .textFieldStyle(GlassTextFieldStyle())
+                    .keyboardType(.asciiCapable)
+                    .autocapitalization(.allCharacters)
+                    .onChange(of: hexInput) { _, newValue in
+                        // Remove # if user types it
+                        var cleaned = newValue.replacingOccurrences(of: "#", with: "")
+                        // Limit to 6 characters
+                        if cleaned.count > 6 {
+                            cleaned = String(cleaned.prefix(6))
+                        }
+                        // Only allow hex characters
+                        cleaned = cleaned.filter { $0.isHexDigit }
+                        hexInput = cleaned.uppercased()
+                    }
+            }
+            
+            // Preview of the color using UIKit
+            if hexInput.count == 6, let color = Color(hex: hexInput) {
+                HStack {
+                    Text("Preview:")
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.6))
+                    
+                    // Use UIKit-based preview
+                    ColorBoxView(color: color)
+                        .frame(width: 60, height: 30)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 4)
+                                .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                        )
+                    
+                    Spacer()
+                }
+                .padding(.top, 8)
+            }
+        }
+        .padding(.bottom, 30)
+        .onAppear {
+            isFocused = true
+        }
+    }
+}
+
+// MARK: - Color Extension for Hex Support
+extension Color {
+    init?(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hex).scanHexInt64(&int)
+        let r, g, b: UInt64
+        switch hex.count {
+        case 6: // RGB (6 digits)
+            (r, g, b) = ((int >> 16) & 0xFF, (int >> 8) & 0xFF, int & 0xFF)
+        default:
+            return nil
+        }
+        self.init(
+            red: Double(r) / 255,
+            green: Double(g) / 255,
+            blue: Double(b) / 255
+        )
     }
 }
