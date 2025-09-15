@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 
 struct SummaryView: View {
+    @Environment(\.modelContext) private var context
     @Query(sort: \Transaction.date, order: .reverse)
     private var txs: [Transaction]
 
@@ -48,6 +49,9 @@ struct SummaryView: View {
                     // By Payment Method Section with list component
                     byPaymentSection
                     
+                    // All Transactions Section (NEW)
+                    allTransactionsSection
+                    
                     // Extra padding at bottom for tab bar
                     Spacer()
                         .frame(height: 100)
@@ -91,7 +95,7 @@ struct SummaryView: View {
                     GlassCardRow(
                         label: "Income",
                         value: formatCurrency(totalIncome),
-                        valueColor: .green
+                        valueColor: Color(red: 0.5, green: 1.0, blue: 0.5)  // Light green
                     )
                     
                     Divider()
@@ -100,7 +104,7 @@ struct SummaryView: View {
                     GlassCardRow(
                         label: "Expenses",
                         value: formatCurrency(totalExpenses),
-                        valueColor: .red
+                        valueColor: Color(red: 1.0, green: 0.5, blue: 0.5)  // Light red
                     )
                     
                     Divider()
@@ -109,7 +113,7 @@ struct SummaryView: View {
                     GlassCardRow(
                         label: "Net",
                         value: formatCurrency(netTotal),
-                        valueColor: netTotal >= 0 ? .green : .red,
+                        valueColor: netTotal >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : Color(red: 1.0, green: 0.5, blue: 0.5),  // Light green or light red
                         isEmphasized: true
                     )
                 }
@@ -156,6 +160,34 @@ struct SummaryView: View {
                         SummaryPaymentItem(
                             name: key,
                             amount: byPayment[key] ?? 0
+                        )
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - NEW: All Transactions Section
+    @ViewBuilder private var allTransactionsSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("All transactions")
+                .font(.headline)
+                .foregroundColor(.appText)
+            
+            if filteredTxs.isEmpty {
+                Text("No transactions for this month")
+                    .foregroundColor(.appText.opacity(0.6))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                VStack(spacing: 8) {
+                    ForEach(filteredTxs) { tx in
+                        // Using the TransactionListItem component from Components/TransactionListItem.swift
+                        TransactionListItem(
+                            transaction: tx,
+                            onDelete: {
+                                context.delete(tx)
+                                try? context.save()
+                            }
                         )
                     }
                 }
@@ -276,7 +308,7 @@ struct SummaryCategoryItem: View {
             trailing: {
                 Text(formatCurrency(amount))
                     .font(.system(size: 16, weight: .regular))
-                    .foregroundColor(amount >= 0 ? .green : .white)
+                    .foregroundColor(amount >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : .white)  // Light green for positive
             }
         )
     }
@@ -308,7 +340,7 @@ struct SummaryPaymentItem: View {
             trailing: {
                 Text(formatCurrency(amount))
                     .font(.system(size: 16, weight: .regular))
-                    .foregroundColor(amount >= 0 ? .green : .white)
+                    .foregroundColor(amount >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : .white)  // Light green for positive
             }
         )
     }

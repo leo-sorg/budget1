@@ -3,14 +3,14 @@ import SwiftUI
 struct HomeTabView: View {
     private enum Tab: String, CaseIterable {
         case input = "square.and.pencil"
-        case history = "list.bullet"
+        case history = "hammer.fill"
         case summary = "chart.pie"
         case manage = "gearshape"
 
         var title: String {
             switch self {
             case .input: return "Input"
-            case .history: return "History"
+            case .history: return "WIP"
             case .summary: return "Summary"
             case .manage: return "Manage"
             }
@@ -45,7 +45,7 @@ struct HomeTabView: View {
                     .background(
                         Capsule()
                             .fill(.ultraThinMaterial)
-                            .opacity(0.5)
+                            .opacity(1.0)  // Changed from 0.5 to 1.0 for 100% opacity
                     )
                     .overlay(
                         Capsule()

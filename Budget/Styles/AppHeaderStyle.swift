@@ -6,21 +6,21 @@ struct AppHeader: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Top spacing - matches InputView date spacing
+            // Top spacing - reduced for smaller header
             Spacer()
-                .frame(height: 40)
+                .frame(height: 30)
             
             // Header content
             VStack(alignment: .leading, spacing: 16) {
                 Text(title)
-                    .font(.headline)
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.appText)
             }
             .padding(.horizontal, 16)
             
-            // Bottom spacing - matches InputView date spacing
+            // Bottom spacing - reduced for smaller header
             Spacer()
-                .frame(height: 40)
+                .frame(height: 20)
         }
     }
 }

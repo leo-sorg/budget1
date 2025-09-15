@@ -149,9 +149,21 @@ struct GlassCardRow: View {
     }
 }
 
-// MARK: - Specific List Item Types
+// MARK: - Income/Expense Tag Component (NEW)
+struct CategoryTypeTag: View {
+    let isIncome: Bool
+    
+    var body: some View {
+        Text(isIncome ? "Income" : "Expense")
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundColor(isIncome ?
+                Color(red: 0.5, green: 1.0, blue: 0.5) :  // Light green
+                Color(red: 1.0, green: 0.5, blue: 0.5)     // Light red
+            )
+    }
+}
 
-// Category List Item - WITH LIGHT COLORS FIX
+// MARK: - Category List Item - COMPLETELY REBUILT
 struct CategoryListItem: View {
     let category: Category
     let onDelete: () -> Void
@@ -159,35 +171,27 @@ struct CategoryListItem: View {
     var body: some View {
         AppListItem(
             content: {
-                // Emoji
-                Text(category.emoji ?? "🏷️")
-                    .font(.system(size: 20))
-                
-                // Name
-                Text(category.name)
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.white)
+                HStack(spacing: 12) {
+                    // Emoji
+                    Text(category.emoji ?? "🏷️")
+                        .font(.system(size: 20))
+                    
+                    // Name
+                    Text(category.name)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.white)
+                }
             },
             trailing: {
-                // Income/Expense indicator with light colors
-                HStack {
-                    Text(category.isIncome ? "Income" : "Expense")
-                        .font(.caption.weight(.medium))
-                        .foregroundColor(category.isIncome ? Color(red: 0.6, green: 0.9, blue: 0.6) : Color(red: 1.0, green: 0.7, blue: 0.7))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(
-                            Capsule()
-                                .fill(category.isIncome ? Color(red: 0.6, green: 0.9, blue: 0.6).opacity(0.3) : Color(red: 1.0, green: 0.7, blue: 0.7).opacity(0.3))
-                        )
-                }
+                // New Income/Expense tag
+                CategoryTypeTag(isIncome: category.isIncome)
             },
             onDelete: onDelete
         )
     }
 }
 
-// Payment Method List Item
+// MARK: - Payment Method List Item
 struct PaymentMethodListItem: View {
     let paymentMethod: PaymentMethod
     let onDelete: () -> Void
@@ -195,15 +199,17 @@ struct PaymentMethodListItem: View {
     var body: some View {
         AppListItem(
             content: {
-                // Payment method icon
-                Image(systemName: "creditcard.fill")
-                    .font(.system(size: 18))
-                    .foregroundColor(.white.opacity(0.6))
-                
-                // Name
-                Text(paymentMethod.name)
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.white)
+                HStack(spacing: 12) {
+                    // Payment method icon
+                    Image(systemName: "creditcard.fill")
+                        .font(.system(size: 18))
+                        .foregroundColor(.white.opacity(0.6))
+                    
+                    // Name
+                    Text(paymentMethod.name)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.white)
+                }
             },
             trailing: {
                 EmptyView()

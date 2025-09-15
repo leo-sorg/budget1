@@ -29,17 +29,58 @@ struct RootSwitcherView: View {
 struct SplashView: View {
     var body: some View {
         ZStack {
-            VStack(spacing: 12) {
-                Image(systemName: "creditcard.fill")
-                    .font(.system(size: 56, weight: .bold))
-                    .foregroundColor(.appAccent)
-                Text("Budget")
-                    .font(.title.bold())
-            }
-            .foregroundColor(.appText)
+            // Black background
+            Color.black
+                .ignoresSafeArea(.all)
+            
+            // Liquid glass square with "Budget" text
+            Text("Budget")
+                .font(.system(size: 32, weight: .bold))
+                .foregroundColor(.white)
+                .frame(width: 180, height: 180)
+                .background(
+                    RoundedRectangle(cornerRadius: 32)
+                        .fill(.clear)
+                        .background(
+                            RoundedRectangle(cornerRadius: 32)
+                                .fill(.ultraThinMaterial)
+                                .opacity(0.8)  // Increased from 0.5 to 0.8
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 32)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [
+                                            Color.white.opacity(0.35),  // Increased from 0.25
+                                            Color.white.opacity(0.25),  // Increased from 0.15
+                                            Color.white.opacity(0.25)   // Increased from 0.15
+                                        ],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .opacity(0.8)  // Increased from 0.6
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 32)
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [
+                                            Color.white.opacity(0.8),  // Increased from 0.6
+                                            Color.white.opacity(0.4),  // Increased from 0.2
+                                            Color.white.opacity(0.6)   // Increased from 0.4
+                                        ],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ),
+                                    lineWidth: 1
+                                )
+                                .opacity(0.9)  // Increased from 0.7
+                        )
+                )
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.clear)
+        .background(Color.black)
         .ignoresSafeArea(.all)
     }
 }
