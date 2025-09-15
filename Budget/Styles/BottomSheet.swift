@@ -75,7 +75,7 @@ struct BottomSheet<SheetContent: View>: View {
         }
     }
     
-    // MARK: - Helper function (moved here)
+    // MARK: - Helper function
     private func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
@@ -165,7 +165,7 @@ struct CategorySheetContent: View {
     }
 }
 
-// MARK: - Payment Bottom Sheet Content
+// MARK: - Payment Bottom Sheet Content (FIXED - removed extra padding)
 struct PaymentSheetContent: View {
     @Binding var name: String
     @Binding var emoji: String
@@ -195,6 +195,6 @@ struct PaymentSheetContent: View {
                 AppEmojiField(text: $emoji, placeholder: "e.g. 💳")
             }
         }
-        .padding(.bottom, 60)
+        // REMOVED the .padding(.bottom, 60) that was causing the layout issue
     }
 }

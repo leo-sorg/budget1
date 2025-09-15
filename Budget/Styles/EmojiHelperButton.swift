@@ -91,8 +91,9 @@ struct EmojiHelperButton: View {
                     showEmojiPicker = false
                 }
             )
-            .presentationDetents([.fraction(0.6)])
+            .presentationDetents([.medium, .large])  // Allow medium and large sizes
             .presentationDragIndicator(.visible)
+            .interactiveDismissDisabled(false)  // Allow dismissal but not interfere with scrolling
         }
     }
 }
@@ -106,44 +107,48 @@ struct EmojiPickerSheet: View {
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 8)
     
     var body: some View {
-        NavigationView {
-            VStack(spacing: 0) {
-                // Header
-                HStack {
-                    Text("Choose Emoji")
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                    Spacer()
-                    Button("Cancel") {
-                        onDismiss()
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Text("Choose Emoji")
+                    .font(.headline)
+                    .foregroundColor(.primary)
+                Spacer()
+                Button("Cancel") {
+                    onDismiss()
+                }
+                .foregroundColor(.blue)
+            }
+            .padding()
+            .background(Color(.systemBackground))
+            
+            // Emoji Grid with ScrollView
+            ScrollView(.vertical, showsIndicators: true) {
+                LazyVGrid(columns: columns, spacing: 12) {
+                    ForEach(emojis, id: \.self) { emoji in
+                        Button(action: {
+                            onEmojiSelected(emoji)
+                        }) {
+                            Text(emoji)
+                                .font(.system(size: 32))
+                                .frame(width: 44, height: 44)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(Color.gray.opacity(0.1))
+                                )
+                        }
+                        .buttonStyle(PlainButtonStyle())
                     }
                 }
                 .padding()
-                
-                // Emoji Grid
-                ScrollView {
-                    LazyVGrid(columns: columns, spacing: 12) {
-                        ForEach(emojis, id: \.self) { emoji in
-                            Button(action: {
-                                onEmojiSelected(emoji)
-                            }) {
-                                Text(emoji)
-                                    .font(.system(size: 32))
-                                    .frame(width: 44, height: 44)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .fill(Color.gray.opacity(0.1))
-                                    )
-                            }
-                            .buttonStyle(PlainButtonStyle())
-                        }
-                    }
-                    .padding()
-                }
-                
-                Spacer()
             }
-            .background(Color(.systemBackground))
+            .gesture(
+                DragGesture()
+                    .onChanged { _ in
+                        // Do nothing - this prevents the drag from dismissing the sheet
+                    }
+            )
         }
+        .background(Color(.systemBackground))
     }
 }
