@@ -38,12 +38,13 @@ struct SheetsClient {
         postJSON(payload, completion: completion)
     }
 
-    func postPayment(remoteID: String, name: String, sortIndex: Int,
+    func postPayment(remoteID: String, name: String, emoji: String?, sortIndex: Int,
                      completion: @escaping (Response) -> Void = { _ in }) {
         let payload: [String: Any] = [
             "type": "paymentMethod",
             "remoteID": remoteID,
             "name": name,
+            "emoji": emoji ?? "", // Added emoji field
             "sortIndex": sortIndex
         ]
         postJSON(payload, completion: completion)

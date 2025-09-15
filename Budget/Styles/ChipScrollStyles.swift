@@ -58,11 +58,23 @@ struct PaymentChipView: View {
     
     var body: some View {
         Button(action: onTap) {
-            Text(paymentMethod.name)
-                .font(.system(size: 16, weight: .medium))
-                .foregroundColor(.white)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 12)
+            HStack(spacing: 6) {
+                // Show emoji if available, otherwise use card icon
+                if let emoji = paymentMethod.emoji, !emoji.isEmpty {
+                    Text(emoji)
+                        .font(.system(size: 16))
+                } else {
+                    Image(systemName: "creditcard.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(.white.opacity(0.7))
+                }
+                
+                Text(paymentMethod.name)
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(.white)
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
         }
         .background(GlassChipBackground(isSelected: isSelected))
         .buttonStyle(PlainButtonStyle())

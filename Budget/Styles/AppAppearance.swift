@@ -35,10 +35,9 @@ enum AppAppearance {
         // Text field backgrounds (for your custom text fields)
         UITextField.appearance().backgroundColor = .clear
         
-        // Toolbar backgrounds (for your keyboard toolbars)
-        UIToolbar.appearance().backgroundColor = .clear
-        UIToolbar.appearance().barTintColor = .clear
-        UIToolbar.appearance().isTranslucent = true
+        // CRITICAL: REMOVE ALL KEYBOARD AND TOOLBAR OVERRIDES
+        // DO NOT set any UITextField keyboard properties globally
+        // DO NOT set any UIToolbar properties that might interfere
         
         // Make sure window backgrounds use our default color
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {

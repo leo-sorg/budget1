@@ -191,7 +191,7 @@ struct CategoryListItem: View {
     }
 }
 
-// MARK: - Payment Method List Item
+// MARK: - Payment Method List Item (Updated to show emoji)
 struct PaymentMethodListItem: View {
     let paymentMethod: PaymentMethod
     let onDelete: () -> Void
@@ -200,10 +200,15 @@ struct PaymentMethodListItem: View {
         AppListItem(
             content: {
                 HStack(spacing: 12) {
-                    // Payment method icon
-                    Image(systemName: "creditcard.fill")
-                        .font(.system(size: 18))
-                        .foregroundColor(.white.opacity(0.6))
+                    // Payment method emoji (fallback to card icon)
+                    if let emoji = paymentMethod.emoji, !emoji.isEmpty {
+                        Text(emoji)
+                            .font(.system(size: 20))
+                    } else {
+                        Image(systemName: "creditcard.fill")
+                            .font(.system(size: 18))
+                            .foregroundColor(.white.opacity(0.6))
+                    }
                     
                     // Name
                     Text(paymentMethod.name)

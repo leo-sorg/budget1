@@ -7,21 +7,15 @@ struct ManageView: View {
     @Environment(\.modelContext) private var context
     @EnvironmentObject private var store: BackgroundImageStore
 
-    // Order by sortIndex, then name
-    @Query(sort: [
-        SortDescriptor(\Category.sortIndex, order: .forward),
-        SortDescriptor(\Category.name, order: .forward)
-    ]) private var categories: [Category]
-
-    @Query(sort: [
-        SortDescriptor(\PaymentMethod.sortIndex, order: .forward),
-        SortDescriptor(\PaymentMethod.name, order: .forward)
-    ]) private var methods: [PaymentMethod]
+    // Use @State instead of @Query to avoid migration issues
+    @State private var categories: [Category] = []
+    @State private var methods: [PaymentMethod] = []
 
     @State private var newCategory = ""
     @State private var newCategoryEmoji = ""
     @State private var newCategoryIsIncome = false
     @State private var newPayment = ""
+    @State private var newPaymentEmoji = ""
     @State private var alertMessage: String?
     @State private var showHexColorSheet = false
     @State private var hexColorInput = ""
@@ -99,7 +93,9 @@ struct ManageView: View {
             .scrollContentBackground(.hidden)
             .background(Color.clear)
         }
-        .task { normalizeSortIndicesIfNeeded() }
+        .task {
+            await loadData()
+        }
         .alert("Oops", isPresented: Binding(
             get: { alertMessage != nil },
             set: { if !$0 { alertMessage = nil } }
@@ -132,9 +128,12 @@ struct ManageView: View {
                 onClose: closePaymentSheet,
                 isButtonDisabled: newPayment.isEmpty
             ) {
-                PaymentSheetContent(name: $newPayment)
+                PaymentSheetContent(
+                    name: $newPayment,
+                    emoji: $newPaymentEmoji
+                )
             }
-            .presentationDetents([.height(280)])
+            .presentationDetents([.height(350)])
             .presentationBackground(Color.clear)
             .presentationDragIndicator(.hidden)
         }
@@ -150,6 +149,46 @@ struct ManageView: View {
             .presentationDetents([.height(280)])
             .presentationBackground(Color.clear)
             .presentationDragIndicator(.hidden)
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Button("Cancel") {
+                    hideKeyboard()
+                }
+                Spacer()
+                Button("Done") {
+                    hideKeyboard()
+                }
+            }
+        }
+    }
+
+    // MARK: - Data Loading
+    @MainActor
+    private func loadData() async {
+        do {
+            // Load categories
+            let categoryDescriptor = FetchDescriptor<Category>(
+                sortBy: [
+                    SortDescriptor(\Category.sortIndex, order: .forward),
+                    SortDescriptor(\Category.name, order: .forward)
+                ]
+            )
+            categories = try context.fetch(categoryDescriptor)
+            
+            // Load payment methods
+            let paymentDescriptor = FetchDescriptor<PaymentMethod>(
+                sortBy: [
+                    SortDescriptor(\PaymentMethod.sortIndex, order: .forward),
+                    SortDescriptor(\PaymentMethod.name, order: .forward)
+                ]
+            )
+            methods = try context.fetch(paymentDescriptor)
+            
+            normalizeSortIndicesIfNeeded()
+        } catch {
+            print("Error loading data: \(error)")
+            alertMessage = "Could not load data: \(error.localizedDescription)"
         }
     }
 
@@ -169,7 +208,7 @@ struct ManageView: View {
                 onDelete: {
                     context.delete(category)
                     try? context.save()
-                    renumberCategories()
+                    Task { await loadData() }
                 }
             )
         }
@@ -190,7 +229,7 @@ struct ManageView: View {
                 onDelete: {
                     context.delete(method)
                     try? context.save()
-                    renumberMethods()
+                    Task { await loadData() }
                 }
             )
         }
@@ -288,7 +327,7 @@ struct ManageView: View {
     // MARK: - Add Functions
     @MainActor
     private func addCategory() {
-        dismissKeyboard()
+        hideKeyboard()
         let name = trimmed(newCategory)
         let emoji = trimmed(newCategoryEmoji)
         guard !name.isEmpty else { return }
@@ -313,6 +352,7 @@ struct ManageView: View {
             }
 
             closeCategorySheet()
+            Task { await loadData() }
 
             Task {
                 SHEETS.postCategory(
@@ -331,8 +371,9 @@ struct ManageView: View {
 
     @MainActor
     private func addPayment() {
-        dismissKeyboard()
+        hideKeyboard()
         let name = trimmed(newPayment)
+        let emoji = trimmed(newPaymentEmoji)
         guard !name.isEmpty else { return }
 
         if methods.contains(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) {
@@ -341,7 +382,11 @@ struct ManageView: View {
         }
 
         let next = (methods.map { $0.sortIndex }.max() ?? -1) + 1
-        let newPM = PaymentMethod(name: name, sortIndex: next)
+        let newPM = PaymentMethod(
+            name: name,
+            emoji: emoji.isEmpty ? nil : emoji,
+            sortIndex: next
+        )
 
         do {
             try withAnimation {
@@ -352,10 +397,12 @@ struct ManageView: View {
             SHEETS.postPayment(
                 remoteID: newPM.remoteID,
                 name: newPM.name,
+                emoji: newPM.emoji,
                 sortIndex: newPM.sortIndex
             )
 
             closePaymentSheet()
+            Task { await loadData() }
         } catch {
             alertMessage = "Could not save payment method: \(error.localizedDescription)"
             print("SAVE ERROR (Payment):", error)
@@ -363,7 +410,7 @@ struct ManageView: View {
     }
 
     private func closeCategorySheet() {
-        dismissKeyboard()
+        hideKeyboard()
         newCategory = ""
         newCategoryEmoji = ""
         newCategoryIsIncome = false
@@ -371,8 +418,9 @@ struct ManageView: View {
     }
 
     private func closePaymentSheet() {
-        dismissKeyboard()
+        hideKeyboard()
         newPayment = ""
+        newPaymentEmoji = ""
         showPaymentForm = false
     }
 
@@ -428,6 +476,11 @@ struct ManageView: View {
             showHexColorSheet = false
             hexColorInput = ""
         }
+    }
+    
+    // MARK: - Helper function
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }
 
@@ -505,11 +558,7 @@ struct HexColorSheetContent: View {
                     .font(.system(size: 18, weight: .medium))
                     .foregroundColor(.white.opacity(0.5))
                 
-                TextField("000000", text: $hexInput)
-                    .focused($isFocused)
-                    .textFieldStyle(GlassTextFieldStyle())
-                    .keyboardType(.asciiCapable)
-                    .autocapitalization(.allCharacters)
+                AppTextField(text: $hexInput, placeholder: "000000")
                     .onChange(of: hexInput) { _, newValue in
                         // Remove # if user types it
                         var cleaned = newValue.replacingOccurrences(of: "#", with: "")

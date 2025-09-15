@@ -50,12 +50,13 @@ struct InputView: View {
                             .font(.headline)
                             .foregroundColor(.appText)
                         
-                        GlassTextFieldWithCallback(
-                            text: $descriptionText,
-                            placeholder: "Optional description"
-                        ) { isFocused in
-                            isDescriptionFieldFocused = isFocused
-                        }
+            // Updated AppTextField for description
+            AppTextField(
+                text: $descriptionText,
+                placeholder: "Optional description"
+            ) { isFocused in
+                isDescriptionFieldFocused = isFocused
+            }
                     }
                     
                     // Save button
@@ -90,6 +91,22 @@ struct InputView: View {
             paymentMethods = (try? ctx.fetch(FetchDescriptor<PaymentMethod>(sortBy: [SortDescriptor(\.name)]))) ?? []
             if categories.isEmpty || paymentMethods.isEmpty { seedDefaults() }
         }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Button("Cancel") {
+                    hideKeyboard()
+                }
+                Spacer()
+                Button("Done") {
+                    hideKeyboard()
+                }
+            }
+        }
+    }
+    
+    // MARK: - Helper function (moved here)
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
     
     private func handleFieldSwitch(from: String?, to: String?) {
@@ -253,8 +270,8 @@ struct InputView: View {
                 .font(.headline)
                 .foregroundColor(.appText)
             
-            // Updated CurrencyTextField with focus callback
-            CurrencyTextField(
+            // Updated AppCurrencyField with focus callback
+            AppCurrencyField(
                 text: $amountText,
                 placeholder: "R$ 0,00"
             ) { isFocused in
@@ -396,9 +413,15 @@ struct InputView: View {
         }
         if !categoriesOnly && paymentMethods.isEmpty {
             let base = (paymentMethods.map { $0.sortIndex }.max() ?? -1) + 1
-            let seeds = ["Credit Card", "Debit Card", "Pix", "Cash"]
-            for (offset, name) in seeds.enumerated() {
-                ctx.insert(PaymentMethod(name: name, sortIndex: base + offset))
+            let seeds: [(String, String?)] = [
+                ("Credit Card", "💳"),
+                ("Debit Card", "💳"),
+                ("Pix", "📱"),
+                ("Cash", "💵")
+            ]
+            for (offset, seed) in seeds.enumerated() {
+                let (name, emoji) = seed
+                ctx.insert(PaymentMethod(name: name, emoji: emoji, sortIndex: base + offset))
             }
         }
         try? ctx.save()

@@ -35,6 +35,7 @@ final class Category {
 @Model
 final class PaymentMethod {
     @Attribute(.unique) var name: String
+    var emoji: String? // Keep simple - no renaming needed
     /// Controls display order via drag & drop.
     var sortIndex: Int
     /// Stable ID used when syncing to Google Sheets (and future backends).
@@ -46,10 +47,12 @@ final class PaymentMethod {
 
     init(
         name: String,
+        emoji: String? = nil,
         sortIndex: Int = 0,
         remoteID: String = UUID().uuidString
     ) {
         self.name = name
+        self.emoji = emoji
         self.sortIndex = sortIndex
         self.remoteID = remoteID
     }

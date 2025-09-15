@@ -62,6 +62,22 @@ struct BottomSheet<SheetContent: View>: View {
         }
         .background(Color(white: 0.15))
         .edgesIgnoringSafeArea(.bottom)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Button("Cancel") {
+                    hideKeyboard()
+                }
+                Spacer()
+                Button("Done") {
+                    hideKeyboard()
+                }
+            }
+        }
+    }
+    
+    // MARK: - Helper function (moved here)
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }
 
@@ -99,17 +115,22 @@ struct CategorySheetContent: View {
                 Text("Name")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.white.opacity(0.6))
-                TextField("e.g. Food", text: $name)
-                    .textFieldStyle(GlassTextFieldStyle())
+                AppTextField(text: $name, placeholder: "e.g. Food")
             }
             
-            // Emoji field
+            // Emoji field with picker button
             VStack(alignment: .leading, spacing: 8) {
-                Text("Emoji (optional)")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.white.opacity(0.6))
-                TextField("e.g. 🍕", text: $emoji)
-                    .textFieldStyle(GlassTextFieldStyle())
+                HStack {
+                    Text("Emoji (optional)")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.white.opacity(0.6))
+                    Spacer()
+                    EmojiHelperButton { selectedEmoji in
+                        emoji = selectedEmoji
+                    }
+                }
+                
+                AppEmojiField(text: $emoji, placeholder: "e.g. 🍕")
             }
             
             // Type selector
@@ -147,15 +168,33 @@ struct CategorySheetContent: View {
 // MARK: - Payment Bottom Sheet Content
 struct PaymentSheetContent: View {
     @Binding var name: String
+    @Binding var emoji: String
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Payment Type")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.white.opacity(0.6))
-            TextField("e.g. Credit Card, Pix", text: $name)
-                .textFieldStyle(GlassTextFieldStyle())
+        VStack(spacing: 24) {
+            // Name field
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Payment Type")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.white.opacity(0.6))
+                AppTextField(text: $name, placeholder: "e.g. Credit Card, Pix")
+            }
+            
+            // Emoji field with picker button
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text("Emoji (optional)")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.white.opacity(0.6))
+                    Spacer()
+                    EmojiHelperButton { selectedEmoji in
+                        emoji = selectedEmoji
+                    }
+                }
+                
+                AppEmojiField(text: $emoji, placeholder: "e.g. 💳")
+            }
         }
-        .padding(.bottom, 60) // Extra padding for smaller sheet
+        .padding(.bottom, 60)
     }
 }
