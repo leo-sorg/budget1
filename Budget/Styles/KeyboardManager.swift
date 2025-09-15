@@ -43,11 +43,14 @@ struct EmojiTextFieldRepresentable: UIViewRepresentable {
         textField.rightView = UIView(frame: CGRect(x: 0, y: 0, width: 4, height: 0))
         textField.rightViewMode = .always
         applyPlaceholder(placeholder, to: textField)
+        textField.inputAccessoryView = makeAccessoryToolbar(for: context.coordinator)
+        context.coordinator.textField = textField
         return textField
     }
 
     func updateUIView(_ uiView: EmojiTextField, context: Context) {
         context.coordinator.parent = self
+        context.coordinator.textField = uiView
 
         if uiView.text != text {
             uiView.text = text
@@ -64,6 +67,21 @@ struct EmojiTextFieldRepresentable: UIViewRepresentable {
         }
     }
 
+    private func makeAccessoryToolbar(for coordinator: Coordinator) -> UIToolbar {
+        let toolbar = UIToolbar()
+        toolbar.barStyle = .black
+        toolbar.isTranslucent = true
+        toolbar.tintColor = .white
+        toolbar.sizeToFit()
+
+        let cancelItem = UIBarButtonItem(title: "Cancel", style: .plain, target: coordinator, action: #selector(Coordinator.cancelTapped))
+        let flexible = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        let doneItem = UIBarButtonItem(title: "Done", style: .done, target: coordinator, action: #selector(Coordinator.doneTapped))
+        toolbar.items = [cancelItem, flexible, doneItem]
+
+        return toolbar
+    }
+
     private static func applyPlaceholder(_ placeholder: String, to textField: UITextField) {
         let attributes: [NSAttributedString.Key: Any] = [
             .foregroundColor: UIColor.white.withAlphaComponent(0.4)
@@ -78,6 +96,7 @@ struct EmojiTextFieldRepresentable: UIViewRepresentable {
     // MARK: - Coordinator
     final class Coordinator: NSObject, UITextFieldDelegate {
         var parent: EmojiTextFieldRepresentable
+        weak var textField: EmojiTextField?
 
         init(parent: EmojiTextFieldRepresentable) {
             self.parent = parent
@@ -105,6 +124,15 @@ struct EmojiTextFieldRepresentable: UIViewRepresentable {
         func textFieldShouldReturn(_ textField: UITextField) -> Bool {
             textField.resignFirstResponder()
             return true
+        }
+
+        @objc func cancelTapped() {
+            textField?.resignFirstResponder()
+        }
+
+        @objc func doneTapped() {
+            parent.text = textField?.text ?? parent.text
+            textField?.resignFirstResponder()
         }
     }
 }
