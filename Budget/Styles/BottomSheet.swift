@@ -7,6 +7,7 @@ struct BottomSheet<SheetContent: View>: View {
     let buttonAction: () -> Void
     let onClose: () -> Void
     let isButtonDisabled: Bool
+    @State private var keyboardHeight: CGFloat = 0
     
     init(
         buttonTitle: String,
@@ -23,45 +24,85 @@ struct BottomSheet<SheetContent: View>: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Header section
-            HStack(alignment: .top) {
-                // Drag indicator in center
-                Spacer()
-                Capsule()
-                    .fill(Color.white.opacity(0.3))
-                    .frame(width: 36, height: 5)
-                    .padding(.top, 8)
-                Spacer()
-            }
-            .overlay(
-                // X button overlaid on right
-                HStack {
+        GeometryReader { geometry in
+            VStack(spacing: 0) {
+                // Header section
+                HStack(alignment: .top) {
+                    // Drag indicator in center
                     Spacer()
-                    Button(action: onClose) {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 24))
-                            .foregroundColor(.white.opacity(0.5))
-                    }
-                    .offset(x: -20, y: 20) // 20pt from right, 20pt from top
+                    Capsule()
+                        .fill(Color.white.opacity(0.3))
+                        .frame(width: 36, height: 5)
+                        .padding(.top, 8)
+                    Spacer()
                 }
-            )
-            .frame(height: 60)
-            
-            // Dynamic content
-            sheetContent
-                .padding(.horizontal, 20)
-                .padding(.bottom, 30)
-            
-            // Fixed button at bottom with safe area consideration
-            Button(buttonTitle, action: buttonAction)
-                .buttonStyle(AppButtonStyle())
-                .disabled(isButtonDisabled)
-                .padding(.horizontal, 20)
-                .padding(.bottom, 50)
+                .overlay(
+                    // X button overlaid on right
+                    HStack {
+                        Spacer()
+                        Button(action: onClose) {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 24))
+                                .foregroundColor(.white.opacity(0.5))
+                        }
+                        .offset(x: -20, y: 20) // 20pt from right, 20pt from top
+                    }
+                )
+                .frame(height: 60)
+                
+                // Scrollable content when keyboard is shown
+                ScrollView {
+                    VStack(spacing: 0) {
+                        // Dynamic content
+                        sheetContent
+                            .padding(.horizontal, 20)
+                            .padding(.bottom, 30)
+                        
+                        // Fixed button at bottom
+                        Button(buttonTitle, action: buttonAction)
+                            .buttonStyle(AppButtonStyle())
+                            .disabled(isButtonDisabled)
+                            .padding(.horizontal, 20)
+                            .padding(.bottom, keyboardHeight > 0 ? 20 : 50) // Less bottom padding when keyboard is shown
+                    }
+                }
+                .scrollDismissesKeyboard(.interactively)
+                
+                // Add padding for keyboard
+                if keyboardHeight > 0 {
+                    Spacer()
+                        .frame(height: keyboardHeight)
+                }
+            }
+            .background(Color(white: 0.15))
+            .edgesIgnoringSafeArea(.bottom)
+            .onAppear {
+                NotificationCenter.default.addObserver(
+                    forName: UIResponder.keyboardWillShowNotification,
+                    object: nil,
+                    queue: .main
+                ) { notification in
+                    if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
+                        withAnimation(.easeOut(duration: 0.25)) {
+                            keyboardHeight = keyboardFrame.height - geometry.safeAreaInsets.bottom
+                        }
+                    }
+                }
+                
+                NotificationCenter.default.addObserver(
+                    forName: UIResponder.keyboardWillHideNotification,
+                    object: nil,
+                    queue: .main
+                ) { _ in
+                    withAnimation(.easeOut(duration: 0.25)) {
+                        keyboardHeight = 0
+                    }
+                }
+            }
+            .onDisappear {
+                NotificationCenter.default.removeObserver(self)
+            }
         }
-        .background(Color(white: 0.15))
-        .edgesIgnoringSafeArea(.bottom)
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Button("Cancel") {
