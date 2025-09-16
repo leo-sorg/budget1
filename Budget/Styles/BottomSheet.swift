@@ -25,6 +25,10 @@ struct BottomSheet<SheetContent: View>: View {
     
     var body: some View {
         GeometryReader { geometry in
+            let safeBottomInset = geometry.safeAreaInsets.bottom
+            let restingButtonPadding = max(50, safeBottomInset + 16)
+            let buttonBottomPadding = keyboardHeight > 0 ? keyboardHeight + safeBottomInset : restingButtonPadding
+
             VStack(spacing: 0) {
                 // Header section
                 HStack(alignment: .top) {
@@ -57,25 +61,33 @@ struct BottomSheet<SheetContent: View>: View {
                         sheetContent
                             .padding(.horizontal, 20)
                             .padding(.bottom, 30)
-                        
-                        // Fixed button at bottom
-                        Button(buttonTitle, action: buttonAction)
-                            .buttonStyle(AppButtonStyle())
-                            .disabled(isButtonDisabled)
-                            .padding(.horizontal, 20)
-                            .padding(.bottom, keyboardHeight > 0 ? 20 : 50) // Less bottom padding when keyboard is shown
                     }
                 }
                 .scrollDismissesKeyboard(.interactively)
-                
-                // Add padding for keyboard
-                if keyboardHeight > 0 {
-                    Spacer()
-                        .frame(height: keyboardHeight)
-                }
             }
             .background(Color(white: 0.15))
             .edgesIgnoringSafeArea(.bottom)
+            .safeAreaInset(edge: .bottom) {
+                VStack(spacing: 12) {
+                    Button(buttonTitle, action: buttonAction)
+                        .buttonStyle(AppButtonStyle())
+                        .disabled(isButtonDisabled)
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 12)
+                .padding(.bottom, buttonBottomPadding)
+                .frame(maxWidth: .infinity)
+                .background(
+                    Color(white: 0.15)
+                        .overlay(
+                            Rectangle()
+                                .fill(Color.white.opacity(0.12))
+                                .frame(height: 1)
+                                .frame(maxHeight: .infinity, alignment: .top)
+                        )
+                        .ignoresSafeArea(edges: .bottom)
+                )
+            }
             .onAppear {
                 NotificationCenter.default.addObserver(
                     forName: UIResponder.keyboardWillShowNotification,
@@ -84,7 +96,8 @@ struct BottomSheet<SheetContent: View>: View {
                 ) { notification in
                     if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
                         withAnimation(.easeOut(duration: 0.25)) {
-                            keyboardHeight = keyboardFrame.height - geometry.safeAreaInsets.bottom
+                            let height = keyboardFrame.height - geometry.safeAreaInsets.bottom
+                            keyboardHeight = max(height, 0)
                         }
                     }
                 }
@@ -103,23 +116,8 @@ struct BottomSheet<SheetContent: View>: View {
                 NotificationCenter.default.removeObserver(self)
             }
         }
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Button("Cancel") {
-                    hideKeyboard()
-                }
-                Spacer()
-                Button("Done") {
-                    hideKeyboard()
-                }
-            }
-        }
     }
     
-    // MARK: - Helper function
-    private func hideKeyboard() {
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-    }
 }
 
 // MARK: - Corner Radius Extension
