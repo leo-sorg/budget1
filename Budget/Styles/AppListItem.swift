@@ -1,10 +1,13 @@
 import SwiftUI
 
-// MARK: - Reusable Glass List Item Component
+// MARK: - Reusable Glass List Item Component with Swipe to Delete
 struct AppListItem<Content: View, TrailingContent: View>: View {
     let content: Content
     let trailingContent: TrailingContent
     let onDelete: (() -> Void)?
+    
+    @State private var offset: CGFloat = 0
+    @State private var isSwiped = false
     
     init(
         @ViewBuilder content: () -> Content,
@@ -17,37 +20,93 @@ struct AppListItem<Content: View, TrailingContent: View>: View {
     }
     
     var body: some View {
-        HStack(spacing: 12) {
-            content
-            
-            Spacer()
-            
-            trailingContent
-            
-            if let onDelete = onDelete {
-                Button(role: .destructive, action: onDelete) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 18))
-                        .foregroundColor(.white.opacity(0.4))
+        ZStack(alignment: .trailing) {
+            // Delete button background (revealed on swipe) - BEHIND the main content
+            if onDelete != nil && (offset < 0 || isSwiped) {
+                HStack {
+                    Spacer()
+                    Button(action: {
+                        withAnimation(.easeOut(duration: 0.3)) {
+                            offset = -UIScreen.main.bounds.width
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            onDelete?()
+                        }
+                    }) {
+                        VStack(spacing: 4) {
+                            Image(systemName: "trash.fill")
+                                .font(.system(size: 18))
+                                .foregroundColor(.white.opacity(0.5))
+                            Text("Delete")
+                                .font(.system(size: 11))
+                                .foregroundColor(.white.opacity(0.5))
+                        }
+                        .frame(width: 80)
+                        .frame(maxHeight: .infinity)
+                    }
+                    .buttonStyle(PlainButtonStyle())
                 }
-                .buttonStyle(.borderless)
+                .transition(.opacity)
+            }
+            
+            // Main content - SOLID BACKGROUND to cover the delete button
+            HStack(spacing: 12) {
+                content
+                
+                Spacer()
+                
+                trailingContent
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(white: 0.13)) // Solid dark background first
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(.ultraThinMaterial)
+                            .opacity(0.3)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                    )
+            )
+            .offset(x: offset)
+            .gesture(
+                onDelete != nil ? DragGesture()
+                    .onChanged { value in
+                        if value.translation.width < 0 {
+                            // Only allow swiping left, and limit the swipe distance
+                            offset = max(-100, value.translation.width)
+                        } else if isSwiped {
+                            // Allow swiping back to close if already swiped
+                            offset = min(0, -80 + value.translation.width)
+                        }
+                    }
+                    .onEnded { value in
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            let threshold: CGFloat = -40
+                            if offset < threshold {
+                                offset = -80
+                                isSwiped = true
+                            } else {
+                                offset = 0
+                                isSwiped = false
+                            }
+                        }
+                    } : nil
+            )
+            .onTapGesture {
+                if isSwiped {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        offset = 0
+                        isSwiped = false
+                    }
+                }
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(.clear)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(.ultraThinMaterial)
-                        .opacity(0.3)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                )
-        )
+        .clipped() // Ensure delete button doesn't show outside bounds
     }
 }
 
