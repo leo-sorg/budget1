@@ -272,8 +272,15 @@ struct AppTextField: View {
 struct AppEmojiField: View {
     @Binding var text: String
     let placeholder: String
+    let onFocusChange: ((Bool) -> Void)?
     @FocusState private var isFocused: Bool
-    
+
+    init(text: Binding<String>, placeholder: String, onFocusChange: ((Bool) -> Void)? = nil) {
+        self._text = text
+        self.placeholder = placeholder
+        self.onFocusChange = onFocusChange
+    }
+
     var body: some View {
         EmojiTextFieldRepresentable(text: $text, placeholder: placeholder, isFirstResponder: $isFocused)
             .focused($isFocused)
@@ -283,6 +290,9 @@ struct AppEmojiField: View {
                 if newValue.count > 10 {
                     text = String(newValue.prefix(10))
                 }
+            }
+            .onChange(of: isFocused) { _, newValue in
+                onFocusChange?(newValue)
             }
             .padding(12)
             .background(GlassBackground(isFocused: isFocused))

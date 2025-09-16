@@ -17,21 +17,7 @@ struct InputView: View {
     @State private var alertMessage: String?
     
     // Focus state for auto-scroll
-    @State private var isAmountFieldFocused: Bool = false
-    @State private var isDescriptionFieldFocused: Bool = false
-    @State private var scrollOffset: CGFloat = 0
-    
-    // Dynamic scroll measurement
-    @State private var saveButtonFrame: CGRect = .zero
-    @State private var scrollViewHeight: CGFloat = 0
-    @State private var keyboardHeight: CGFloat = 0
-    
-    // Track focus changes to handle direct switching
-    @State private var focusedField: String? = nil {
-        didSet {
-            handleFieldSwitch(from: oldValue, to: focusedField)
-        }
-    }
+    @StateObject private var keyboardScroll = KeyboardScrollCoordinator()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -59,7 +45,11 @@ struct InputView: View {
                             text: $descriptionText,
                             placeholder: "Optional description"
                         ) { isFocused in
-                            isDescriptionFieldFocused = isFocused
+                            keyboardScroll.focusChanged(
+                                field: "input_description",
+                                isFocused: isFocused,
+                                accessoryHeight: KeyboardScrollCoordinator.standardAccessoryHeight
+                            )
                         }
                     }
                     
@@ -71,35 +61,21 @@ struct InputView: View {
                         .frame(height: 300)
                 }
                 .padding()
-                .offset(y: scrollOffset)
+                .offset(y: keyboardScroll.scrollOffset)
             }
-            .background(
-                GeometryReader { geometry in
-                    Color.clear
-                        .onAppear {
-                            scrollViewHeight = geometry.size.height
-                        }
-                }
-            )
             .scrollContentBackground(.hidden)
             .background(Color.clear)
             .scrollDismissesKeyboard(.interactively)
         }
         .overlay(alignment: .top) { toastOverlay }
         .animation(.default, value: showSavedToast)
-        .onChange(of: isAmountFieldFocused) { _, isFocused in
-            focusedField = isFocused ? "value" : (isDescriptionFieldFocused ? "description" : nil)
-        }
-        .onChange(of: isDescriptionFieldFocused) { _, isFocused in
-            focusedField = isFocused ? "description" : (isAmountFieldFocused ? "value" : nil)
-        }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notification in
             if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
-                keyboardHeight = keyboardFrame.height
+                keyboardScroll.keyboardWillShow(height: keyboardFrame.height)
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
-            keyboardHeight = 0
+            keyboardScroll.keyboardWillHide()
         }
         .alert("Oops", isPresented: alertBinding) {
             Button("OK") { alertMessage = nil }
@@ -127,40 +103,6 @@ struct InputView: View {
     // MARK: - Helper function
     private func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-    }
-    
-    private func handleFieldSwitch(from: String?, to: String?) {
-        guard to != nil else {
-            // Keyboard dismissed - reset scroll
-            withAnimation(.easeInOut(duration: 0.3)) {
-                scrollOffset = 0
-            }
-            return
-        }
-        
-        // Calculate dynamically based on actual positions
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            withAnimation(.easeInOut(duration: 0.3)) {
-                // Get the bottom of the save button
-                let buttonBottom = saveButtonFrame.maxY
-                
-                // Get the top of the keyboard (screen height - keyboard height)
-                let keyboardTop = UIScreen.main.bounds.height - keyboardHeight
-                
-                // Calculate how much we need to scroll
-                // We want the button to be visible above the keyboard with some padding
-                let padding: CGFloat = 20
-                let targetPosition = keyboardTop - padding
-                
-                // If button is below the target position, scroll up
-                if buttonBottom > targetPosition {
-                    scrollOffset = -(buttonBottom - targetPosition)
-                } else {
-                    // Button is already visible, no scroll needed
-                    scrollOffset = 0
-                }
-            }
-        }
     }
     
     // MARK: - Date Section with inline calendar
@@ -304,7 +246,11 @@ struct InputView: View {
                 text: $amountText,
                 placeholder: "R$ 0,00"
             ) { isFocused in
-                isAmountFieldFocused = isFocused
+                keyboardScroll.focusChanged(
+                    field: "input_amount",
+                    isFocused: isFocused,
+                    accessoryHeight: KeyboardScrollCoordinator.standardAccessoryHeight
+                )
             }
         }
     }
@@ -320,10 +266,10 @@ struct InputView: View {
             GeometryReader { geometry in
                 Color.clear
                     .onAppear {
-                        saveButtonFrame = geometry.frame(in: .global)
+                        keyboardScroll.registerButtonFrame(geometry.frame(in: .global))
                     }
                     .onChange(of: geometry.frame(in: .global)) { _, newFrame in
-                        saveButtonFrame = newFrame
+                        keyboardScroll.registerButtonFrame(newFrame)
                     }
             }
         )
