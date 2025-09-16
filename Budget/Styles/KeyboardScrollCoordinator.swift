@@ -25,7 +25,21 @@ final class KeyboardScrollCoordinator: ObservableObject {
     }
 
     func registerButtonFrame(_ frame: CGRect) {
-        buttonFrame = frame
+        // Geometry readers report the already-shifted frame whenever the
+        // scroll offset animates. Remove the temporary offset so we keep the
+        // original anchor position of the button and avoid endless
+        // recalculations while editing fields.
+        let adjustedFrame = frame.offsetBy(dx: 0, dy: -scrollOffset)
+
+        if buttonFrame == .zero {
+            buttonFrame = adjustedFrame
+            scheduleUpdate(delayed: true)
+            return
+        }
+
+        guard !framesAreApproximatelyEqual(buttonFrame, adjustedFrame) else { return }
+
+        buttonFrame = adjustedFrame
         scheduleUpdate(delayed: true)
     }
 
@@ -40,9 +54,7 @@ final class KeyboardScrollCoordinator: ObservableObject {
         cancelResetWorkItem()
         cancelUpdateWorkItem()
 
-        withAnimation(.easeInOut(duration: 0.3)) {
-            scrollOffset = 0
-        }
+        updateScrollOffsetIfNeeded(0)
     }
 
     func focusChanged(field id: String, isFocused: Bool, accessoryHeight: CGFloat = KeyboardScrollCoordinator.standardAccessoryHeight) {
@@ -68,9 +80,7 @@ final class KeyboardScrollCoordinator: ObservableObject {
             let buttonBottom = self.buttonFrame.maxY
             let offset = buttonBottom > target ? -(buttonBottom - target) : 0
 
-            withAnimation(.easeInOut(duration: 0.3)) {
-                self.scrollOffset = offset
-            }
+            self.updateScrollOffsetIfNeeded(offset)
         }
 
         updateWorkItem = workItem
@@ -83,9 +93,7 @@ final class KeyboardScrollCoordinator: ObservableObject {
 
         let workItem = DispatchWorkItem { [weak self] in
             guard let self, self.activeField == nil else { return }
-            withAnimation(.easeInOut(duration: 0.3)) {
-                self.scrollOffset = 0
-            }
+            self.updateScrollOffsetIfNeeded(0)
         }
 
         resetWorkItem = workItem
@@ -100,6 +108,22 @@ final class KeyboardScrollCoordinator: ObservableObject {
     private func cancelUpdateWorkItem() {
         updateWorkItem?.cancel()
         updateWorkItem = nil
+    }
+
+    private func framesAreApproximatelyEqual(_ lhs: CGRect, _ rhs: CGRect) -> Bool {
+        let threshold: CGFloat = 0.5
+        return abs(lhs.minX - rhs.minX) < threshold &&
+            abs(lhs.minY - rhs.minY) < threshold &&
+            abs(lhs.maxX - rhs.maxX) < threshold &&
+            abs(lhs.maxY - rhs.maxY) < threshold
+    }
+
+    private func updateScrollOffsetIfNeeded(_ newValue: CGFloat) {
+        guard abs(newValue - scrollOffset) > 0.001 else { return }
+
+        withAnimation(.easeInOut(duration: 0.3)) {
+            scrollOffset = newValue
+        }
     }
 }
 
