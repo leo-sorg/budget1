@@ -57,22 +57,17 @@ struct BottomSheet<SheetContent: View>: View {
                         sheetContent
                             .padding(.horizontal, 20)
                             .padding(.bottom, 30)
-                        
+
                         // Fixed button at bottom
                         Button(buttonTitle, action: buttonAction)
                             .buttonStyle(AppButtonStyle())
                             .disabled(isButtonDisabled)
                             .padding(.horizontal, 20)
-                            .padding(.bottom, keyboardHeight > 0 ? 20 : 50) // Less bottom padding when keyboard is shown
+                            .padding(.bottom, keyboardHeight > 0 ? 0 : 50) // Remove extra gap when keyboard is shown
                     }
                 }
+                .padding(.bottom, keyboardHeight)
                 .scrollDismissesKeyboard(.interactively)
-                
-                // Add padding for keyboard
-                if keyboardHeight > 0 {
-                    Spacer()
-                        .frame(height: keyboardHeight)
-                }
             }
             .background(Color(white: 0.15))
             .edgesIgnoringSafeArea(.bottom)
@@ -84,7 +79,8 @@ struct BottomSheet<SheetContent: View>: View {
                 ) { notification in
                     if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
                         withAnimation(.easeOut(duration: 0.25)) {
-                            keyboardHeight = keyboardFrame.height - geometry.safeAreaInsets.bottom
+                            let height = keyboardFrame.height - geometry.safeAreaInsets.bottom
+                            keyboardHeight = max(height, 0)
                         }
                     }
                 }
@@ -103,23 +99,8 @@ struct BottomSheet<SheetContent: View>: View {
                 NotificationCenter.default.removeObserver(self)
             }
         }
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Button("Cancel") {
-                    hideKeyboard()
-                }
-                Spacer()
-                Button("Done") {
-                    hideKeyboard()
-                }
-            }
-        }
     }
     
-    // MARK: - Helper function
-    private func hideKeyboard() {
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-    }
 }
 
 // MARK: - Corner Radius Extension
