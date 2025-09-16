@@ -17,7 +17,6 @@ struct ManageView: View {
     @State private var newPayment = ""
     @State private var newPaymentEmoji = ""
     @State private var alertMessage: String?
-    @State private var showHexColorSheet = false
     @State private var hexColorInput = ""
 
     // Preset colors for background picker - Using explicit Color values (11 colors + 1 custom slot)
@@ -46,6 +45,7 @@ struct ManageView: View {
     @State private var showCategoryForm = false
     @State private var showPaymentForm = false
     @State private var pickerItem: PhotosPickerItem?
+    @State private var showHexInput = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -64,6 +64,9 @@ struct ManageView: View {
                                 onTap: {
                                     withAnimation(.easeInOut(duration: 0.2)) {
                                         selectedSection = section
+                                        // Reset forms when switching sections
+                                        showCategoryForm = false
+                                        showPaymentForm = false
                                     }
                                 }
                             )
@@ -104,44 +107,17 @@ struct ManageView: View {
         } message: {
             Text(alertMessage ?? "")
         }
-        .sheet(isPresented: $showCategoryForm) {
-            BottomSheet(
-                buttonTitle: "Add Category",
-                buttonAction: addCategory,
-                onClose: closeCategorySheet,
-                isButtonDisabled: newCategory.isEmpty
-            ) {
-                CategorySheetContent(
-                    name: $newCategory,
-                    emoji: $newCategoryEmoji,
-                    isIncome: $newCategoryIsIncome
-                )
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Button("Cancel") {
+                    hideKeyboard()
+                }
+                Spacer()
+                Button("Done") {
+                    hideKeyboard()
+                }
             }
         }
-        .sheet(isPresented: $showPaymentForm) {
-            BottomSheet(
-                buttonTitle: "Add Payment Type",
-                buttonAction: addPayment,
-                onClose: closePaymentSheet,
-                isButtonDisabled: newPayment.isEmpty
-            ) {
-                PaymentSheetContent(
-                    name: $newPayment,
-                    emoji: $newPaymentEmoji
-                )
-            }
-        }
-        .sheet(isPresented: $showHexColorSheet) {
-            BottomSheet(
-                buttonTitle: "Set Color",
-                buttonAction: applyHexColor,
-                onClose: { showHexColorSheet = false },
-                isButtonDisabled: !isValidHex(hexColorInput)
-            ) {
-                HexColorSheetContent(hexInput: $hexColorInput)
-            }
-        }
-        // Removed toolbar - sheets handle their own toolbars
     }
 
     // MARK: - Data Loading
@@ -173,48 +149,211 @@ struct ManageView: View {
         }
     }
 
-    // MARK: - Sections using new list components
+    // MARK: - Category Section with inline form
     @ViewBuilder private var categorySection: some View {
-        AppListSection(
-            title: "Category List",
-            emptyMessage: "No categories yet. Add one above.",
-            items: categories,
-            onAdd: {
-                // Ensure payment form is closed before opening category form
-                showPaymentForm = false
-                showCategoryForm = true
-            }
-        ) { category in
-            CategoryListItem(
-                category: category,
-                onDelete: {
-                    context.delete(category)
-                    try? context.save()
-                    Task { await loadData() }
+        VStack(spacing: 24) {
+            // Add/Edit form
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    Text("Add Category")
+                        .font(.headline)
+                        .foregroundColor(.appText)
+                    Spacer()
+                    Button(showCategoryForm ? "Cancel" : "Add New") {
+                        withAnimation {
+                            showCategoryForm.toggle()
+                            if showCategoryForm {
+                                newCategory = ""
+                                newCategoryEmoji = ""
+                                newCategoryIsIncome = false
+                            }
+                        }
+                    }
+                    .buttonStyle(AppSmallButtonStyle())
                 }
-            )
+                
+                if showCategoryForm {
+                    VStack(spacing: 20) {
+                        // Name field
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Name")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.white.opacity(0.6))
+                            AppTextField(text: $newCategory, placeholder: "e.g. Food")
+                        }
+                        
+                        // Emoji field with picker button
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("Emoji (optional)")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(.white.opacity(0.6))
+                                Spacer()
+                                EmojiHelperButton { selectedEmoji in
+                                    newCategoryEmoji = selectedEmoji
+                                }
+                            }
+                            AppEmojiField(text: $newCategoryEmoji, placeholder: "e.g. 🍕")
+                        }
+                        
+                        // Type selector
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Type")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.white.opacity(0.6))
+                            
+                            HStack(spacing: 12) {
+                                Button(action: { newCategoryIsIncome = false }) {
+                                    Text("Expense")
+                                        .font(.system(size: 16, weight: .medium))
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 24)
+                                        .padding(.vertical, 12)
+                                }
+                                .background(GlassChipBackground(isSelected: !newCategoryIsIncome))
+                                .buttonStyle(PlainButtonStyle())
+                                
+                                Button(action: { newCategoryIsIncome = true }) {
+                                    Text("Income")
+                                        .font(.system(size: 16, weight: .medium))
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 24)
+                                        .padding(.vertical, 12)
+                                }
+                                .background(GlassChipBackground(isSelected: newCategoryIsIncome))
+                                .buttonStyle(PlainButtonStyle())
+                            }
+                        }
+                        
+                        // Add button
+                        Button("Add Category") {
+                            addCategory()
+                        }
+                        .buttonStyle(AppButtonStyle())
+                        .disabled(newCategory.isEmpty)
+                    }
+                    .padding(16)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.white.opacity(0.05))
+                    )
+                }
+            }
+            
+            // Category list
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Category List")
+                    .font(.headline)
+                    .foregroundColor(.appText)
+                
+                if categories.isEmpty {
+                    Text("No categories yet. Add one above.")
+                        .foregroundColor(.appText.opacity(0.6))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    VStack(spacing: 8) {
+                        ForEach(categories) { category in
+                            CategoryListItem(
+                                category: category,
+                                onDelete: {
+                                    context.delete(category)
+                                    try? context.save()
+                                    Task { await loadData() }
+                                }
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 
+    // MARK: - Payment Section with inline form
     @ViewBuilder private var paymentSection: some View {
-        AppListSection(
-            title: "Payment Type List",
-            emptyMessage: "No payment methods yet. Add one above.",
-            items: methods,
-            onAdd: {
-                // Ensure category form is closed before opening payment form
-                showCategoryForm = false
-                showPaymentForm = true
-            }
-        ) { method in
-            PaymentMethodListItem(
-                paymentMethod: method,
-                onDelete: {
-                    context.delete(method)
-                    try? context.save()
-                    Task { await loadData() }
+        VStack(spacing: 24) {
+            // Add/Edit form
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    Text("Add Payment Type")
+                        .font(.headline)
+                        .foregroundColor(.appText)
+                    Spacer()
+                    Button(showPaymentForm ? "Cancel" : "Add New") {
+                        withAnimation {
+                            showPaymentForm.toggle()
+                            if showPaymentForm {
+                                newPayment = ""
+                                newPaymentEmoji = ""
+                            }
+                        }
+                    }
+                    .buttonStyle(AppSmallButtonStyle())
                 }
-            )
+                
+                if showPaymentForm {
+                    VStack(spacing: 20) {
+                        // Name field
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Payment Type")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.white.opacity(0.6))
+                            AppTextField(text: $newPayment, placeholder: "e.g. Credit Card, Pix")
+                        }
+                        
+                        // Emoji field with picker button
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("Emoji (optional)")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(.white.opacity(0.6))
+                                Spacer()
+                                EmojiHelperButton { selectedEmoji in
+                                    newPaymentEmoji = selectedEmoji
+                                }
+                            }
+                            AppEmojiField(text: $newPaymentEmoji, placeholder: "e.g. 💳")
+                        }
+                        
+                        // Add button
+                        Button("Add Payment Type") {
+                            addPayment()
+                        }
+                        .buttonStyle(AppButtonStyle())
+                        .disabled(newPayment.isEmpty)
+                    }
+                    .padding(16)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.white.opacity(0.05))
+                    )
+                }
+            }
+            
+            // Payment list
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Payment Type List")
+                    .font(.headline)
+                    .foregroundColor(.appText)
+                
+                if methods.isEmpty {
+                    Text("No payment methods yet. Add one above.")
+                        .foregroundColor(.appText.opacity(0.6))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    VStack(spacing: 8) {
+                        ForEach(methods) { method in
+                            PaymentMethodListItem(
+                                paymentMethod: method,
+                                onDelete: {
+                                    context.delete(method)
+                                    try? context.save()
+                                    Task { await loadData() }
+                                }
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -246,7 +385,7 @@ struct ManageView: View {
                     // Custom hex color button (12th square)
                     Button(action: {
                         hexColorInput = ""
-                        showHexColorSheet = true
+                        showHexInput.toggle()
                     }) {
                         ZStack {
                             RoundedRectangle(cornerRadius: 8)
@@ -264,6 +403,42 @@ struct ManageView: View {
                     }
                     .buttonStyle(PlainButtonStyle())
                 }
+            }
+            
+            // Hex input inline
+            if showHexInput {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Hex Color Code")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.white.opacity(0.6))
+                    
+                    HStack(spacing: 8) {
+                        Text("#")
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(.white.opacity(0.5))
+                        
+                        AppTextField(text: $hexColorInput, placeholder: "000000")
+                            .onChange(of: hexColorInput) { _, newValue in
+                                var cleaned = newValue.replacingOccurrences(of: "#", with: "")
+                                if cleaned.count > 6 {
+                                    cleaned = String(cleaned.prefix(6))
+                                }
+                                cleaned = cleaned.filter { $0.isHexDigit }
+                                hexColorInput = cleaned.uppercased()
+                            }
+                    }
+                    
+                    Button("Set Color") {
+                        applyHexColor()
+                    }
+                    .buttonStyle(AppButtonStyle())
+                    .disabled(!isValidHex(hexColorInput))
+                }
+                .padding(16)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.white.opacity(0.05))
+                )
             }
             
             // Buttons below the color grid
@@ -334,7 +509,11 @@ struct ManageView: View {
                 try context.save()
             }
 
-            closeCategorySheet()
+            // Reset form
+            newCategory = ""
+            newCategoryEmoji = ""
+            newCategoryIsIncome = false
+            showCategoryForm = false
             Task { await loadData() }
 
             Task {
@@ -384,55 +563,14 @@ struct ManageView: View {
                 sortIndex: newPM.sortIndex
             )
 
-            closePaymentSheet()
+            // Reset form
+            newPayment = ""
+            newPaymentEmoji = ""
+            showPaymentForm = false
             Task { await loadData() }
         } catch {
             alertMessage = "Could not save payment method: \(error.localizedDescription)"
             print("SAVE ERROR (Payment):", error)
-        }
-    }
-
-    private func closeCategorySheet() {
-        hideKeyboard()
-        showCategoryForm = false
-        // Reset state after animation completes
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            newCategory = ""
-            newCategoryEmoji = ""
-            newCategoryIsIncome = false
-        }
-    }
-
-    private func closePaymentSheet() {
-        hideKeyboard()
-        showPaymentForm = false
-        // Reset state after animation completes
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            newPayment = ""
-            newPaymentEmoji = ""
-        }
-    }
-
-    // MARK: - Reorder handlers
-    @MainActor
-    private func renumberCategories() {
-        for (idx, c) in categories.enumerated() { c.sortIndex = idx }
-        try? context.save()
-    }
-
-    @MainActor
-    private func renumberMethods() {
-        for (idx, m) in methods.enumerated() { m.sortIndex = idx }
-        try? context.save()
-    }
-
-    @MainActor
-    private func normalizeSortIndicesIfNeeded() {
-        if !categories.isEmpty, Set(categories.map { $0.sortIndex }).count == 1 {
-            renumberCategories()
-        }
-        if !methods.isEmpty, Set(methods.map { $0.sortIndex }).count == 1 {
-            renumberMethods()
         }
     }
 
@@ -462,14 +600,35 @@ struct ManageView: View {
         let cleanHex = hexColorInput.replacingOccurrences(of: "#", with: "")
         if let color = Color(hex: cleanHex) {
             store.setColor(color)
-            showHexColorSheet = false
+            showHexInput = false
             hexColorInput = ""
         }
     }
     
-    // MARK: - Helper function
     private func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+    
+    @MainActor
+    private func renumberCategories() {
+        for (idx, c) in categories.enumerated() { c.sortIndex = idx }
+        try? context.save()
+    }
+
+    @MainActor
+    private func renumberMethods() {
+        for (idx, m) in methods.enumerated() { m.sortIndex = idx }
+        try? context.save()
+    }
+
+    @MainActor
+    private func normalizeSortIndicesIfNeeded() {
+        if !categories.isEmpty, Set(categories.map { $0.sortIndex }).count == 1 {
+            renumberCategories()
+        }
+        if !methods.isEmpty, Set(methods.map { $0.sortIndex }).count == 1 {
+            renumberMethods()
+        }
     }
 }
 
@@ -528,5 +687,26 @@ struct ColorBoxView: UIViewRepresentable {
     
     func updateUIView(_ uiView: UIView, context: Context) {
         uiView.backgroundColor = UIColor(color)
+    }
+}
+
+// MARK: - Color Extension for Hex Support
+extension Color {
+    init?(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hex).scanHexInt64(&int)
+        let r, g, b: UInt64
+        switch hex.count {
+        case 6: // RGB (6 digits)
+            (r, g, b) = ((int >> 16) & 0xFF, (int >> 8) & 0xFF, int & 0xFF)
+        default:
+            return nil
+        }
+        self.init(
+            red: Double(r) / 255,
+            green: Double(g) / 255,
+            blue: Double(b) / 255
+        )
     }
 }
