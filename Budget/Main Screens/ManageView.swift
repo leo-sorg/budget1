@@ -117,7 +117,7 @@ struct ManageView: View {
                     isIncome: $newCategoryIsIncome
                 )
             }
-            .presentationDetents([.height(420)])
+            .presentationDetents([.medium])  // Let sheet size to content
             .presentationBackground(Color.clear)
             .presentationDragIndicator(.hidden)
         }
@@ -133,7 +133,7 @@ struct ManageView: View {
                     emoji: $newPaymentEmoji
                 )
             }
-            .presentationDetents([.height(350)])
+            .presentationDetents([.medium])  // Let sheet size to content
             .presentationBackground(Color.clear)
             .presentationDragIndicator(.hidden)
         }
@@ -150,17 +150,7 @@ struct ManageView: View {
             .presentationBackground(Color.clear)
             .presentationDragIndicator(.hidden)
         }
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Button("Cancel") {
-                    hideKeyboard()
-                }
-                Spacer()
-                Button("Done") {
-                    hideKeyboard()
-                }
-            }
-        }
+        // Removed toolbar - let the sheets handle their own toolbars
     }
 
     // MARK: - Data Loading

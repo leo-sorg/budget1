@@ -7,7 +7,7 @@ struct BottomSheet<SheetContent: View>: View {
     let buttonAction: () -> Void
     let onClose: () -> Void
     let isButtonDisabled: Bool
-    @State private var keyboardHeight: CGFloat = 0
+    @State private var keyboardShowing = false
     
     init(
         buttonTitle: String,
@@ -24,83 +24,73 @@ struct BottomSheet<SheetContent: View>: View {
     }
     
     var body: some View {
-        GeometryReader { geometry in
-            VStack(spacing: 0) {
-                // Header section
-                HStack(alignment: .top) {
-                    // Drag indicator in center
-                    Spacer()
-                    Capsule()
-                        .fill(Color.white.opacity(0.3))
-                        .frame(width: 36, height: 5)
-                        .padding(.top, 8)
-                    Spacer()
-                }
-                .overlay(
-                    // X button overlaid on right
-                    HStack {
-                        Spacer()
-                        Button(action: onClose) {
-                            Image(systemName: "xmark.circle.fill")
-                                .font(.system(size: 24))
-                                .foregroundColor(.white.opacity(0.5))
-                        }
-                        .offset(x: -20, y: 20) // 20pt from right, 20pt from top
-                    }
-                )
-                .frame(height: 60)
-                
-                // Scrollable content when keyboard is shown
-                ScrollView {
-                    VStack(spacing: 0) {
-                        // Dynamic content
-                        sheetContent
-                            .padding(.horizontal, 20)
-                            .padding(.bottom, 30)
-
-                        // Fixed button at bottom
-                        Button(buttonTitle, action: buttonAction)
-                            .buttonStyle(AppButtonStyle())
-                            .disabled(isButtonDisabled)
-                            .padding(.horizontal, 20)
-                            .padding(.bottom, keyboardHeight > 0 ? 0 : 50) // Remove extra gap when keyboard is shown
-                    }
-                }
-                .padding(.bottom, keyboardHeight)
-                .scrollDismissesKeyboard(.interactively)
+        VStack(spacing: 0) {
+            // Header section
+            HStack(alignment: .top) {
+                // Drag indicator in center
+                Spacer()
+                Capsule()
+                    .fill(Color.white.opacity(0.3))
+                    .frame(width: 36, height: 5)
+                    .padding(.top, 8)
+                Spacer()
             }
-            .background(Color(white: 0.15))
-            .edgesIgnoringSafeArea(.bottom)
-            .onAppear {
-                NotificationCenter.default.addObserver(
-                    forName: UIResponder.keyboardWillShowNotification,
-                    object: nil,
-                    queue: .main
-                ) { notification in
-                    if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
-                        withAnimation(.easeOut(duration: 0.25)) {
-                            let height = keyboardFrame.height - geometry.safeAreaInsets.bottom
-                            keyboardHeight = max(height, 0)
-                        }
+            .overlay(
+                // X button overlaid on right
+                HStack {
+                    Spacer()
+                    Button(action: onClose) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(.white.opacity(0.5))
                     }
+                    .offset(x: -20, y: 20)
                 }
-                
-                NotificationCenter.default.addObserver(
-                    forName: UIResponder.keyboardWillHideNotification,
-                    object: nil,
-                    queue: .main
-                ) { _ in
-                    withAnimation(.easeOut(duration: 0.25)) {
-                        keyboardHeight = 0
-                    }
+            )
+            .frame(height: 60)
+            
+            // Content with conditional bottom padding
+            ScrollView {
+                VStack(spacing: 0) {
+                    // Dynamic content
+                    sheetContent
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 30)
+                    
+                    // Fixed button at bottom
+                    Button(buttonTitle, action: buttonAction)
+                        .buttonStyle(AppButtonStyle())
+                        .disabled(isButtonDisabled)
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, keyboardShowing ? 300 : 50) // Add extra padding when keyboard shows
                 }
             }
-            .onDisappear {
-                NotificationCenter.default.removeObserver(self)
+            .scrollDismissesKeyboard(.interactively)
+        }
+        .background(Color(white: 0.15))
+        .edgesIgnoringSafeArea(.bottom)
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+            keyboardShowing = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            keyboardShowing = false
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Button("Cancel") {
+                    hideKeyboard()
+                }
+                Spacer()
+                Button("Done") {
+                    hideKeyboard()
+                }
             }
         }
     }
     
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
 }
 
 // MARK: - Corner Radius Extension
@@ -187,7 +177,7 @@ struct CategorySheetContent: View {
     }
 }
 
-// MARK: - Payment Bottom Sheet Content (FIXED - removed extra padding)
+// MARK: - Payment Bottom Sheet Content
 struct PaymentSheetContent: View {
     @Binding var name: String
     @Binding var emoji: String
@@ -217,6 +207,5 @@ struct PaymentSheetContent: View {
                 AppEmojiField(text: $emoji, placeholder: "e.g. 💳")
             }
         }
-        // REMOVED the .padding(.bottom, 60) that was causing the layout issue
     }
 }
