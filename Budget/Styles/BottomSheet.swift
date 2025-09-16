@@ -8,7 +8,6 @@ struct BottomSheet<SheetContent: View>: View {
     let onClose: () -> Void
     let isButtonDisabled: Bool
     @StateObject private var keyboardScroll = KeyboardScrollCoordinator()
-    @State private var buttonContainerHeight: CGFloat = 0
     
     init(
         buttonTitle: String,
@@ -24,31 +23,35 @@ struct BottomSheet<SheetContent: View>: View {
         self.sheetContent = content()
     }
     
+    private var keyboardPadding: CGFloat {
+        max(0, -keyboardScroll.scrollOffset)
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             header
 
-            ZStack(alignment: .bottom) {
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 0) {
-                        sheetContent
-                            .padding(.horizontal, 20)
-                            .padding(.top, 24)
-                    }
-                    .padding(.bottom, buttonContainerHeight + 40)
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 0) {
+                    sheetContent
+                        .padding(.horizontal, 20)
+                        .padding(.top, 24)
+                        .padding(.bottom, 32)
                 }
-                .scrollDismissesKeyboard(.interactively)
-
-                buttonArea
             }
-            .offset(y: keyboardScroll.scrollOffset)
-            .onPreferenceChange(BottomSheetButtonFramePreferenceKey.self) { frame in
-                updateButtonMetrics(with: frame)
+            .scrollDismissesKeyboard(.interactively)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                buttonArea
+                    .padding(.bottom, keyboardPadding)
+                    .animation(.easeInOut(duration: 0.25), value: keyboardPadding)
             }
         }
         .background(Color(white: 0.15))
         .ignoresSafeArea(.keyboard)
         .environment(\.keyboardScrollCoordinator, keyboardScroll)
+        .onPreferenceChange(BottomSheetButtonFramePreferenceKey.self) { frame in
+            updateButtonFrame(with: frame)
+        }
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Button("Cancel") {
@@ -128,13 +131,8 @@ struct BottomSheet<SheetContent: View>: View {
         )
     }
 
-    private func updateButtonMetrics(with frame: CGRect) {
+    private func updateButtonFrame(with frame: CGRect) {
         guard frame != .zero else { return }
-
-        let height = frame.height
-        if abs(height - buttonContainerHeight) > 0.5 {
-            buttonContainerHeight = height
-        }
 
         keyboardScroll.registerButtonFrame(frame)
     }
