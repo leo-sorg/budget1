@@ -117,9 +117,6 @@ struct ManageView: View {
                     isIncome: $newCategoryIsIncome
                 )
             }
-            .presentationDetents([.medium])  // Let sheet size to content
-            .presentationBackground(Color.clear)
-            .presentationDragIndicator(.hidden)
         }
         .sheet(isPresented: $showPaymentForm) {
             BottomSheet(
@@ -133,9 +130,6 @@ struct ManageView: View {
                     emoji: $newPaymentEmoji
                 )
             }
-            .presentationDetents([.medium])  // Let sheet size to content
-            .presentationBackground(Color.clear)
-            .presentationDragIndicator(.hidden)
         }
         .sheet(isPresented: $showHexColorSheet) {
             BottomSheet(
@@ -146,11 +140,8 @@ struct ManageView: View {
             ) {
                 HexColorSheetContent(hexInput: $hexColorInput)
             }
-            .presentationDetents([.height(280)])
-            .presentationBackground(Color.clear)
-            .presentationDragIndicator(.hidden)
         }
-        // Removed toolbar - let the sheets handle their own toolbars
+        // Removed toolbar - sheets handle their own toolbars
     }
 
     // MARK: - Data Loading
@@ -189,8 +180,9 @@ struct ManageView: View {
             emptyMessage: "No categories yet. Add one above.",
             items: categories,
             onAdd: {
-                showCategoryForm = true
+                // Ensure payment form is closed before opening category form
                 showPaymentForm = false
+                showCategoryForm = true
             }
         ) { category in
             CategoryListItem(
@@ -210,8 +202,9 @@ struct ManageView: View {
             emptyMessage: "No payment methods yet. Add one above.",
             items: methods,
             onAdd: {
-                showPaymentForm = true
+                // Ensure category form is closed before opening payment form
                 showCategoryForm = false
+                showPaymentForm = true
             }
         ) { method in
             PaymentMethodListItem(
@@ -401,17 +394,23 @@ struct ManageView: View {
 
     private func closeCategorySheet() {
         hideKeyboard()
-        newCategory = ""
-        newCategoryEmoji = ""
-        newCategoryIsIncome = false
         showCategoryForm = false
+        // Reset state after animation completes
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            newCategory = ""
+            newCategoryEmoji = ""
+            newCategoryIsIncome = false
+        }
     }
 
     private func closePaymentSheet() {
         hideKeyboard()
-        newPayment = ""
-        newPaymentEmoji = ""
         showPaymentForm = false
+        // Reset state after animation completes
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            newPayment = ""
+            newPaymentEmoji = ""
+        }
     }
 
     // MARK: - Reorder handlers
@@ -529,83 +528,5 @@ struct ColorBoxView: UIViewRepresentable {
     
     func updateUIView(_ uiView: UIView, context: Context) {
         uiView.backgroundColor = UIColor(color)
-    }
-}
-
-// MARK: - Hex Color Input Sheet Content
-struct HexColorSheetContent: View {
-    @Binding var hexInput: String
-    @FocusState private var isFocused: Bool
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Hex Color Code")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.white.opacity(0.6))
-            
-            HStack(spacing: 8) {
-                Text("#")
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundColor(.white.opacity(0.5))
-                
-                AppTextField(text: $hexInput, placeholder: "000000")
-                    .onChange(of: hexInput) { _, newValue in
-                        // Remove # if user types it
-                        var cleaned = newValue.replacingOccurrences(of: "#", with: "")
-                        // Limit to 6 characters
-                        if cleaned.count > 6 {
-                            cleaned = String(cleaned.prefix(6))
-                        }
-                        // Only allow hex characters
-                        cleaned = cleaned.filter { $0.isHexDigit }
-                        hexInput = cleaned.uppercased()
-                    }
-            }
-            
-            // Preview of the color using UIKit
-            if hexInput.count == 6, let color = Color(hex: hexInput) {
-                HStack {
-                    Text("Preview:")
-                        .font(.caption)
-                        .foregroundColor(.white.opacity(0.6))
-                    
-                    // Use UIKit-based preview
-                    ColorBoxView(color: color)
-                        .frame(width: 60, height: 30)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 4)
-                                .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                        )
-                    
-                    Spacer()
-                }
-                .padding(.top, 8)
-            }
-        }
-        .padding(.bottom, 30)
-        .onAppear {
-            isFocused = true
-        }
-    }
-}
-
-// MARK: - Color Extension for Hex Support
-extension Color {
-    init?(hex: String) {
-        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        var int: UInt64 = 0
-        Scanner(string: hex).scanHexInt64(&int)
-        let r, g, b: UInt64
-        switch hex.count {
-        case 6: // RGB (6 digits)
-            (r, g, b) = ((int >> 16) & 0xFF, (int >> 8) & 0xFF, int & 0xFF)
-        default:
-            return nil
-        }
-        self.init(
-            red: Double(r) / 255,
-            green: Double(g) / 255,
-            blue: Double(b) / 255
-        )
     }
 }

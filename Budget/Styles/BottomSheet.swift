@@ -49,32 +49,25 @@ struct BottomSheet<SheetContent: View>: View {
             )
             .frame(height: 60)
             
-            // Content with conditional bottom padding
-            ScrollView {
-                VStack(spacing: 0) {
-                    // Dynamic content
-                    sheetContent
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 30)
-                    
-                    // Fixed button at bottom
-                    Button(buttonTitle, action: buttonAction)
-                        .buttonStyle(AppButtonStyle())
-                        .disabled(isButtonDisabled)
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, keyboardShowing ? 300 : 50) // Add extra padding when keyboard shows
-                }
+            // Content that sizes itself - NO SCROLL VIEW
+            VStack(spacing: 0) {
+                // Dynamic content
+                sheetContent
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 30)
+                
+                // Fixed button at bottom
+                Button(buttonTitle, action: buttonAction)
+                    .buttonStyle(AppButtonStyle())
+                    .disabled(isButtonDisabled)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 50) // Simple fixed bottom padding
             }
-            .scrollDismissesKeyboard(.interactively)
+            
+            Spacer(minLength: 0) // Push content to top
         }
         .background(Color(white: 0.15))
-        .edgesIgnoringSafeArea(.bottom)
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
-            keyboardShowing = true
-        }
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
-            keyboardShowing = false
-        }
+        .ignoresSafeArea(.keyboard) // Let SwiftUI handle keyboard automatically
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Button("Cancel") {
@@ -86,31 +79,15 @@ struct BottomSheet<SheetContent: View>: View {
                 }
             }
         }
+        // Use medium detent only
+        .presentationDetents([.medium])
+        .presentationBackground(Color(white: 0.15))
+        .presentationDragIndicator(.hidden) // We have our own custom indicator
+        .interactiveDismissDisabled(false)
     }
     
     private func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-    }
-}
-
-// MARK: - Corner Radius Extension
-extension View {
-    func cornerRadius(_ radius: CGFloat, corners: UIRectCorner) -> some View {
-        clipShape(RoundedCorner(radius: radius, corners: corners))
-    }
-}
-
-struct RoundedCorner: Shape {
-    var radius: CGFloat = .infinity
-    var corners: UIRectCorner = .allCorners
-    
-    func path(in rect: CGRect) -> Path {
-        let path = UIBezierPath(
-            roundedRect: rect,
-            byRoundingCorners: corners,
-            cornerRadii: CGSize(width: radius, height: radius)
-        )
-        return Path(path.cgPath)
     }
 }
 
@@ -119,6 +96,7 @@ struct CategorySheetContent: View {
     @Binding var name: String
     @Binding var emoji: String
     @Binding var isIncome: Bool
+    @FocusState private var nameFieldFocused: Bool
     
     var body: some View {
         VStack(spacing: 24) {
@@ -174,6 +152,10 @@ struct CategorySheetContent: View {
                 }
             }
         }
+        .onAppear {
+            // Don't auto-focus to prevent unexpected scrolling
+            nameFieldFocused = false
+        }
     }
 }
 
@@ -181,6 +163,7 @@ struct CategorySheetContent: View {
 struct PaymentSheetContent: View {
     @Binding var name: String
     @Binding var emoji: String
+    @FocusState private var nameFieldFocused: Bool
     
     var body: some View {
         VStack(spacing: 24) {
@@ -207,5 +190,87 @@ struct PaymentSheetContent: View {
                 AppEmojiField(text: $emoji, placeholder: "e.g. 💳")
             }
         }
+        .onAppear {
+            // Don't auto-focus to prevent unexpected scrolling
+            nameFieldFocused = false
+        }
+    }
+}
+
+// MARK: - Hex Color Input Sheet Content
+struct HexColorSheetContent: View {
+    @Binding var hexInput: String
+    @FocusState private var isFocused: Bool
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Hex Color Code")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.white.opacity(0.6))
+            
+            HStack(spacing: 8) {
+                Text("#")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(.white.opacity(0.5))
+                
+                AppTextField(text: $hexInput, placeholder: "000000")
+                    .onChange(of: hexInput) { _, newValue in
+                        // Remove # if user types it
+                        var cleaned = newValue.replacingOccurrences(of: "#", with: "")
+                        // Limit to 6 characters
+                        if cleaned.count > 6 {
+                            cleaned = String(cleaned.prefix(6))
+                        }
+                        // Only allow hex characters
+                        cleaned = cleaned.filter { $0.isHexDigit }
+                        hexInput = cleaned.uppercased()
+                    }
+            }
+            
+            // Preview of the color using UIKit
+            if hexInput.count == 6, let color = Color(hex: hexInput) {
+                HStack {
+                    Text("Preview:")
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.6))
+                    
+                    // Use UIKit-based preview
+                    ColorBoxView(color: color)
+                        .frame(width: 60, height: 30)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 4)
+                                .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                        )
+                    
+                    Spacer()
+                }
+                .padding(.top, 8)
+            }
+        }
+        .padding(.bottom, 30)
+        .onAppear {
+            isFocused = true
+        }
+    }
+}
+
+// MARK: - Color Extension for Hex Support
+extension Color {
+    init?(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hex).scanHexInt64(&int)
+        let r, g, b: UInt64
+        switch hex.count {
+        case 6: // RGB (6 digits)
+            (r, g, b) = ((int >> 16) & 0xFF, (int >> 8) & 0xFF, int & 0xFF)
+        default:
+            return nil
+        }
+        self.init(
+            red: Double(r) / 255,
+            green: Double(g) / 255,
+            blue: Double(b) / 255
+        )
     }
 }

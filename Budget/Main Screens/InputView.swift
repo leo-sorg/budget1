@@ -16,10 +16,15 @@ struct InputView: View {
     @State private var showSavedToast = false
     @State private var alertMessage: String?
     
-    // Add focus state for auto-scroll
+    // Focus state for auto-scroll
     @State private var isAmountFieldFocused: Bool = false
     @State private var isDescriptionFieldFocused: Bool = false
     @State private var scrollOffset: CGFloat = 0
+    
+    // Dynamic scroll measurement
+    @State private var saveButtonFrame: CGRect = .zero
+    @State private var scrollViewHeight: CGFloat = 0
+    @State private var keyboardHeight: CGFloat = 0
     
     // Track focus changes to handle direct switching
     @State private var focusedField: String? = nil {
@@ -50,13 +55,12 @@ struct InputView: View {
                             .font(.headline)
                             .foregroundColor(.appText)
                         
-            // Updated AppTextField for description
-            AppTextField(
-                text: $descriptionText,
-                placeholder: "Optional description"
-            ) { isFocused in
-                isDescriptionFieldFocused = isFocused
-            }
+                        AppTextField(
+                            text: $descriptionText,
+                            placeholder: "Optional description"
+                        ) { isFocused in
+                            isDescriptionFieldFocused = isFocused
+                        }
                     }
                     
                     // Save button
@@ -69,6 +73,14 @@ struct InputView: View {
                 .padding()
                 .offset(y: scrollOffset)
             }
+            .background(
+                GeometryReader { geometry in
+                    Color.clear
+                        .onAppear {
+                            scrollViewHeight = geometry.size.height
+                        }
+                }
+            )
             .scrollContentBackground(.hidden)
             .background(Color.clear)
             .scrollDismissesKeyboard(.interactively)
@@ -80,6 +92,14 @@ struct InputView: View {
         }
         .onChange(of: isDescriptionFieldFocused) { _, isFocused in
             focusedField = isFocused ? "description" : (isAmountFieldFocused ? "value" : nil)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notification in
+            if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
+                keyboardHeight = keyboardFrame.height
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            keyboardHeight = 0
         }
         .alert("Oops", isPresented: alertBinding) {
             Button("OK") { alertMessage = nil }
@@ -104,31 +124,41 @@ struct InputView: View {
         }
     }
     
-    // MARK: - Helper function (moved here)
+    // MARK: - Helper function
     private func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
     
     private func handleFieldSwitch(from: String?, to: String?) {
-        withAnimation(.easeInOut(duration: 0.3)) {
-            switch (from, to) {
-            case (nil, "value"):
-                // First time focusing value field
-                scrollOffset = -190
-            case (nil, "description"):
-                // First time focusing description field
-                scrollOffset = -235
-            case ("value", "description"):
-                // Switching from value to description - scroll up 45 more points
-                scrollOffset = -235
-            case ("description", "value"):
-                // Switching from description to value - scroll down 45 points
-                scrollOffset = -190
-            case (_, nil):
-                // Any field to no field - return to normal
+        guard to != nil else {
+            // Keyboard dismissed - reset scroll
+            withAnimation(.easeInOut(duration: 0.3)) {
                 scrollOffset = 0
-            default:
-                break
+            }
+            return
+        }
+        
+        // Calculate dynamically based on actual positions
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                // Get the bottom of the save button
+                let buttonBottom = saveButtonFrame.maxY
+                
+                // Get the top of the keyboard (screen height - keyboard height)
+                let keyboardTop = UIScreen.main.bounds.height - keyboardHeight
+                
+                // Calculate how much we need to scroll
+                // We want the button to be visible above the keyboard with some padding
+                let padding: CGFloat = 20
+                let targetPosition = keyboardTop - padding
+                
+                // If button is below the target position, scroll up
+                if buttonBottom > targetPosition {
+                    scrollOffset = -(buttonBottom - targetPosition)
+                } else {
+                    // Button is already visible, no scroll needed
+                    scrollOffset = 0
+                }
             }
         }
     }
@@ -270,7 +300,6 @@ struct InputView: View {
                 .font(.headline)
                 .foregroundColor(.appText)
             
-            // Updated AppCurrencyField with focus callback
             AppCurrencyField(
                 text: $amountText,
                 placeholder: "R$ 0,00"
@@ -287,6 +316,17 @@ struct InputView: View {
         .buttonStyle(AppButtonStyle())
         .disabled(!canSave)
         .opacity(canSave ? 1.0 : 0.5)
+        .background(
+            GeometryReader { geometry in
+                Color.clear
+                    .onAppear {
+                        saveButtonFrame = geometry.frame(in: .global)
+                    }
+                    .onChange(of: geometry.frame(in: .global)) { _, newFrame in
+                        saveButtonFrame = newFrame
+                    }
+            }
+        )
     }
 
     @ViewBuilder private var toastOverlay: some View {
@@ -383,28 +423,28 @@ struct InputView: View {
             let base = (categories.map { $0.sortIndex }.max() ?? -1) + 1
             let seeds: [(String, String?, Bool)] = [
                 // Expenses (14 categories)
-                               ("Food", "🍽️", false),
-                               ("Transport", "🚕", false),
-                               ("Bills", "💡", false),
-                               ("Shopping", "🛍️", false),
-                               ("Leisure", "🎬", false),
-                               ("Groceries", "🛒", false),
-                               ("Healthcare", "🏥", false),
-                               ("Education", "📚", false),
-                               ("Rent", "🏠", false),
-                               ("Insurance", "🛡️", false),
-                               ("Pets", "🐾", false),
-                               ("Gym", "💪", false),
-                               ("Subscriptions", "📱", false),
-                               ("Coffee", "☕", false),
-                               
-                               // Income (6 categories)
-                               ("Salary", "💼", true),
-                               ("Gifts", "🎁", true),
-                               ("Freelance", "💻", true),
-                               ("Investments", "📈", true),
-                               ("Bonus", "💰", true),
-                               ("Refunds", "💵", true)
+                ("Food", "🍽️", false),
+                ("Transport", "🚕", false),
+                ("Bills", "💡", false),
+                ("Shopping", "🛍️", false),
+                ("Leisure", "🎬", false),
+                ("Groceries", "🛒", false),
+                ("Healthcare", "🏥", false),
+                ("Education", "📚", false),
+                ("Rent", "🏠", false),
+                ("Insurance", "🛡️", false),
+                ("Pets", "🐾", false),
+                ("Gym", "💪", false),
+                ("Subscriptions", "📱", false),
+                ("Coffee", "☕", false),
+                
+                // Income (6 categories)
+                ("Salary", "💼", true),
+                ("Gifts", "🎁", true),
+                ("Freelance", "💻", true),
+                ("Investments", "📈", true),
+                ("Bonus", "💰", true),
+                ("Refunds", "💵", true)
             ]
             for (offset, seed) in seeds.enumerated() {
                 let (name, emoji, isIncome) = seed
@@ -432,6 +472,10 @@ struct InputView: View {
         formatter.dateStyle = .full
         formatter.timeStyle = .none
         return formatter.string(from: date)
+    }
+    
+    private func dismissKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }
 

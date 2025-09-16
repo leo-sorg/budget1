@@ -37,6 +37,7 @@ struct EmojiTextFieldRepresentable: UIViewRepresentable {
         textField.spellCheckingType = .no
         textField.returnKeyType = .done
         textField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        textField.setContentHuggingPriority(.defaultHigh, for: .vertical) // Important: don't expand vertically
         textField.addTarget(context.coordinator, action: #selector(Coordinator.textDidChange(_:)), for: .editingChanged)
         textField.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 4, height: 0))
         textField.leftViewMode = .always
@@ -267,7 +268,7 @@ struct AppTextField: View {
     }
 }
 
-// MARK: - 3. EMOJI FIELD (Default Keyboard) - NO TOOLBAR
+// MARK: - 3. EMOJI FIELD (Default Keyboard) - FIXED HEIGHT
 struct AppEmojiField: View {
     @Binding var text: String
     let placeholder: String
@@ -276,6 +277,7 @@ struct AppEmojiField: View {
     var body: some View {
         EmojiTextFieldRepresentable(text: $text, placeholder: placeholder, isFirstResponder: $isFocused)
             .focused($isFocused)
+            .frame(height: 20) // Fixed intrinsic height for the text field
             .frame(maxWidth: .infinity)
             .onChange(of: text) { _, newValue in
                 if newValue.count > 10 {
