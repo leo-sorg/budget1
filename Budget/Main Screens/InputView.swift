@@ -20,14 +20,11 @@ struct InputView: View {
     @State private var isAmountFieldFocused: Bool = false
     @State private var isDescriptionFieldFocused: Bool = false
     @State private var scrollOffset: CGFloat = 0
-
+    
     // Dynamic scroll measurement
     @State private var saveButtonFrame: CGRect = .zero
-    @State private var amountFieldFrame: CGRect = .zero
-    @State private var descriptionFieldFrame: CGRect = .zero
     @State private var scrollViewHeight: CGFloat = 0
     @State private var keyboardHeight: CGFloat = 0
-    @State private var fieldSwitchWorkItem: DispatchWorkItem?
     
     // Track focus changes to handle direct switching
     @State private var focusedField: String? = nil {
@@ -64,17 +61,6 @@ struct InputView: View {
                         ) { isFocused in
                             isDescriptionFieldFocused = isFocused
                         }
-                        .background(
-                            GeometryReader { geometry in
-                                Color.clear
-                                    .onAppear {
-                                        descriptionFieldFrame = geometry.frame(in: .global)
-                                    }
-                                    .onChange(of: geometry.frame(in: .global)) { _, newFrame in
-                                        descriptionFieldFrame = newFrame
-                                    }
-                            }
-                        )
                     }
                     
                     // Save button
@@ -110,12 +96,10 @@ struct InputView: View {
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notification in
             if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
                 keyboardHeight = keyboardFrame.height
-                handleFieldSwitch(from: focusedField, to: focusedField)
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
             keyboardHeight = 0
-            handleFieldSwitch(from: focusedField, to: focusedField)
         }
         .alert("Oops", isPresented: alertBinding) {
             Button("OK") { alertMessage = nil }
@@ -146,66 +130,36 @@ struct InputView: View {
     }
     
     private func handleFieldSwitch(from: String?, to: String?) {
-        fieldSwitchWorkItem?.cancel()
-
-        guard let to else {
+        guard to != nil else {
+            // Keyboard dismissed - reset scroll
             withAnimation(.easeInOut(duration: 0.3)) {
                 scrollOffset = 0
             }
-            fieldSwitchWorkItem = nil
             return
         }
-
-        var workItem: DispatchWorkItem?
-        workItem = DispatchWorkItem { [weak workItem] in
-            guard let workItem, workItem.isCancelled == false else { return }
-
-            guard keyboardHeight > 0 else {
-                withAnimation(.easeInOut(duration: 0.3)) {
+        
+        // Calculate dynamically based on actual positions
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                // Get the bottom of the save button
+                let buttonBottom = saveButtonFrame.maxY
+                
+                // Get the top of the keyboard (screen height - keyboard height)
+                let keyboardTop = UIScreen.main.bounds.height - keyboardHeight
+                
+                // Calculate how much we need to scroll
+                // We want the button to be visible above the keyboard with some padding
+                let padding: CGFloat = 20
+                let targetPosition = keyboardTop - padding
+                
+                // If button is below the target position, scroll up
+                if buttonBottom > targetPosition {
+                    scrollOffset = -(buttonBottom - targetPosition)
+                } else {
+                    // Button is already visible, no scroll needed
                     scrollOffset = 0
                 }
-                fieldSwitchWorkItem = nil
-                return
             }
-
-            let keyboardTop = UIScreen.main.bounds.height - keyboardHeight
-            let padding: CGFloat = 24
-            let targetPosition = keyboardTop - padding
-
-            let normalizedButtonBottom: CGFloat
-            if saveButtonFrame == .zero {
-                normalizedButtonBottom = 0
-            } else {
-                normalizedButtonBottom = saveButtonFrame.maxY - scrollOffset
-            }
-
-            let normalizedFieldBottom: CGFloat
-            switch to {
-            case "value":
-                normalizedFieldBottom = amountFieldFrame == .zero ? 0 : amountFieldFrame.maxY - scrollOffset
-            case "description":
-                normalizedFieldBottom = descriptionFieldFrame == .zero ? 0 : descriptionFieldFrame.maxY - scrollOffset
-            default:
-                normalizedFieldBottom = 0
-            }
-
-            let fieldOverlap = max(0, normalizedFieldBottom - targetPosition)
-            let buttonOverlap = max(0, normalizedButtonBottom - targetPosition)
-            let requiredOffset = -max(fieldOverlap, buttonOverlap)
-
-            if abs(scrollOffset - requiredOffset) > 0.1 {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    scrollOffset = requiredOffset
-                }
-            }
-
-            fieldSwitchWorkItem = nil
-        }
-
-        fieldSwitchWorkItem = workItem
-
-        if let workItem {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1, execute: workItem)
         }
     }
     
@@ -352,17 +306,6 @@ struct InputView: View {
             ) { isFocused in
                 isAmountFieldFocused = isFocused
             }
-            .background(
-                GeometryReader { geometry in
-                    Color.clear
-                        .onAppear {
-                            amountFieldFrame = geometry.frame(in: .global)
-                        }
-                        .onChange(of: geometry.frame(in: .global)) { _, newFrame in
-                            amountFieldFrame = newFrame
-                        }
-                }
-            )
         }
     }
     
