@@ -8,6 +8,7 @@ struct BottomSheet<SheetContent: View>: View {
     let onClose: () -> Void
     let isButtonDisabled: Bool
     @StateObject private var keyboardScroll = KeyboardScrollCoordinator()
+    @State private var buttonContainerHeight: CGFloat = 0
     
     init(
         buttonTitle: String,
@@ -25,59 +26,25 @@ struct BottomSheet<SheetContent: View>: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Header section
-            HStack(alignment: .top) {
-                // Drag indicator in center
-                Spacer()
-                Capsule()
-                    .fill(Color.white.opacity(0.3))
-                    .frame(width: 36, height: 5)
-                    .padding(.top, 8)
-                Spacer()
-            }
-            .overlay(
-                // X button overlaid on right
-                HStack {
-                    Spacer()
-                    Button(action: onClose) {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 24))
-                            .foregroundColor(.white.opacity(0.5))
+            header
+
+            ZStack(alignment: .bottom) {
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        sheetContent
+                            .padding(.horizontal, 20)
+                            .padding(.top, 24)
                     }
-                    .offset(x: -20, y: 20)
+                    .padding(.bottom, buttonContainerHeight + 40)
                 }
-            )
-            .frame(height: 60)
+                .scrollDismissesKeyboard(.interactively)
 
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 0) {
-                    sheetContent
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 30)
-
-                    Button(buttonTitle, action: buttonAction)
-                        .buttonStyle(AppButtonStyle())
-                        .disabled(isButtonDisabled)
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 50)
-                        .background(
-                            GeometryReader { geometry in
-                                Color.clear
-                                    .onAppear {
-                                        keyboardScroll.registerButtonFrame(geometry.frame(in: .global))
-                                    }
-                                    .onChange(of: geometry.frame(in: .global)) { _, newFrame in
-                                        keyboardScroll.registerButtonFrame(newFrame)
-                                    }
-                            }
-                        )
-
-                    Spacer()
-                        .frame(height: 160)
-                }
-                .offset(y: keyboardScroll.scrollOffset)
+                buttonArea
             }
-            .scrollDismissesKeyboard(.interactively)
+            .offset(y: keyboardScroll.scrollOffset)
+            .onPreferenceChange(BottomSheetButtonFramePreferenceKey.self) { frame in
+                updateButtonMetrics(with: frame)
+            }
         }
         .background(Color(white: 0.15))
         .ignoresSafeArea(.keyboard)
@@ -93,10 +60,9 @@ struct BottomSheet<SheetContent: View>: View {
                 }
             }
         }
-        // Use medium detent only
         .presentationDetents([.medium])
         .presentationBackground(Color(white: 0.15))
-        .presentationDragIndicator(.hidden) // We have our own custom indicator
+        .presentationDragIndicator(.hidden)
         .interactiveDismissDisabled(false)
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notification in
             if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
@@ -107,9 +73,82 @@ struct BottomSheet<SheetContent: View>: View {
             keyboardScroll.keyboardWillHide()
         }
     }
-    
+
+    private var header: some View {
+        ZStack {
+            HStack {
+                Spacer()
+                Capsule()
+                    .fill(Color.white.opacity(0.3))
+                    .frame(width: 36, height: 5)
+                Spacer()
+            }
+
+            HStack {
+                Spacer()
+                Button(action: onClose) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 24))
+                        .foregroundColor(.white.opacity(0.5))
+                }
+            }
+        }
+        .padding(.top, 12)
+        .padding(.bottom, 12)
+        .padding(.horizontal, 20)
+        .frame(height: 60)
+    }
+
+    private var buttonArea: some View {
+        VStack(spacing: 16) {
+            Button(buttonTitle, action: buttonAction)
+                .buttonStyle(AppButtonStyle())
+                .disabled(isButtonDisabled)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 20)
+        .padding(.top, 16)
+        .padding(.bottom, 24)
+        .background(
+            Color(white: 0.12).opacity(0.95)
+                .overlay(
+                    Color.white.opacity(0.12)
+                        .frame(height: 1),
+                    alignment: .top
+                )
+        )
+        .background(
+            GeometryReader { geometry in
+                Color.clear
+                    .preference(
+                        key: BottomSheetButtonFramePreferenceKey.self,
+                        value: geometry.frame(in: .global)
+                    )
+            }
+        )
+    }
+
+    private func updateButtonMetrics(with frame: CGRect) {
+        guard frame != .zero else { return }
+
+        let height = frame.height
+        if abs(height - buttonContainerHeight) > 0.5 {
+            buttonContainerHeight = height
+        }
+
+        keyboardScroll.registerButtonFrame(frame)
+    }
+
     private func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+}
+
+private struct BottomSheetButtonFramePreferenceKey: PreferenceKey {
+    static var defaultValue: CGRect = .zero
+
+    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
+        value = nextValue()
     }
 }
 
