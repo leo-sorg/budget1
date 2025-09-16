@@ -110,11 +110,12 @@ struct ManageView: View {
                 buttonAction: addCategory,
                 onClose: closeCategorySheet,
                 isButtonDisabled: newCategory.isEmpty
-            ) {
+            ) { reportFocusChange in
                 CategorySheetContent(
                     name: $newCategory,
                     emoji: $newCategoryEmoji,
-                    isIncome: $newCategoryIsIncome
+                    isIncome: $newCategoryIsIncome,
+                    onFieldFocusChange: reportFocusChange
                 )
             }
         }
@@ -124,10 +125,11 @@ struct ManageView: View {
                 buttonAction: addPayment,
                 onClose: closePaymentSheet,
                 isButtonDisabled: newPayment.isEmpty
-            ) {
+            ) { reportFocusChange in
                 PaymentSheetContent(
                     name: $newPayment,
-                    emoji: $newPaymentEmoji
+                    emoji: $newPaymentEmoji,
+                    onFieldFocusChange: reportFocusChange
                 )
             }
         }
@@ -137,8 +139,11 @@ struct ManageView: View {
                 buttonAction: applyHexColor,
                 onClose: { showHexColorSheet = false },
                 isButtonDisabled: !isValidHex(hexColorInput)
-            ) {
-                HexColorSheetContent(hexInput: $hexColorInput)
+            ) { reportFocusChange in
+                HexColorSheetContent(
+                    hexInput: $hexColorInput,
+                    onFieldFocusChange: reportFocusChange
+                )
             }
         }
         // Removed toolbar - sheets handle their own toolbars
