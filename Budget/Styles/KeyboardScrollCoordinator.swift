@@ -9,7 +9,7 @@ final class KeyboardScrollCoordinator: ObservableObject {
     }
 
     static let standardAccessoryHeight: CGFloat = 44
-    static let emojiAccessoryHeight: CGFloat = 56
+    static let emojiAccessoryHeight: CGFloat = 44
 
     @Published private(set) var scrollOffset: CGFloat = 0
 
