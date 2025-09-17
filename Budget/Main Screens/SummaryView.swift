@@ -14,7 +14,7 @@ struct SummaryView: View {
     @State private var errorMessage: String?
 
     // Set this to false to use real API, true to use mock data
-    private let useMockData = true
+    private let useMockData = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -139,100 +139,32 @@ struct SummaryView: View {
         }
     }
     
-    // MARK: - Real API Call
+    // MARK: - Real API Call using SheetsClient
     private func fetchRealAPITransactions() {
         let (startDate, endDate) = selectedDateRange
         
-        // Create URL with parameters
-        let baseURL = "https://script.google.com/macros/s/AKfycbwYG8LPgAhxsOFWMNl54d6W3OeRXAoHH69Kw6d_vv0hXOwe1xrDOI316PJiAeg59A14/exec"
-        var components = URLComponents(string: baseURL)!
-        components.queryItems = [
-            URLQueryItem(name: "secret", value: "budget2761"),
-            URLQueryItem(name: "action", value: "getTransactions"),
-            URLQueryItem(name: "startDate", value: formatDateForAPI(startDate)),
-            URLQueryItem(name: "endDate", value: formatDateForAPI(endDate)),
-            URLQueryItem(name: "limit", value: "300")
-        ]
-        
-        guard let url = components.url else {
-            errorMessage = "Invalid URL"
-            isLoading = false
-            return
-        }
-        
-        print("🔗 API URL: \(url.absoluteString)")
-        
-        URLSession.shared.dataTask(with: url) { data, response, error in
+        SHEETS.getTransactions(startDate: startDate, endDate: endDate, limit: 300) { result in
             DispatchQueue.main.async {
                 self.isLoading = false
                 
-                if let error = error {
-                    self.errorMessage = "Network error: \(error.localizedDescription)"
-                    print("❌ Network Error: \(error)")
-                    return
-                }
-                
-                guard let data = data else {
-                    self.errorMessage = "No data received"
-                    return
-                }
-                
-                // Debug: Print raw response
-                if let rawResponse = String(data: data, encoding: .utf8) {
-                    print("📄 Raw API Response: \(rawResponse)")
-                }
-                
-                // Check if response is HTML (error page) instead of JSON
-                if let responseString = String(data: data, encoding: .utf8),
-                   responseString.lowercased().contains("<html") {
-                    self.errorMessage = "API returned an error page instead of JSON data"
-                    return
-                }
-                
-                do {
-                    let apiResponse = try JSONDecoder().decode(APIResponse.self, from: data)
-                    
+                switch result {
+                case .success(let apiResponse):
                     if apiResponse.success {
-                        // Clean up the API data after decoding
-                        self.apiTransactions = apiResponse.data.map { transaction in
-                            APITransaction(
-                                remoteID: transaction.remoteID,
-                                amount: transaction.amount,
-                                categoryName: transaction.categoryName,
-                                paymentMethod: transaction.paymentMethod,
-                                merchantName: transaction.merchantName,
-                                note: transaction.note,
-                                dateISO: self.convertISODateToSimpleFormat(transaction.dateISO),
-                                transactionType: transaction.transactionType
-                            )
-                        }
+                        // Just use the data as-is from the API - it's already filtered by date
+                        self.apiTransactions = apiResponse.data
                         self.errorMessage = nil
-                        print("✅ Successfully loaded \(self.apiTransactions.count) transactions")
+                        print("✅ Successfully loaded \(self.apiTransactions.count) transactions for \(self.selectedMonth)/\(self.selectedYear)")
                     } else {
                         self.errorMessage = apiResponse.message
                         print("❌ API Error: \(apiResponse.message)")
                     }
-                } catch {
-                    print("❌ JSON Decode Error: \(error)")
-                    if let decodingError = error as? DecodingError {
-                        switch decodingError {
-                        case .keyNotFound(let key, let context):
-                            self.errorMessage = "Missing key '\(key.stringValue)' in API response"
-                        case .typeMismatch(let type, let context):
-                            self.errorMessage = "Type mismatch for \(type) at \(context.codingPath)"
-                        case .valueNotFound(let type, let context):
-                            self.errorMessage = "Missing value for \(type) at \(context.codingPath)"
-                        case .dataCorrupted(let context):
-                            self.errorMessage = "Data corrupted at \(context.codingPath)"
-                        @unknown default:
-                            self.errorMessage = "Unknown decoding error: \(error.localizedDescription)"
-                        }
-                    } else {
-                        self.errorMessage = "Failed to parse response: \(error.localizedDescription)"
-                    }
+                    
+                case .failure(let error):
+                    print("❌ Error: \(error)")
+                    self.errorMessage = error.localizedDescription
                 }
             }
-        }.resume()
+        }
     }
     
     // MARK: - Mock Data Generator
@@ -363,25 +295,39 @@ struct SummaryView: View {
         comps.year = selectedYear
         comps.month = selectedMonth
         comps.day = 1
+        comps.hour = 0
+        comps.minute = 0
+        comps.second = 0
+        
         let cal = Calendar.current
         let start = cal.date(from: comps) ?? Date()
-        let end = cal.date(byAdding: .month, value: 1, to: start) ?? start
+        
+        // Calculate the last day of the month
+        var endComps = DateComponents()
+        endComps.year = selectedYear
+        endComps.month = selectedMonth + 1
+        endComps.day = 1
+        endComps.hour = 0
+        endComps.minute = 0
+        endComps.second = 0
+        
+        // Get first day of next month, then subtract 1 day
+        if let firstOfNextMonth = cal.date(from: endComps) {
+            let end = cal.date(byAdding: .day, value: -1, to: firstOfNextMonth) ?? start
+            return (start, end)
+        }
+        
+        // Fallback: add 1 month to start date then subtract 1 day
+        let endOfMonth = cal.date(byAdding: .month, value: 1, to: start)!
+        let end = cal.date(byAdding: .day, value: -1, to: endOfMonth)!
         return (start, end)
     }
     
     private func formatDateForAPI(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
         return formatter.string(from: date)
-    }
-    
-    // Helper function to convert ISO date to simple format
-    private func convertISODateToSimpleFormat(_ isoDate: String) -> String {
-        // Convert from "2025-09-17T03:00:00.000Z" to "2025-09-17"
-        if isoDate.contains("T") {
-            return String(isoDate.prefix(10)) // Take first 10 characters (YYYY-MM-DD)
-        }
-        return isoDate // Return as-is if already in simple format
     }
     
     // MARK: - Computed Properties (now using API data)
@@ -525,7 +471,8 @@ struct SummaryView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else {
                 VStack(spacing: 8) {
-                    ForEach(apiTransactions, id: \.remoteID) { transaction in
+                    // Use array index as id instead of remoteID to handle duplicates
+                    ForEach(Array(apiTransactions.enumerated()), id: \.offset) { index, transaction in
                         APITransactionListItem(transaction: transaction)
                     }
                 }
@@ -543,26 +490,7 @@ struct SummaryView: View {
     }
 }
 
-// MARK: - API Models
-
-struct APIResponse: Codable {
-    let success: Bool
-    let message: String
-    let total: Int?
-    let filtered: Int?
-    let data: [APITransaction]
-}
-
-struct APITransaction: Codable {
-    let remoteID: String
-    let amount: Double
-    let categoryName: String
-    let paymentMethod: String
-    let merchantName: String
-    let note: String
-    let dateISO: String
-    let transactionType: String
-}
+// API Models are now defined in SheetsClient.swift
 
 // MARK: - API Transaction List Item
 
@@ -620,15 +548,29 @@ struct APITransactionListItem: View {
     }
     
     private func formatDisplayDate(_ dateString: String) -> String {
-        let inputFormatter = DateFormatter()
-        inputFormatter.dateFormat = "yyyy-MM-dd"
+        // Handle ISO date format: "2025-08-16T03:00:00.000Z"
+        let isoFormatter = DateFormatter()
+        isoFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        isoFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        
+        // Also try simple date format: "2025-08-16"
+        let simpleFormatter = DateFormatter()
+        simpleFormatter.dateFormat = "yyyy-MM-dd"
         
         let outputFormatter = DateFormatter()
         outputFormatter.dateStyle = .medium
+        outputFormatter.timeStyle = .none
         
-        if let date = inputFormatter.date(from: dateString) {
+        // Try ISO format first
+        if let date = isoFormatter.date(from: dateString) {
             return outputFormatter.string(from: date)
         }
+        // Fall back to simple format
+        else if let date = simpleFormatter.date(from: dateString) {
+            return outputFormatter.string(from: date)
+        }
+        
+        // If neither works, return the original string
         return dateString
     }
     

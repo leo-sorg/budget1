@@ -9,8 +9,11 @@ struct SheetsClient {
         let body: String
     }
 
+    // MARK: - POST Methods (existing)
+    
     func postTransaction(remoteID: String, amount: Decimal, date: Date,
-                         categoryName: String?, paymentName: String?, note: String?,
+                         categoryName: String?, paymentName: String?, merchantName: String? = nil,
+                         note: String?,
                          completion: @escaping (Response) -> Void = { _ in }) {
         let payload: [String: Any] = [
             "type": "transaction",
@@ -18,9 +21,10 @@ struct SheetsClient {
             "amount": (amount as NSDecimalNumber).doubleValue,
             "dateISO": DateFormatter.iso8601.string(from: date),
             "categoryName": categoryName ?? "",
-            "paymentMethod": paymentName ?? "", // Changed from paymentName to paymentMethod for script
-            "merchantName": "", // Empty for now - not integrated in UI yet
-            "note": note ?? ""
+            "paymentMethod": paymentName ?? "", // API expects paymentMethod, not paymentName
+            "merchantName": merchantName ?? "", // Now properly accepting merchantName parameter
+            "note": note ?? "",
+            "transactionType": "" // API expects this field, even if empty
         ]
         postJSON(payload, completion: completion)
     }
@@ -51,6 +55,66 @@ struct SheetsClient {
         postJSON(payload, completion: completion)
     }
 
+    // MARK: - GET Methods (new)
+    
+    func getTransactions(startDate: Date, endDate: Date, limit: Int = 300,
+                        completion: @escaping (Result<APIResponse, Error>) -> Void) {
+        var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)!
+        components.queryItems = [
+            URLQueryItem(name: "secret", value: secret),
+            URLQueryItem(name: "action", value: "getTransactions"),
+            URLQueryItem(name: "startDate", value: DateFormatter.iso8601.string(from: startDate)),
+            URLQueryItem(name: "endDate", value: DateFormatter.iso8601.string(from: endDate)),
+            URLQueryItem(name: "limit", value: String(limit))
+        ]
+        
+        guard let url = components.url else {
+            print("SheetsClient ❌ bad URL for getTransactions")
+            completion(.failure(SheetsError.invalidURL))
+            return
+        }
+        
+        print("SheetsClient 🔗 GET: \(url.absoluteString)")
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                print("SheetsClient ❌ Network error: \(error)")
+                completion(.failure(error))
+                return
+            }
+            
+            guard let data = data else {
+                print("SheetsClient ❌ No data received")
+                completion(.failure(SheetsError.noData))
+                return
+            }
+            
+            // Debug: Print raw response
+            if let rawResponse = String(data: data, encoding: .utf8) {
+                print("SheetsClient 📄 Raw response: \(rawResponse.prefix(500))...")
+            }
+            
+            // Check if response is HTML (error page) instead of JSON
+            if let responseString = String(data: data, encoding: .utf8),
+               responseString.lowercased().contains("<html") {
+                print("SheetsClient ❌ Received HTML instead of JSON")
+                completion(.failure(SheetsError.htmlResponse))
+                return
+            }
+            
+            do {
+                let apiResponse = try JSONDecoder().decode(APIResponse.self, from: data)
+                print("SheetsClient ✅ Decoded \(apiResponse.data.count) transactions")
+                completion(.success(apiResponse))
+            } catch {
+                print("SheetsClient ❌ Decode error: \(error)")
+                completion(.failure(error))
+            }
+        }.resume()
+    }
+
+    // MARK: - Private POST helper
+    
     private func postJSON(_ body: [String: Any], completion: @escaping (Response) -> Void) {
         var comps = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)!
         comps.queryItems = [URLQueryItem(name: "secret", value: secret)]
@@ -81,6 +145,48 @@ struct SheetsClient {
     }
 }
 
+// MARK: - Error Types
+
+enum SheetsError: LocalizedError {
+    case invalidURL
+    case noData
+    case htmlResponse
+    
+    var errorDescription: String? {
+        switch self {
+        case .invalidURL:
+            return "Invalid URL configuration"
+        case .noData:
+            return "No data received from server"
+        case .htmlResponse:
+            return "Server returned an error page instead of data"
+        }
+    }
+}
+
+// MARK: - API Models
+
+struct APIResponse: Codable {
+    let success: Bool
+    let message: String
+    let total: Int?
+    let filtered: Int?
+    let data: [APITransaction]
+}
+
+struct APITransaction: Codable {
+    let remoteID: String
+    let amount: Double
+    let categoryName: String
+    let paymentMethod: String
+    let merchantName: String
+    let note: String
+    let dateISO: String
+    let transactionType: String
+}
+
+// MARK: - Date Formatter
+
 private extension DateFormatter {
     static let iso8601: DateFormatter = {
         let f = DateFormatter()
@@ -91,4 +197,3 @@ private extension DateFormatter {
         return f
     }()
 }
-
