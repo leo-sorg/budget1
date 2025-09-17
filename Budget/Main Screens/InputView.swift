@@ -336,12 +336,13 @@ struct InputView: View {
                 try ctx.save()
             }
 
+            // UPDATED: Using correct parameter names for new script
             SHEETS.postTransaction(
                 remoteID: tx.remoteID,
                 amount: signedAmount,
                 date: date,
                 categoryName: selectedCategory?.name,
-                paymentName: selectedMethod?.name,
+                paymentName: selectedMethod?.name, // SheetsClient converts this to paymentMethod internally
                 note: descriptionText.isEmpty ? nil : descriptionText
             )
 

@@ -516,6 +516,7 @@ struct ManageView: View {
             showCategoryForm = false
             Task { await loadData() }
 
+            // UPDATED: Using correct API call for new script
             Task {
                 SHEETS.postCategory(
                     remoteID: newCat.remoteID,
@@ -556,6 +557,7 @@ struct ManageView: View {
                 try context.save()
             }
 
+            // UPDATED: Using correct API call for new script
             SHEETS.postPayment(
                 remoteID: newPM.remoteID,
                 name: newPM.name,

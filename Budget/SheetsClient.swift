@@ -18,7 +18,8 @@ struct SheetsClient {
             "amount": (amount as NSDecimalNumber).doubleValue,
             "dateISO": DateFormatter.iso8601.string(from: date),
             "categoryName": categoryName ?? "",
-            "paymentName": paymentName ?? "",
+            "paymentMethod": paymentName ?? "", // Changed from paymentName to paymentMethod for script
+            "merchantName": "", // Empty for now - not integrated in UI yet
             "note": note ?? ""
         ]
         postJSON(payload, completion: completion)
@@ -44,7 +45,7 @@ struct SheetsClient {
             "type": "paymentMethod",
             "remoteID": remoteID,
             "name": name,
-            "emoji": emoji ?? "", // Added emoji field
+            "emoji": emoji ?? "",
             "sortIndex": sortIndex
         ]
         postJSON(payload, completion: completion)
@@ -90,3 +91,4 @@ private extension DateFormatter {
         return f
     }()
 }
+
