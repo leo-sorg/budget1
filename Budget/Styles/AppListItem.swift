@@ -73,30 +73,11 @@ struct AppListItem<Content: View, TrailingContent: View>: View {
                     )
             )
             .offset(x: offset)
-            .gesture(
-                onDelete != nil ? DragGesture()
-                    .onChanged { value in
-                        if value.translation.width < 0 {
-                            // Only allow swiping left, and limit the swipe distance
-                            offset = max(-100, value.translation.width)
-                        } else if isSwiped {
-                            // Allow swiping back to close if already swiped
-                            offset = min(0, -80 + value.translation.width)
-                        }
-                    }
-                    .onEnded { value in
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            let threshold: CGFloat = -40
-                            if offset < threshold {
-                                offset = -80
-                                isSwiped = true
-                            } else {
-                                offset = 0
-                                isSwiped = false
-                            }
-                        }
-                    } : nil
-            )
+            .modifier(SwipeToDeleteModifier(
+                onDelete: onDelete,
+                offset: $offset,
+                isSwiped: $isSwiped
+            ))
             .onTapGesture {
                 if isSwiped {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
@@ -107,6 +88,78 @@ struct AppListItem<Content: View, TrailingContent: View>: View {
             }
         }
         .clipped() // Ensure delete button doesn't show outside bounds
+    }
+}
+
+// MARK: - Swipe to Delete Modifier (Only applied when needed)
+private struct SwipeToDeleteModifier: ViewModifier {
+    let onDelete: (() -> Void)?
+    @Binding var offset: CGFloat
+    @Binding var isSwiped: Bool
+    
+    func body(content: Content) -> some View {
+        if onDelete != nil {
+            content
+                .gesture(
+                    DragGesture(minimumDistance: 20, coordinateSpace: .local)
+                        .onChanged { value in
+                            let horizontalAmount = value.translation.width
+                            let verticalAmount = value.translation.height
+                            
+                            // Much more strict: only handle clearly horizontal gestures
+                            // If vertical movement is more than 30% of horizontal, ignore
+                            if abs(verticalAmount) > abs(horizontalAmount) * 0.3 {
+                                return
+                            }
+                            
+                            // Only handle left swipes for delete
+                            if horizontalAmount < 0 {
+                                offset = max(-100, horizontalAmount)
+                            } else if isSwiped {
+                                offset = min(0, -80 + horizontalAmount)
+                            }
+                        }
+                        .onEnded { value in
+                            let horizontalAmount = value.translation.width
+                            let verticalAmount = value.translation.height
+                            
+                            // Same strict check for vertical gestures
+                            if abs(verticalAmount) > abs(horizontalAmount) * 0.3 {
+                                withAnimation(.spring(response: 0.15, dampingFraction: 0.9)) {
+                                    offset = 0
+                                    isSwiped = false
+                                }
+                                return
+                            }
+                            
+                            // Handle horizontal swipe completion
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                let threshold: CGFloat = -40
+                                if offset < threshold {
+                                    offset = -80
+                                    isSwiped = true
+                                } else {
+                                    offset = 0
+                                    isSwiped = false
+                                }
+                            }
+                        }
+                )
+                .simultaneousGesture(
+                    // Add a tap gesture to close swipe if tapped
+                    TapGesture()
+                        .onEnded { _ in
+                            if isSwiped {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    offset = 0
+                                    isSwiped = false
+                                }
+                            }
+                        }
+                )
+        } else {
+            content
+        }
     }
 }
 

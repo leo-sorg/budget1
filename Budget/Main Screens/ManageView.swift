@@ -67,6 +67,8 @@ struct ManageView: View {
                                         // Reset forms when switching sections
                                         showCategoryForm = false
                                         showPaymentForm = false
+                                        // Dismiss keyboard to avoid scroll interference
+                                        hideKeyboard()
                                     }
                                 }
                             )
@@ -76,7 +78,7 @@ struct ManageView: View {
             .padding() // Same as InputView sections
             
             // Content based on selected section
-            ScrollView {
+            ScrollView(.vertical, showsIndicators: true) {
                 VStack(spacing: 24) {
                     switch selectedSection {
                     case .categories:
@@ -95,6 +97,7 @@ struct ManageView: View {
             }
             .scrollContentBackground(.hidden)
             .background(Color.clear)
+            // REMOVED: .scrollDismissesKeyboard(.interactively) - this was interfering with scroll detection
         }
         .task {
             await loadData()
@@ -166,6 +169,9 @@ struct ManageView: View {
                                 newCategory = ""
                                 newCategoryEmoji = ""
                                 newCategoryIsIncome = false
+                            } else {
+                                // Dismiss keyboard when canceling
+                                hideKeyboard()
                             }
                         }
                     }
@@ -203,7 +209,10 @@ struct ManageView: View {
                                 .foregroundColor(.white.opacity(0.6))
                             
                             HStack(spacing: 12) {
-                                Button(action: { newCategoryIsIncome = false }) {
+                                Button(action: {
+                                    newCategoryIsIncome = false
+                                    hideKeyboard()
+                                }) {
                                     Text("Expense")
                                         .font(.system(size: 16, weight: .medium))
                                         .foregroundColor(.white)
@@ -213,7 +222,10 @@ struct ManageView: View {
                                 .background(GlassChipBackground(isSelected: !newCategoryIsIncome))
                                 .buttonStyle(PlainButtonStyle())
                                 
-                                Button(action: { newCategoryIsIncome = true }) {
+                                Button(action: {
+                                    newCategoryIsIncome = true
+                                    hideKeyboard()
+                                }) {
                                     Text("Income")
                                         .font(.system(size: 16, weight: .medium))
                                         .foregroundColor(.white)
@@ -240,7 +252,7 @@ struct ManageView: View {
                 }
             }
             
-            // Category list
+            // Category list with improved scrolling
             VStack(alignment: .leading, spacing: 16) {
                 Text("Category List")
                     .font(.headline)
@@ -251,7 +263,7 @@ struct ManageView: View {
                         .foregroundColor(.appText.opacity(0.6))
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
-                    VStack(spacing: 8) {
+                    LazyVStack(spacing: 8) {
                         ForEach(categories) { category in
                             CategoryListItem(
                                 category: category,
@@ -284,6 +296,9 @@ struct ManageView: View {
                             if showPaymentForm {
                                 newPayment = ""
                                 newPaymentEmoji = ""
+                            } else {
+                                // Dismiss keyboard when canceling
+                                hideKeyboard()
                             }
                         }
                     }
@@ -329,7 +344,7 @@ struct ManageView: View {
                 }
             }
             
-            // Payment list
+            // Payment list with improved scrolling
             VStack(alignment: .leading, spacing: 16) {
                 Text("Payment Type List")
                     .font(.headline)
@@ -340,7 +355,7 @@ struct ManageView: View {
                         .foregroundColor(.appText.opacity(0.6))
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
-                    VStack(spacing: 8) {
+                    LazyVStack(spacing: 8) {
                         ForEach(methods) { method in
                             PaymentMethodListItem(
                                 paymentMethod: method,
@@ -386,6 +401,7 @@ struct ManageView: View {
                     Button(action: {
                         hexColorInput = ""
                         showHexInput.toggle()
+                        hideKeyboard()
                     }) {
                         ZStack {
                             RoundedRectangle(cornerRadius: 8)
