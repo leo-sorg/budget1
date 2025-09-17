@@ -14,7 +14,7 @@ struct SummaryView: View {
     @State private var errorMessage: String?
 
     // Set this to false to use real API, true to use mock data
-    private let useMockData = false
+    private let useMockData = true
 
     var body: some View {
         VStack(spacing: 0) {
@@ -76,6 +76,9 @@ struct SummaryView: View {
                 .padding()
             }
             .background(Color.clear)
+            .refreshable {
+                await refreshData()
+            }
         }
         .onAppear {
             // Fetch transactions for current month when screen appears
@@ -136,6 +139,46 @@ struct SummaryView: View {
             }
         } else {
             fetchRealAPITransactions()
+        }
+    }
+    
+    // MARK: - Pull to Refresh
+    @MainActor
+    private func refreshData() async {
+        // Don't show loading indicator during refresh (pull indicator is enough)
+        errorMessage = nil
+        
+        if useMockData {
+            // Simulate network delay for mock data
+            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+            self.apiTransactions = self.getMockTransactionsForMonth()
+            self.errorMessage = nil
+        } else {
+            await withCheckedContinuation { continuation in
+                let (startDate, endDate) = selectedDateRange
+                
+                SHEETS.getTransactions(startDate: startDate, endDate: endDate, limit: 300) { result in
+                    DispatchQueue.main.async {
+                        switch result {
+                        case .success(let apiResponse):
+                            if apiResponse.success {
+                                self.apiTransactions = apiResponse.data
+                                self.errorMessage = nil
+                                print("✅ Refreshed \(self.apiTransactions.count) transactions")
+                            } else {
+                                self.errorMessage = apiResponse.message
+                                print("❌ Refresh Error: \(apiResponse.message)")
+                            }
+                            
+                        case .failure(let error):
+                            print("❌ Refresh Error: \(error)")
+                            self.errorMessage = error.localizedDescription
+                        }
+                        
+                        continuation.resume()
+                    }
+                }
+            }
         }
     }
     
@@ -490,8 +533,6 @@ struct SummaryView: View {
     }
 }
 
-// API Models are now defined in SheetsClient.swift
-
 // MARK: - API Transaction List Item
 
 struct APITransactionListItem: View {
@@ -528,14 +569,6 @@ struct APITransactionListItem: View {
                                 .lineLimit(1)
                                 .truncationMode(.tail)
                         }
-                        
-                        if !transaction.note.isEmpty {
-                            Text("• \(transaction.note)")
-                                .foregroundColor(Color.appText.opacity(0.6))
-                                .font(.caption)
-                                .lineLimit(1)
-                                .truncationMode(.tail)
-                        }
                     }
                 }
             },
@@ -557,9 +590,9 @@ struct APITransactionListItem: View {
         let simpleFormatter = DateFormatter()
         simpleFormatter.dateFormat = "yyyy-MM-dd"
         
+        // Output formatter for DD/MM format
         let outputFormatter = DateFormatter()
-        outputFormatter.dateStyle = .medium
-        outputFormatter.timeStyle = .none
+        outputFormatter.dateFormat = "dd/MM"
         
         // Try ISO format first
         if let date = isoFormatter.date(from: dateString) {
@@ -582,7 +615,8 @@ struct APITransactionListItem: View {
     }
 }
 
-// MARK: - Month Chip Component with Glass Background (unchanged)
+// MARK: - Month Chip Component with Glass Background
+
 struct MonthChipView: View {
     let month: Int
     let year: Int
@@ -618,7 +652,7 @@ struct MonthChipView: View {
     }
 }
 
-// MARK: - Summary List Item Components (unchanged)
+// MARK: - Summary List Item Components
 
 struct SummaryCategoryItem: View {
     let name: String
