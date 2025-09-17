@@ -14,7 +14,7 @@ struct SummaryView: View {
     @State private var errorMessage: String?
 
     // Set this to false to use real API, true to use mock data
-    private let useMockData = true
+    private let useMockData = false
 
     var body: some View {
         VStack(spacing: 0) {
