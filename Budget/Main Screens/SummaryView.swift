@@ -533,7 +533,7 @@ struct SummaryView: View {
     }
 }
 
-// MARK: - API Transaction List Item
+// MARK: - API Transaction List Item (UPDATED - removed merchant and note)
 
 struct APITransactionListItem: View {
     let transaction: APITransaction
@@ -560,14 +560,6 @@ struct APITransactionListItem: View {
                             Text("• \(transaction.paymentMethod)")
                                 .foregroundColor(Color.appText.opacity(0.6))
                                 .font(.caption)
-                        }
-                        
-                        if !transaction.merchantName.isEmpty {
-                            Text("• \(transaction.merchantName)")
-                                .foregroundColor(Color.appText.opacity(0.6))
-                                .font(.caption)
-                                .lineLimit(1)
-                                .truncationMode(.tail)
                         }
                     }
                 }
