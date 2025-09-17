@@ -193,7 +193,8 @@ struct SummaryView: View {
                 switch result {
                 case .success(let apiResponse):
                     if apiResponse.success {
-                        // Just use the data as-is from the API - it's already filtered by date
+                        // Use the data in the exact order returned by the API
+                        // The API should be returning them in the correct order already
                         self.apiTransactions = apiResponse.data
                         self.errorMessage = nil
                         print("✅ Successfully loaded \(self.apiTransactions.count) transactions for \(self.selectedMonth)/\(self.selectedYear)")
@@ -308,8 +309,9 @@ struct SummaryView: View {
             transactions.append(transaction)
         }
         
-        // Sort by date descending (most recent first)
-        return transactions.sorted { $0.dateISO > $1.dateISO }
+        // Return transactions in the order they were created (no sorting)
+        // This preserves the natural order like the API would
+        return transactions
     }
     
     // MARK: - Month navigation data
@@ -573,29 +575,41 @@ struct APITransactionListItem: View {
     }
     
     private func formatDisplayDate(_ dateString: String) -> String {
-        // Handle ISO date format: "2025-08-16T03:00:00.000Z"
-        let isoFormatter = DateFormatter()
-        isoFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
-        isoFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-        
-        // Also try simple date format: "2025-08-16"
-        let simpleFormatter = DateFormatter()
-        simpleFormatter.dateFormat = "yyyy-MM-dd"
-        
         // Output formatter for DD/MM format
         let outputFormatter = DateFormatter()
         outputFormatter.dateFormat = "dd/MM"
         
-        // Try ISO format first
+        // Use ISO8601DateFormatter which handles various ISO formats automatically
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        
+        // Try with fractional seconds first
         if let date = isoFormatter.date(from: dateString) {
             return outputFormatter.string(from: date)
         }
-        // Fall back to simple format
-        else if let date = simpleFormatter.date(from: dateString) {
+        
+        // Try without fractional seconds (for format like "2025-09-17T00:30:41-03:00")
+        isoFormatter.formatOptions = [.withInternetDateTime]
+        if let date = isoFormatter.date(from: dateString) {
             return outputFormatter.string(from: date)
         }
         
-        // If neither works, return the original string
+        // Try simple date format: "2025-08-16"
+        let simpleFormatter = DateFormatter()
+        simpleFormatter.dateFormat = "yyyy-MM-dd"
+        if let date = simpleFormatter.date(from: dateString) {
+            return outputFormatter.string(from: date)
+        }
+        
+        // If nothing works, try to extract just the date part
+        if dateString.count >= 10 {
+            let datePart = String(dateString.prefix(10))
+            if let date = simpleFormatter.date(from: datePart) {
+                return outputFormatter.string(from: date)
+            }
+        }
+        
+        // If all else fails, return the original string
         return dateString
     }
     
