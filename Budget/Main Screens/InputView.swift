@@ -53,7 +53,7 @@ struct InputView: View {
                         }
                     }
                     
-                    // Save button
+                    // Save button - UPDATED TO USE ENHANCED BUTTON
                     saveSection
                     
                     // Extra padding at bottom
@@ -85,7 +85,12 @@ struct InputView: View {
         .task {
             categories = (try? ctx.fetch(FetchDescriptor<Category>(sortBy: [SortDescriptor(\.name)]))) ?? []
             paymentMethods = (try? ctx.fetch(FetchDescriptor<PaymentMethod>(sortBy: [SortDescriptor(\.name)]))) ?? []
-            if categories.isEmpty || paymentMethods.isEmpty { seedDefaults() }
+            if categories.isEmpty || paymentMethods.isEmpty {
+                seedDefaults()
+                // Reload after seeding defaults
+                categories = (try? ctx.fetch(FetchDescriptor<Category>(sortBy: [SortDescriptor(\.name)]))) ?? []
+                paymentMethods = (try? ctx.fetch(FetchDescriptor<PaymentMethod>(sortBy: [SortDescriptor(\.name)]))) ?? []
+            }
         }
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
@@ -161,6 +166,8 @@ struct InputView: View {
             if paymentMethods.isEmpty {
                 Button("Add default payment types") {
                     seedDefaults(paymentsOnly: true)
+                    // Refresh the payment methods after seeding
+                    paymentMethods = (try? ctx.fetch(FetchDescriptor<PaymentMethod>(sortBy: [SortDescriptor(\.name)]))) ?? []
                 }
                 .buttonStyle(AppButtonStyle())
             } else {
@@ -193,6 +200,8 @@ struct InputView: View {
             if categories.isEmpty {
                 Button("Add default categories") {
                     seedDefaults(categoriesOnly: true)
+                    // Refresh the categories after seeding
+                    categories = (try? ctx.fetch(FetchDescriptor<Category>(sortBy: [SortDescriptor(\.name)]))) ?? []
                 }
                 .buttonStyle(AppButtonStyle())
             } else {
@@ -255,11 +264,11 @@ struct InputView: View {
         }
     }
     
+    // MARK: - UPDATED SAVE SECTION WITH ENHANCED BUTTON
     @ViewBuilder private var saveSection: some View {
-        Button("Save Entry") {
-            save()
+        EnhancedButton(title: "Save Entry") {
+            return await performSave()
         }
-        .buttonStyle(AppButtonStyle())
         .disabled(!canSave)
         .opacity(canSave ? 1.0 : 0.5)
         .background(
@@ -273,6 +282,56 @@ struct InputView: View {
                     }
             }
         )
+    }
+    
+    // MARK: - NEW ASYNC SAVE FUNCTION
+    @MainActor
+    private func performSave() async -> Bool {
+        guard let amount = amountDecimal else { return false }
+
+        let signedAmount = (selectedCategory?.isIncome ?? false) ? amount : -amount
+
+        let tx = Transaction(
+            amount: signedAmount,
+            date: date,
+            note: descriptionText.isEmpty ? nil : descriptionText,
+            category: selectedCategory,
+            paymentMethod: selectedMethod
+        )
+
+        do {
+            try withAnimation {
+                ctx.insert(tx)
+                try ctx.save()
+            }
+
+            // Post to sheets in background - fire and forget
+            SHEETS.postTransaction(
+                remoteID: tx.remoteID,
+                amount: signedAmount,
+                date: date,
+                categoryName: selectedCategory?.name,
+                paymentName: selectedMethod?.name,
+                note: descriptionText.isEmpty ? nil : descriptionText
+            )
+
+            // Clear form
+            amountText = ""
+            descriptionText = ""
+            date = Date()
+            selectedCategory = nil
+            selectedMethod = nil
+            showDatePicker = false
+            
+            dismissKeyboard()
+            
+            // Return success
+            return true
+        } catch {
+            alertMessage = "Could not save entry: \(error.localizedDescription)"
+            print("SAVE ERROR (Transaction):", error)
+            return false
+        }
     }
 
     @ViewBuilder private var toastOverlay: some View {
@@ -315,54 +374,6 @@ struct InputView: View {
         }
         
         return Decimal(string: cleanString)
-    }
-
-    private func save() {
-        guard let amount = amountDecimal else { return }
-
-        let signedAmount = (selectedCategory?.isIncome ?? false) ? amount : -amount
-
-        let tx = Transaction(
-            amount: signedAmount,
-            date: date,
-            note: descriptionText.isEmpty ? nil : descriptionText,
-            category: selectedCategory,
-            paymentMethod: selectedMethod
-        )
-
-        do {
-            try withAnimation {
-                ctx.insert(tx)
-                try ctx.save()
-            }
-
-            // UPDATED: Using correct parameter names for new script
-            SHEETS.postTransaction(
-                remoteID: tx.remoteID,
-                amount: signedAmount,
-                date: date,
-                categoryName: selectedCategory?.name,
-                paymentName: selectedMethod?.name, // SheetsClient converts this to paymentMethod internally
-                note: descriptionText.isEmpty ? nil : descriptionText
-            )
-
-            amountText = ""
-            descriptionText = ""
-            date = Date()
-            selectedCategory = nil
-            selectedMethod = nil
-            showDatePicker = false
-            
-            withAnimation { showSavedToast = true }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                withAnimation { showSavedToast = false }
-            }
-
-            dismissKeyboard()
-        } catch {
-            alertMessage = "Could not save entry: \(error.localizedDescription)"
-            print("SAVE ERROR (Transaction):", error)
-        }
     }
 
     private func seedDefaults(categoriesOnly: Bool = false, paymentsOnly: Bool = false) {

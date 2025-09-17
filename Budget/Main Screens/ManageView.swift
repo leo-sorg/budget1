@@ -237,11 +237,10 @@ struct ManageView: View {
                             }
                         }
                         
-                        // Add button
-                        Button("Add Category") {
-                            addCategory()
+                        // UPDATED: Add button using EnhancedButton
+                        EnhancedButton(title: "Add Category") {
+                            await performAddCategory()
                         }
-                        .buttonStyle(AppButtonStyle())
                         .disabled(newCategory.isEmpty)
                     }
                     .padding(16)
@@ -329,11 +328,10 @@ struct ManageView: View {
                             AppEmojiField(text: $newPaymentEmoji, placeholder: "e.g. 💳")
                         }
                         
-                        // Add button
-                        Button("Add Payment Type") {
-                            addPayment()
+                        // UPDATED: Add button using EnhancedButton
+                        EnhancedButton(title: "Add Payment Type") {
+                            await performAddPayment()
                         }
-                        .buttonStyle(AppButtonStyle())
                         .disabled(newPayment.isEmpty)
                     }
                     .padding(16)
@@ -444,10 +442,14 @@ struct ManageView: View {
                             }
                     }
                     
-                    Button("Set Color") {
-                        applyHexColor()
+                    // UPDATED: Set Color button using EnhancedButton
+                    EnhancedButton(title: "Set Color") {
+                        if isValidHex(hexColorInput) {
+                            applyHexColor()
+                            return true
+                        }
+                        return false
                     }
-                    .buttonStyle(AppButtonStyle())
                     .disabled(!isValidHex(hexColorInput))
                 }
                 .padding(16)
@@ -498,7 +500,117 @@ struct ManageView: View {
         }
     }
 
-    // MARK: - Add Functions
+    // MARK: - NEW ASYNC ADD FUNCTIONS
+    @MainActor
+    private func performAddCategory() async -> Bool {
+        hideKeyboard()
+        let name = trimmed(newCategory)
+        let emoji = trimmed(newCategoryEmoji)
+        guard !name.isEmpty else { return false }
+
+        if categories.contains(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) {
+            alertMessage = "A category named \"\(name)\" already exists."
+            return false
+        }
+
+        let next = (categories.map { $0.sortIndex }.max() ?? -1) + 1
+        let newCat = Category(
+            name: name,
+            emoji: emoji.isEmpty ? nil : emoji,
+            sortIndex: next,
+            isIncome: newCategoryIsIncome
+        )
+
+        do {
+            try withAnimation {
+                context.insert(newCat)
+                try context.save()
+            }
+
+            // Post to sheets in background - fire and forget
+            SHEETS.postCategory(
+                remoteID: newCat.remoteID,
+                name: newCat.name,
+                emoji: newCat.emoji,
+                sortIndex: newCat.sortIndex,
+                isIncome: newCat.isIncome
+            )
+            
+            // Clear form fields
+            newCategory = ""
+            newCategoryEmoji = ""
+            newCategoryIsIncome = false
+            
+            // Wait for success animation to show before collapsing
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                withAnimation {
+                    showCategoryForm = false
+                }
+            }
+            
+            await loadData()
+            return true
+        } catch {
+            alertMessage = "Could not save category: \(error.localizedDescription)"
+            print("SAVE ERROR (Category):", error)
+            return false
+        }
+    }
+
+    @MainActor
+    private func performAddPayment() async -> Bool {
+        hideKeyboard()
+        let name = trimmed(newPayment)
+        let emoji = trimmed(newPaymentEmoji)
+        guard !name.isEmpty else { return false }
+
+        if methods.contains(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) {
+            alertMessage = "A payment method named \"\(name)\" already exists."
+            return false
+        }
+
+        let next = (methods.map { $0.sortIndex }.max() ?? -1) + 1
+        let newPM = PaymentMethod(
+            name: name,
+            emoji: emoji.isEmpty ? nil : emoji,
+            sortIndex: next
+        )
+
+        do {
+            try withAnimation {
+                context.insert(newPM)
+                try context.save()
+            }
+
+            // Post to sheets in background - fire and forget
+            SHEETS.postPayment(
+                remoteID: newPM.remoteID,
+                name: newPM.name,
+                emoji: newPM.emoji,
+                sortIndex: newPM.sortIndex
+            )
+            
+            // Clear form fields
+            newPayment = ""
+            newPaymentEmoji = ""
+            
+            // Wait for success animation to show before collapsing
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                withAnimation {
+                    showPaymentForm = false
+                }
+            }
+            
+            await loadData()
+            return true
+        } catch {
+            alertMessage = "Could not save payment method: \(error.localizedDescription)"
+            print("SAVE ERROR (Payment):", error)
+            return false
+        }
+    }
+
+    // MARK: - Original Add Functions (keeping for backward compatibility if needed)
     @MainActor
     private func addCategory() {
         hideKeyboard()
