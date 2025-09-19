@@ -7,9 +7,18 @@ struct ManageView: View {
     @Environment(\.modelContext) private var context
     @EnvironmentObject private var store: BackgroundImageStore
 
-    // Use @State instead of @Query to avoid migration issues
-    @State private var categories: [Category] = []
-    @State private var methods: [PaymentMethod] = []
+    // UPDATED: Use @State for API data instead of local database
+    @State private var categories: [APICategory] = []
+    @State private var methods: [APIPaymentMethod] = []
+    
+    // UPDATED: Add API state management like SummaryView
+    @State private var isLoadingCategories = false
+    @State private var isLoadingPaymentMethods = false
+    @State private var categoriesError: String?
+    @State private var paymentMethodsError: String?
+
+    // Set this to false to use real API, true to use mock data
+    private let useMockData = false
 
     @State private var newCategory = ""
     @State private var newCategoryEmoji = ""
@@ -77,7 +86,7 @@ struct ManageView: View {
             }
             .padding() // Same as InputView sections
             
-            // Content based on selected section
+            // Content based on selected section with pull-to-refresh
             ScrollView(.vertical, showsIndicators: true) {
                 VStack(spacing: 24) {
                     switch selectedSection {
@@ -97,10 +106,17 @@ struct ManageView: View {
             }
             .scrollContentBackground(.hidden)
             .background(Color.clear)
-            // REMOVED: .scrollDismissesKeyboard(.interactively) - this was interfering with scroll detection
+            .refreshable {
+                await refreshCurrentSection()
+            }
         }
-        .task {
-            await loadData()
+        .onAppear {
+            // Load data when view appears
+            loadDataForCurrentSection()
+        }
+        .onChange(of: selectedSection) { _, _ in
+            // Load data when section changes
+            loadDataForCurrentSection()
         }
         .alert("Oops", isPresented: Binding(
             get: { alertMessage != nil },
@@ -123,36 +139,193 @@ struct ManageView: View {
         }
     }
 
-    // MARK: - Data Loading
+    // MARK: - Data Loading Functions
+    
+    private func loadDataForCurrentSection() {
+        switch selectedSection {
+        case .categories:
+            fetchCategories()
+        case .payments:
+            fetchPaymentMethods()
+        case .background:
+            // Background section doesn't need API data
+            break
+        }
+    }
+    
     @MainActor
-    private func loadData() async {
-        do {
-            // Load categories
-            let categoryDescriptor = FetchDescriptor<Category>(
-                sortBy: [
-                    SortDescriptor(\Category.sortIndex, order: .forward),
-                    SortDescriptor(\Category.name, order: .forward)
-                ]
-            )
-            categories = try context.fetch(categoryDescriptor)
-            
-            // Load payment methods
-            let paymentDescriptor = FetchDescriptor<PaymentMethod>(
-                sortBy: [
-                    SortDescriptor(\PaymentMethod.sortIndex, order: .forward),
-                    SortDescriptor(\PaymentMethod.name, order: .forward)
-                ]
-            )
-            methods = try context.fetch(paymentDescriptor)
-            
-            normalizeSortIndicesIfNeeded()
-        } catch {
-            print("Error loading data: \(error)")
-            alertMessage = "Could not load data: \(error.localizedDescription)"
+    private func refreshCurrentSection() async {
+        switch selectedSection {
+        case .categories:
+            await refreshCategories()
+        case .payments:
+            await refreshPaymentMethods()
+        case .background:
+            // Background section doesn't need refresh
+            break
+        }
+    }
+    
+    private func fetchCategories() {
+        isLoadingCategories = true
+        categoriesError = nil
+        
+        if useMockData {
+            // Mock API delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.isLoadingCategories = false
+                self.categories = self.getMockCategories()
+                self.categoriesError = nil
+            }
+        } else {
+            fetchRealAPICategories()
+        }
+    }
+    
+    private func fetchPaymentMethods() {
+        isLoadingPaymentMethods = true
+        paymentMethodsError = nil
+        
+        if useMockData {
+            // Mock API delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.isLoadingPaymentMethods = false
+                self.methods = self.getMockPaymentMethods()
+                self.paymentMethodsError = nil
+            }
+        } else {
+            fetchRealAPIPaymentMethods()
+        }
+    }
+    
+    // MARK: - Real API Functions
+    private func fetchRealAPICategories() {
+        SHEETS.getCategories { result in
+            DispatchQueue.main.async {
+                self.isLoadingCategories = false
+                
+                switch result {
+                case .success(let response):
+                    if response.success {
+                        self.categories = response.data.sorted { $0.sortIndex < $1.sortIndex }
+                        print("✅ Successfully loaded \(self.categories.count) categories")
+                    } else {
+                        self.categoriesError = response.message
+                        print("❌ Categories API Error: \(response.message)")
+                    }
+                    
+                case .failure(let error):
+                    print("❌ Categories Error: \(error)")
+                    self.categoriesError = error.localizedDescription
+                }
+            }
+        }
+    }
+    
+    private func fetchRealAPIPaymentMethods() {
+        SHEETS.getPaymentMethods { result in
+            DispatchQueue.main.async {
+                self.isLoadingPaymentMethods = false
+                
+                switch result {
+                case .success(let response):
+                    if response.success {
+                        self.methods = response.data.sorted { $0.sortIndex < $1.sortIndex }
+                        print("✅ Successfully loaded \(self.methods.count) payment methods")
+                    } else {
+                        self.paymentMethodsError = response.message
+                        print("❌ Payment Methods API Error: \(response.message)")
+                    }
+                    
+                case .failure(let error):
+                    print("❌ Payment Methods Error: \(error)")
+                    self.paymentMethodsError = error.localizedDescription
+                }
+            }
+        }
+    }
+    
+    // MARK: - Pull to Refresh Functions
+    
+    @MainActor
+    private func refreshCategories() async {
+        if useMockData {
+            // Simulate network delay for mock data
+            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+            self.categories = self.getMockCategories()
+            self.categoriesError = nil
+        } else {
+            await refreshRealAPICategories()
+        }
+    }
+    
+    @MainActor
+    private func refreshPaymentMethods() async {
+        if useMockData {
+            // Simulate network delay for mock data
+            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+            self.methods = self.getMockPaymentMethods()
+            self.paymentMethodsError = nil
+        } else {
+            await refreshRealAPIPaymentMethods()
+        }
+    }
+    
+    @MainActor
+    private func refreshRealAPICategories() async {
+        await withCheckedContinuation { continuation in
+            SHEETS.getCategories { result in
+                DispatchQueue.main.async {
+                    switch result {
+                    case .success(let response):
+                        if response.success {
+                            self.categories = response.data.sorted { $0.sortIndex < $1.sortIndex }
+                            self.categoriesError = nil
+                            print("✅ Refreshed \(self.categories.count) categories")
+                        } else {
+                            self.categoriesError = response.message
+                            print("❌ Refresh Categories Error: \(response.message)")
+                        }
+                        
+                    case .failure(let error):
+                        print("❌ Refresh Categories Error: \(error)")
+                        self.categoriesError = error.localizedDescription
+                    }
+                    
+                    continuation.resume()
+                }
+            }
+        }
+    }
+    
+    @MainActor
+    private func refreshRealAPIPaymentMethods() async {
+        await withCheckedContinuation { continuation in
+            SHEETS.getPaymentMethods { result in
+                DispatchQueue.main.async {
+                    switch result {
+                    case .success(let response):
+                        if response.success {
+                            self.methods = response.data.sorted { $0.sortIndex < $1.sortIndex }
+                            self.paymentMethodsError = nil
+                            print("✅ Refreshed \(self.methods.count) payment methods")
+                        } else {
+                            self.paymentMethodsError = response.message
+                            print("❌ Refresh Payment Methods Error: \(response.message)")
+                        }
+                        
+                    case .failure(let error):
+                        print("❌ Refresh Payment Methods Error: \(error)")
+                        self.paymentMethodsError = error.localizedDescription
+                    }
+                    
+                    continuation.resume()
+                }
+            }
         }
     }
 
-    // MARK: - Category Section with inline form
+    // MARK: - Category Section with inline form and loading states
     @ViewBuilder private var categorySection: some View {
         VStack(spacing: 24) {
             // Add/Edit form
@@ -237,9 +410,9 @@ struct ManageView: View {
                             }
                         }
                         
-                        // UPDATED: Add button using EnhancedButton
+                        // Add button using EnhancedButton
                         EnhancedButton(title: "Add Category") {
-                            await performAddCategory()
+                            return await performAddCategory()
                         }
                         .disabled(newCategory.isEmpty)
                     }
@@ -251,25 +424,31 @@ struct ManageView: View {
                 }
             }
             
-            // Category list with improved scrolling
+            // Category list with loading states
             VStack(alignment: .leading, spacing: 16) {
                 Text("Category List")
                     .font(.headline)
                     .foregroundColor(.appText)
                 
-                if categories.isEmpty {
-                    Text("No categories yet. Add one above.")
+                if isLoadingCategories {
+                    // Loading state
+                    loadingView
+                } else if let error = categoriesError {
+                    // Error state
+                    errorView(message: error, retryAction: fetchCategories)
+                } else if categories.isEmpty {
+                    Text("No categories found. Add one above or pull to refresh.")
                         .foregroundColor(.appText.opacity(0.6))
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
                     LazyVStack(spacing: 8) {
-                        ForEach(categories) { category in
-                            CategoryListItem(
+                        ForEach(categories, id: \.remoteID) { category in
+                            APICategoryListItem(
                                 category: category,
                                 onDelete: {
-                                    context.delete(category)
-                                    try? context.save()
-                                    Task { await loadData() }
+                                    // TODO: Implement API delete if needed
+                                    // For now, just show that deletion is not available
+                                    alertMessage = "Deleting from API not yet implemented"
                                 }
                             )
                         }
@@ -279,7 +458,7 @@ struct ManageView: View {
         }
     }
 
-    // MARK: - Payment Section with inline form
+    // MARK: - Payment Section with inline form and loading states
     @ViewBuilder private var paymentSection: some View {
         VStack(spacing: 24) {
             // Add/Edit form
@@ -328,9 +507,9 @@ struct ManageView: View {
                             AppEmojiField(text: $newPaymentEmoji, placeholder: "e.g. 💳")
                         }
                         
-                        // UPDATED: Add button using EnhancedButton
+                        // Add button using EnhancedButton
                         EnhancedButton(title: "Add Payment Type") {
-                            await performAddPayment()
+                            return await performAddPayment()
                         }
                         .disabled(newPayment.isEmpty)
                     }
@@ -342,25 +521,31 @@ struct ManageView: View {
                 }
             }
             
-            // Payment list with improved scrolling
+            // Payment list with loading states
             VStack(alignment: .leading, spacing: 16) {
                 Text("Payment Type List")
                     .font(.headline)
                     .foregroundColor(.appText)
                 
-                if methods.isEmpty {
-                    Text("No payment methods yet. Add one above.")
+                if isLoadingPaymentMethods {
+                    // Loading state
+                    loadingView
+                } else if let error = paymentMethodsError {
+                    // Error state
+                    errorView(message: error, retryAction: fetchPaymentMethods)
+                } else if methods.isEmpty {
+                    Text("No payment methods found. Add one above or pull to refresh.")
                         .foregroundColor(.appText.opacity(0.6))
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
                     LazyVStack(spacing: 8) {
-                        ForEach(methods) { method in
-                            PaymentMethodListItem(
+                        ForEach(methods, id: \.remoteID) { method in
+                            APIPaymentMethodListItem(
                                 paymentMethod: method,
                                 onDelete: {
-                                    context.delete(method)
-                                    try? context.save()
-                                    Task { await loadData() }
+                                    // TODO: Implement API delete if needed
+                                    // For now, just show that deletion is not available
+                                    alertMessage = "Deleting from API not yet implemented"
                                 }
                             )
                         }
@@ -370,6 +555,7 @@ struct ManageView: View {
         }
     }
 
+    // MARK: - Background section (unchanged)
     @ViewBuilder private var backgroundSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Background Options")
@@ -442,7 +628,7 @@ struct ManageView: View {
                             }
                     }
                     
-                    // UPDATED: Set Color button using EnhancedButton
+                    // Set Color button using EnhancedButton
                     EnhancedButton(title: "Set Color") {
                         if isValidHex(hexColorInput) {
                             applyHexColor()
@@ -499,8 +685,47 @@ struct ManageView: View {
             }
         }
     }
+    
+    // MARK: - Loading View (same as SummaryView)
+    @ViewBuilder private var loadingView: some View {
+        VStack(spacing: 20) {
+            ProgressView()
+                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                .scaleEffect(1.5)
+            
+            Text("Loading...")
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(.white.opacity(0.8))
+        }
+        .frame(maxWidth: .infinity, minHeight: 200)
+    }
+    
+    // MARK: - Error View (same as SummaryView)
+    @ViewBuilder private func errorView(message: String, retryAction: @escaping () -> Void) -> some View {
+        VStack(spacing: 20) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 48))
+                .foregroundColor(.white.opacity(0.6))
+            
+            Text("Couldn't load data")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundColor(.white)
+            
+            Text(message)
+                .font(.system(size: 14))
+                .foregroundColor(.white.opacity(0.7))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+            
+            Button("Try Again") {
+                retryAction()
+            }
+            .buttonStyle(AppSmallButtonStyle())
+        }
+        .frame(maxWidth: .infinity, minHeight: 200)
+    }
 
-    // MARK: - NEW ASYNC ADD FUNCTIONS
+    // MARK: - NEW ASYNC ADD FUNCTIONS (updated to refresh from API after adding)
     @MainActor
     private func performAddCategory() async -> Bool {
         hideKeyboard()
@@ -508,52 +733,34 @@ struct ManageView: View {
         let emoji = trimmed(newCategoryEmoji)
         guard !name.isEmpty else { return false }
 
+        // Check if category already exists
         if categories.contains(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) {
             alertMessage = "A category named \"\(name)\" already exists."
             return false
         }
 
-        let next = (categories.map { $0.sortIndex }.max() ?? -1) + 1
-        let newCat = Category(
-            name: name,
-            emoji: emoji.isEmpty ? nil : emoji,
-            sortIndex: next,
-            isIncome: newCategoryIsIncome
-        )
-
-        do {
-            try withAnimation {
-                context.insert(newCat)
-                try context.save()
-            }
-
-            // Post to sheets in background - fire and forget
-            SHEETS.postCategory(
-                remoteID: newCat.remoteID,
-                name: newCat.name,
-                emoji: newCat.emoji,
-                sortIndex: newCat.sortIndex,
-                isIncome: newCat.isIncome
-            )
+        if useMockData {
+            // Mock success for testing
+            await mockAddDelay()
             
             // Clear form fields
-            newCategory = ""
-            newCategoryEmoji = ""
-            newCategoryIsIncome = false
+            self.newCategory = ""
+            self.newCategoryEmoji = ""
+            self.newCategoryIsIncome = false
             
             // Wait for success animation to show before collapsing
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                 withAnimation {
-                    showCategoryForm = false
+                    self.showCategoryForm = false
                 }
             }
             
-            await loadData()
+            // Refresh categories from mock
+            self.categories = self.getMockCategories()
+            
             return true
-        } catch {
-            alertMessage = "Could not save category: \(error.localizedDescription)"
-            print("SAVE ERROR (Category):", error)
-            return false
+        } else {
+            return await performRealAddCategory(name: name, emoji: emoji)
         }
     }
 
@@ -564,144 +771,172 @@ struct ManageView: View {
         let emoji = trimmed(newPaymentEmoji)
         guard !name.isEmpty else { return false }
 
+        // Check if payment method already exists
         if methods.contains(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) {
             alertMessage = "A payment method named \"\(name)\" already exists."
             return false
         }
 
-        let next = (methods.map { $0.sortIndex }.max() ?? -1) + 1
-        let newPM = PaymentMethod(
-            name: name,
-            emoji: emoji.isEmpty ? nil : emoji,
-            sortIndex: next
-        )
-
-        do {
-            try withAnimation {
-                context.insert(newPM)
-                try context.save()
-            }
-
-            // Post to sheets in background - fire and forget
-            SHEETS.postPayment(
-                remoteID: newPM.remoteID,
-                name: newPM.name,
-                emoji: newPM.emoji,
-                sortIndex: newPM.sortIndex
-            )
+        if useMockData {
+            // Mock success for testing
+            await mockAddDelay()
             
             // Clear form fields
-            newPayment = ""
-            newPaymentEmoji = ""
+            self.newPayment = ""
+            self.newPaymentEmoji = ""
             
             // Wait for success animation to show before collapsing
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                 withAnimation {
-                    showPaymentForm = false
+                    self.showPaymentForm = false
                 }
             }
             
-            await loadData()
+            // Refresh payment methods from mock
+            self.methods = self.getMockPaymentMethods()
+            
             return true
-        } catch {
-            alertMessage = "Could not save payment method: \(error.localizedDescription)"
-            print("SAVE ERROR (Payment):", error)
-            return false
+        } else {
+            return await performRealAddPayment(name: name, emoji: emoji)
         }
     }
-
-    // MARK: - Original Add Functions (keeping for backward compatibility if needed)
+    
+    // MARK: - Real API Add Functions
     @MainActor
-    private func addCategory() {
-        hideKeyboard()
-        let name = trimmed(newCategory)
-        let emoji = trimmed(newCategoryEmoji)
-        guard !name.isEmpty else { return }
-
-        if categories.contains(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) {
-            alertMessage = "A category named \"\(name)\" already exists."
-            return
-        }
-
+    private func performRealAddCategory(name: String, emoji: String) async -> Bool {
         let next = (categories.map { $0.sortIndex }.max() ?? -1) + 1
-        let newCat = Category(
-            name: name,
-            emoji: emoji.isEmpty ? nil : emoji,
-            sortIndex: next,
-            isIncome: newCategoryIsIncome
-        )
+        let remoteID = UUID().uuidString
 
-        do {
-            try withAnimation {
-                context.insert(newCat)
-                try context.save()
+        // Post to sheets
+        return await withCheckedContinuation { continuation in
+            SHEETS.postCategory(
+                remoteID: remoteID,
+                name: name,
+                emoji: emoji.isEmpty ? nil : emoji,
+                sortIndex: next,
+                isIncome: newCategoryIsIncome
+            ) { response in
+                DispatchQueue.main.async {
+                    if response.status == 200 {
+                        // Clear form fields
+                        self.newCategory = ""
+                        self.newCategoryEmoji = ""
+                        self.newCategoryIsIncome = false
+                        
+                        // Wait for success animation to show before collapsing
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                            withAnimation {
+                                self.showCategoryForm = false
+                            }
+                        }
+                        
+                        // Refresh categories from API
+                        self.fetchRealAPICategories()
+                        
+                        continuation.resume(returning: true)
+                    } else {
+                        self.alertMessage = "Could not save category: \(response.body)"
+                        continuation.resume(returning: false)
+                    }
+                }
             }
-
-            // Reset form
-            newCategory = ""
-            newCategoryEmoji = ""
-            newCategoryIsIncome = false
-            showCategoryForm = false
-            Task { await loadData() }
-
-            // UPDATED: Using correct API call for new script
-            Task {
-                SHEETS.postCategory(
-                    remoteID: newCat.remoteID,
-                    name: newCat.name,
-                    emoji: newCat.emoji,
-                    sortIndex: newCat.sortIndex,
-                    isIncome: newCat.isIncome
-                )
-            }
-        } catch {
-            alertMessage = "Could not save category: \(error.localizedDescription)"
-            print("SAVE ERROR (Category):", error)
         }
     }
 
     @MainActor
-    private func addPayment() {
-        hideKeyboard()
-        let name = trimmed(newPayment)
-        let emoji = trimmed(newPaymentEmoji)
-        guard !name.isEmpty else { return }
-
-        if methods.contains(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) {
-            alertMessage = "A payment method named \"\(name)\" already exists."
-            return
-        }
-
+    private func performRealAddPayment(name: String, emoji: String) async -> Bool {
         let next = (methods.map { $0.sortIndex }.max() ?? -1) + 1
-        let newPM = PaymentMethod(
-            name: name,
-            emoji: emoji.isEmpty ? nil : emoji,
-            sortIndex: next
-        )
+        let remoteID = UUID().uuidString
 
-        do {
-            try withAnimation {
-                context.insert(newPM)
-                try context.save()
-            }
-
-            // UPDATED: Using correct API call for new script
+        // Post to sheets
+        return await withCheckedContinuation { continuation in
             SHEETS.postPayment(
-                remoteID: newPM.remoteID,
-                name: newPM.name,
-                emoji: newPM.emoji,
-                sortIndex: newPM.sortIndex
-            )
-
-            // Reset form
-            newPayment = ""
-            newPaymentEmoji = ""
-            showPaymentForm = false
-            Task { await loadData() }
-        } catch {
-            alertMessage = "Could not save payment method: \(error.localizedDescription)"
-            print("SAVE ERROR (Payment):", error)
+                remoteID: remoteID,
+                name: name,
+                emoji: emoji.isEmpty ? nil : emoji,
+                sortIndex: next
+            ) { response in
+                DispatchQueue.main.async {
+                    if response.status == 200 {
+                        // Clear form fields
+                        self.newPayment = ""
+                        self.newPaymentEmoji = ""
+                        
+                        // Wait for success animation to show before collapsing
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                            withAnimation {
+                                self.showPaymentForm = false
+                            }
+                        }
+                        
+                        // Refresh payment methods from API
+                        self.fetchRealAPIPaymentMethods()
+                        
+                        continuation.resume(returning: true)
+                    } else {
+                        self.alertMessage = "Could not save payment method: \(response.body)"
+                        continuation.resume(returning: false)
+                    }
+                }
+            }
         }
+    }
+    
+    // MARK: - Mock Data Functions
+    private func getMockCategories() -> [APICategory] {
+        // 10 mock categories (6 expenses + 4 income)
+        let mockCategories = [
+            // Expense categories
+            MockAPICategory(remoteID: "mock-cat-1", name: "Food", emoji: "🍕", sortIndex: 0, isIncome: false),
+            MockAPICategory(remoteID: "mock-cat-2", name: "Transport", emoji: "🚗", sortIndex: 1, isIncome: false),
+            MockAPICategory(remoteID: "mock-cat-3", name: "Shopping", emoji: "🛍️", sortIndex: 2, isIncome: false),
+            MockAPICategory(remoteID: "mock-cat-4", name: "Bills", emoji: "💡", sortIndex: 3, isIncome: false),
+            MockAPICategory(remoteID: "mock-cat-5", name: "Entertainment", emoji: "🎬", sortIndex: 4, isIncome: false),
+            MockAPICategory(remoteID: "mock-cat-6", name: "Healthcare", emoji: "🏥", sortIndex: 5, isIncome: false),
+            
+            // Income categories
+            MockAPICategory(remoteID: "mock-cat-7", name: "Salary", emoji: "💼", sortIndex: 6, isIncome: true),
+            MockAPICategory(remoteID: "mock-cat-8", name: "Freelance", emoji: "💻", sortIndex: 7, isIncome: true),
+            MockAPICategory(remoteID: "mock-cat-9", name: "Investments", emoji: "📈", sortIndex: 8, isIncome: true),
+            MockAPICategory(remoteID: "mock-cat-10", name: "Gifts", emoji: "🎁", sortIndex: 9, isIncome: true)
+        ]
+        
+        return mockCategories.map { mockCat in
+            APICategory(
+                remoteID: mockCat.remoteID,
+                name: mockCat.name,
+                emoji: mockCat.emoji,
+                sortIndex: mockCat.sortIndex,
+                isIncome: mockCat.isIncome,
+                timestamp: "2025-09-17T12:00:00.000Z"
+            )
+        }
+    }
+    
+    private func getMockPaymentMethods() -> [APIPaymentMethod] {
+        // 5 mock payment methods
+        let mockPaymentMethods = [
+            MockAPIPaymentMethod(remoteID: "mock-pay-1", name: "Credit Card", emoji: "💳", sortIndex: 0),
+            MockAPIPaymentMethod(remoteID: "mock-pay-2", name: "Debit Card", emoji: "💳", sortIndex: 1),
+            MockAPIPaymentMethod(remoteID: "mock-pay-3", name: "Pix", emoji: "📱", sortIndex: 2),
+            MockAPIPaymentMethod(remoteID: "mock-pay-4", name: "Cash", emoji: "💵", sortIndex: 3),
+            MockAPIPaymentMethod(remoteID: "mock-pay-5", name: "Bank Transfer", emoji: "🏦", sortIndex: 4)
+        ]
+        
+        return mockPaymentMethods.map { mockPay in
+            APIPaymentMethod(
+                remoteID: mockPay.remoteID,
+                name: mockPay.name,
+                emoji: mockPay.emoji,
+                sortIndex: mockPay.sortIndex,
+                timestamp: "2025-09-17T12:00:00.000Z"
+            )
+        }
+    }
+    
+    private func mockAddDelay() async {
+        // Simulate API call delay
+        try? await Task.sleep(nanoseconds: 800_000_000) // 0.8 seconds
     }
 
     // MARK: - Helpers
@@ -738,31 +973,70 @@ struct ManageView: View {
     private func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
+}
+
+// MARK: - API List Item Components
+
+struct APICategoryListItem: View {
+    let category: APICategory
+    let onDelete: () -> Void
     
-    @MainActor
-    private func renumberCategories() {
-        for (idx, c) in categories.enumerated() { c.sortIndex = idx }
-        try? context.save()
-    }
-
-    @MainActor
-    private func renumberMethods() {
-        for (idx, m) in methods.enumerated() { m.sortIndex = idx }
-        try? context.save()
-    }
-
-    @MainActor
-    private func normalizeSortIndicesIfNeeded() {
-        if !categories.isEmpty, Set(categories.map { $0.sortIndex }).count == 1 {
-            renumberCategories()
-        }
-        if !methods.isEmpty, Set(methods.map { $0.sortIndex }).count == 1 {
-            renumberMethods()
-        }
+    var body: some View {
+        AppListItem(
+            content: {
+                HStack(spacing: 12) {
+                    // Emoji
+                    Text(category.emoji.isEmpty ? "🏷️" : category.emoji)
+                        .font(.system(size: 20))
+                    
+                    // Name
+                    Text(category.name)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.white)
+                }
+            },
+            trailing: {
+                // Income/Expense tag
+                CategoryTypeTag(isIncome: category.isIncome)
+            },
+            onDelete: onDelete
+        )
     }
 }
 
-// MARK: - Custom Manage Section Chip
+struct APIPaymentMethodListItem: View {
+    let paymentMethod: APIPaymentMethod
+    let onDelete: () -> Void
+    
+    var body: some View {
+        AppListItem(
+            content: {
+                HStack(spacing: 12) {
+                    // Payment method emoji (fallback to card icon)
+                    if !paymentMethod.emoji.isEmpty {
+                        Text(paymentMethod.emoji)
+                            .font(.system(size: 20))
+                    } else {
+                        Image(systemName: "creditcard.fill")
+                            .font(.system(size: 18))
+                            .foregroundColor(.white.opacity(0.6))
+                    }
+                    
+                    // Name
+                    Text(paymentMethod.name)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.white)
+                }
+            },
+            trailing: {
+                EmptyView()
+            },
+            onDelete: onDelete
+        )
+    }
+}
+
+// MARK: - Custom Manage Section Chip (unchanged)
 struct ManageSectionChip: View {
     let section: ManageView.ManageSection
     let isSelected: Bool
@@ -782,7 +1056,7 @@ struct ManageSectionChip: View {
     }
 }
 
-// MARK: - Custom Color Square Component using UIKit
+// MARK: - Custom Color Square Component using UIKit (unchanged)
 struct ColorSquare: View {
     let color: Color
     let isSelected: Bool
@@ -804,7 +1078,7 @@ struct ColorSquare: View {
     }
 }
 
-// UIKit-based color view to bypass SwiftUI rendering issues
+// UIKit-based color view to bypass SwiftUI rendering issues (unchanged)
 struct ColorBoxView: UIViewRepresentable {
     let color: Color
     
@@ -820,7 +1094,7 @@ struct ColorBoxView: UIViewRepresentable {
     }
 }
 
-// MARK: - Color Extension for Hex Support
+// MARK: - Color Extension for Hex Support (unchanged)
 extension Color {
     init?(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
@@ -838,5 +1112,44 @@ extension Color {
             green: Double(g) / 255,
             blue: Double(b) / 255
         )
+    }
+}
+
+// MARK: - Mock Data Helper Structs
+private struct MockAPICategory {
+    let remoteID: String
+    let name: String
+    let emoji: String
+    let sortIndex: Int
+    let isIncome: Bool
+}
+
+private struct MockAPIPaymentMethod {
+    let remoteID: String
+    let name: String
+    let emoji: String
+    let sortIndex: Int
+}
+
+// MARK: - APICategory Extension for Mock Data
+extension APICategory {
+    init(remoteID: String, name: String, emoji: String, sortIndex: Int, isIncome: Bool, timestamp: String?) {
+        self.remoteID = remoteID
+        self.name = name
+        self.emoji = emoji
+        self.sortIndex = sortIndex
+        self.isIncome = isIncome
+        self.timestamp = timestamp
+    }
+}
+
+// MARK: - APIPaymentMethod Extension for Mock Data
+extension APIPaymentMethod {
+    init(remoteID: String, name: String, emoji: String, sortIndex: Int, timestamp: String?) {
+        self.remoteID = remoteID
+        self.name = name
+        self.emoji = emoji
+        self.sortIndex = sortIndex
+        self.timestamp = timestamp
     }
 }
