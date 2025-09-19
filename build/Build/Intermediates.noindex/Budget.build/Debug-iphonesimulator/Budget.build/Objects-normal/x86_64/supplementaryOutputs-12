@@ -1,0 +1,18 @@
+"/Users/user286010/BudgetApp/Budget/Models.swift":
+  object: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Models.o"
+  swift-dependencies: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Models.swiftdeps"
+  dependencies: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Models.d"
+  diagnostics: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Models.dia"
+  const-values: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Models.swiftconstvalues"
+"/Users/user286010/BudgetApp/Budget/Color+Theme.swift":
+  swift-dependencies: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Color+Theme.swiftdeps"
+  const-values: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Color+Theme.swiftconstvalues"
+  object: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Color+Theme.o"
+  dependencies: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Color+Theme.d"
+  diagnostics: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Color+Theme.dia"
+"/Users/user286010/BudgetApp/Budget/HomeTabView.swift":
+  object: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/HomeTabView.o"
+  diagnostics: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/HomeTabView.dia"
+  const-values: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/HomeTabView.swiftconstvalues"
+  swift-dependencies: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/HomeTabView.swiftdeps"
+  dependencies: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/HomeTabView.d"

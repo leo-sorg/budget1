@@ -1,0 +1,40 @@
+{
+  "source": "/Users/user286010/BudgetApp/Budget/Styles/AppListItem.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Delete",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 40
+        }
+      },
+      {
+        "comment": "",
+        "key": "Income",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 269
+        }
+      },
+      {
+        "comment": "",
+        "key": "Expense",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 269
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 369
+        }
+      }
+    ]
+  },
+  "version": 1
+}

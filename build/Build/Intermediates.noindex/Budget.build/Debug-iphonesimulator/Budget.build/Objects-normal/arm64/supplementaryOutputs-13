@@ -1,0 +1,18 @@
+"/Users/user286010/BudgetApp/Budget/RootSwitcherView.swift":
+  dependencies: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/RootSwitcherView.d"
+  const-values: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/RootSwitcherView.swiftconstvalues"
+  object: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/RootSwitcherView.o"
+  swift-dependencies: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/RootSwitcherView.swiftdeps"
+  diagnostics: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/RootSwitcherView.dia"
+"/Users/user286010/BudgetApp/Budget/SHEETS.swift":
+  object: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/SHEETS.o"
+  const-values: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/SHEETS.swiftconstvalues"
+  swift-dependencies: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/SHEETS.swiftdeps"
+  diagnostics: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/SHEETS.dia"
+  dependencies: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/SHEETS.d"
+"/Users/user286010/BudgetApp/Budget/SheetsClient.swift":
+  const-values: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/SheetsClient.swiftconstvalues"
+  swift-dependencies: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/SheetsClient.swiftdeps"
+  object: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/SheetsClient.o"
+  diagnostics: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/SheetsClient.dia"
+  dependencies: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/SheetsClient.d"

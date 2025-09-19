@@ -1,0 +1,298 @@
+{
+  "" : {
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Budget-master.dia",
+    "emit-module-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Budget-master-emit-module.d",
+    "emit-module-diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Budget-master-emit-module.dia",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Budget-master.swiftdeps"
+  },
+  "/Users/user286010/BudgetApp/Budget/BackgroundImageStore.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/BackgroundImageStore.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/BackgroundImageStore.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/BackgroundImageStore.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/BackgroundImageStore.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/BackgroundImageStore.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/BackgroundImageStore.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/BackgroundImageStore.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/BackgroundImageStore~partial.swiftmodule"
+  },
+  "/Users/user286010/BudgetApp/Budget/BudgetApp.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/BudgetApp.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/BudgetApp.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/BudgetApp.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/BudgetApp.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/BudgetApp.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/BudgetApp.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/BudgetApp.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/BudgetApp~partial.swiftmodule"
+  },
+  "/Users/user286010/BudgetApp/Budget/Color+AppBackground.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Color+AppBackground.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Color+AppBackground.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Color+AppBackground.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Color+AppBackground.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Color+AppBackground.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Color+AppBackground.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Color+AppBackground.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Color+AppBackground~partial.swiftmodule"
+  },
+  "/Users/user286010/BudgetApp/Budget/Color+Theme.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Color+Theme.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Color+Theme.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Color+Theme.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Color+Theme.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Color+Theme.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Color+Theme.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Color+Theme.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Color+Theme~partial.swiftmodule"
+  },
+  "/Users/user286010/BudgetApp/Budget/HomeTabView.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/HomeTabView.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/HomeTabView.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/HomeTabView.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/HomeTabView.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/HomeTabView.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/HomeTabView.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/HomeTabView.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/HomeTabView~partial.swiftmodule"
+  },
+  "/Users/user286010/BudgetApp/Budget/Main Screens/HistoryView.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/HistoryView.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/HistoryView.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/HistoryView.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/HistoryView.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/HistoryView.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/HistoryView.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/HistoryView.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/HistoryView~partial.swiftmodule"
+  },
+  "/Users/user286010/BudgetApp/Budget/Main Screens/InputView.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/InputView.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/InputView.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/InputView.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/InputView.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/InputView.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/InputView.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/InputView.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/InputView~partial.swiftmodule"
+  },
+  "/Users/user286010/BudgetApp/Budget/Main Screens/ManageView.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/ManageView.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/ManageView.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/ManageView.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/ManageView.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/ManageView.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/ManageView.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/ManageView.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/ManageView~partial.swiftmodule"
+  },
+  "/Users/user286010/BudgetApp/Budget/Main Screens/SummaryView.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/SummaryView.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/SummaryView.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/SummaryView.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/SummaryView.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/SummaryView.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/SummaryView.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/SummaryView.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/SummaryView~partial.swiftmodule"
+  },
+  "/Users/user286010/BudgetApp/Budget/Models.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Models.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Models.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Models.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Models.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Models.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Models.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Models.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Models~partial.swiftmodule"
+  },
+  "/Users/user286010/BudgetApp/Budget/RootSwitcherView.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/RootSwitcherView.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/RootSwitcherView.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/RootSwitcherView.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/RootSwitcherView.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/RootSwitcherView.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/RootSwitcherView.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/RootSwitcherView.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/RootSwitcherView~partial.swiftmodule"
+  },
+  "/Users/user286010/BudgetApp/Budget/SHEETS.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/SHEETS.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/SHEETS.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/SHEETS.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/SHEETS.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/SHEETS.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/SHEETS.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/SHEETS.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/SHEETS~partial.swiftmodule"
+  },
+  "/Users/user286010/BudgetApp/Budget/SheetsClient.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/SheetsClient.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/SheetsClient.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/SheetsClient.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/SheetsClient.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/SheetsClient.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/SheetsClient.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/SheetsClient.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/SheetsClient~partial.swiftmodule"
+  },
+  "/Users/user286010/BudgetApp/Budget/Styles/AppAppearance.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppAppearance.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppAppearance.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppAppearance.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppAppearance.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppAppearance.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppAppearance.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppAppearance.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppAppearance~partial.swiftmodule"
+  },
+  "/Users/user286010/BudgetApp/Budget/Styles/AppButtonStyle.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppButtonStyle.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppButtonStyle.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppButtonStyle.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppButtonStyle.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppButtonStyle.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppButtonStyle.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppButtonStyle.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppButtonStyle~partial.swiftmodule"
+  },
+  "/Users/user286010/BudgetApp/Budget/Styles/AppChipStyle.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppChipStyle.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppChipStyle.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppChipStyle.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppChipStyle.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppChipStyle.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppChipStyle.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppChipStyle.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppChipStyle~partial.swiftmodule"
+  },
+  "/Users/user286010/BudgetApp/Budget/Styles/AppHeaderStyle.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppHeaderStyle.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppHeaderStyle.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppHeaderStyle.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppHeaderStyle.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppHeaderStyle.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppHeaderStyle.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppHeaderStyle.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppHeaderStyle~partial.swiftmodule"
+  },
+  "/Users/user286010/BudgetApp/Budget/Styles/AppListItem.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppListItem.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppListItem.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppListItem.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppListItem.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppListItem.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppListItem.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppListItem.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppListItem~partial.swiftmodule"
+  },
+  "/Users/user286010/BudgetApp/Budget/Styles/AppListStyles.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppListStyles.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppListStyles.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppListStyles.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppListStyles.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppListStyles.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppListStyles.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppListStyles.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppListStyles~partial.swiftmodule"
+  },
+  "/Users/user286010/BudgetApp/Budget/Styles/AppSelectorStyle.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppSelectorStyle.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppSelectorStyle.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppSelectorStyle.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppSelectorStyle.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppSelectorStyle.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppSelectorStyle.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppSelectorStyle.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/AppSelectorStyle~partial.swiftmodule"
+  },
+  "/Users/user286010/BudgetApp/Budget/Styles/ChipScrollStyles.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/ChipScrollStyles.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/ChipScrollStyles.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/ChipScrollStyles.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/ChipScrollStyles.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/ChipScrollStyles.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/ChipScrollStyles.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/ChipScrollStyles.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/ChipScrollStyles~partial.swiftmodule"
+  },
+  "/Users/user286010/BudgetApp/Budget/Styles/EmojiHelperButton.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/EmojiHelperButton.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/EmojiHelperButton.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/EmojiHelperButton.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/EmojiHelperButton.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/EmojiHelperButton.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/EmojiHelperButton.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/EmojiHelperButton.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/EmojiHelperButton~partial.swiftmodule"
+  },
+  "/Users/user286010/BudgetApp/Budget/Styles/EmojiTextField.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/EmojiTextField.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/EmojiTextField.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/EmojiTextField.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/EmojiTextField.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/EmojiTextField.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/EmojiTextField.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/EmojiTextField.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/EmojiTextField~partial.swiftmodule"
+  },
+  "/Users/user286010/BudgetApp/Budget/Styles/KeyboardManager.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/KeyboardManager.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/KeyboardManager.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/KeyboardManager.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/KeyboardManager.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/KeyboardManager.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/KeyboardManager.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/KeyboardManager.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/KeyboardManager~partial.swiftmodule"
+  },
+  "/Users/user286010/BudgetApp/Budget/Styles/KeyboardScrollCoordinator.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/KeyboardScrollCoordinator.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/KeyboardScrollCoordinator.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/KeyboardScrollCoordinator.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/KeyboardScrollCoordinator.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/KeyboardScrollCoordinator.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/KeyboardScrollCoordinator.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/KeyboardScrollCoordinator.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/KeyboardScrollCoordinator~partial.swiftmodule"
+  },
+  "/Users/user286010/BudgetApp/Budget/Styles/TransactionListItem.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/TransactionListItem.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/TransactionListItem.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/TransactionListItem.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/TransactionListItem.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/TransactionListItem.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/TransactionListItem.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/TransactionListItem.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/TransactionListItem~partial.swiftmodule"
+  },
+  "/Users/user286010/BudgetApp/Budget/UIHelpers.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/UIHelpers.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/UIHelpers.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/UIHelpers.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/UIHelpers.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/UIHelpers.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/UIHelpers.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/UIHelpers.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/UIHelpers~partial.swiftmodule"
+  },
+  "/Users/user286010/BudgetApp/Budget/WindowBackgroundView.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/WindowBackgroundView.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/WindowBackgroundView.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/WindowBackgroundView.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/WindowBackgroundView.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/WindowBackgroundView.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/WindowBackgroundView.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/WindowBackgroundView.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/WindowBackgroundView~partial.swiftmodule"
+  },
+  "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "const-values" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/GeneratedAssetSymbols.swiftconstvalues",
+    "dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/GeneratedAssetSymbols.d",
+    "diagnostics" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/GeneratedAssetSymbols.dia",
+    "index-unit-output-path" : "/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/GeneratedAssetSymbols.o",
+    "swift-dependencies" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/GeneratedAssetSymbols.swiftdeps",
+    "swiftmodule" : "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/GeneratedAssetSymbols~partial.swiftmodule"
+  }
+}

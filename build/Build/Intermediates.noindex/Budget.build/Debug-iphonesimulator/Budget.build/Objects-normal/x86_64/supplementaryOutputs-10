@@ -1,0 +1,24 @@
+"/Users/user286010/BudgetApp/Budget/BudgetApp.swift":
+  diagnostics: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/BudgetApp.dia"
+  object: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/BudgetApp.o"
+  dependencies: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/BudgetApp.d"
+  swift-dependencies: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/BudgetApp.swiftdeps"
+  const-values: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/BudgetApp.swiftconstvalues"
+"/Users/user286010/BudgetApp/Budget/Styles/TransactionListItem.swift":
+  const-values: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/TransactionListItem.swiftconstvalues"
+  swift-dependencies: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/TransactionListItem.swiftdeps"
+  diagnostics: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/TransactionListItem.dia"
+  object: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/TransactionListItem.o"
+  dependencies: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/TransactionListItem.d"
+"/Users/user286010/BudgetApp/Budget/Color+AppBackground.swift":
+  const-values: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Color+AppBackground.swiftconstvalues"
+  diagnostics: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Color+AppBackground.dia"
+  object: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Color+AppBackground.o"
+  swift-dependencies: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Color+AppBackground.swiftdeps"
+  dependencies: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/Color+AppBackground.d"
+"/Users/user286010/BudgetApp/Budget/BackgroundImageStore.swift":
+  dependencies: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/BackgroundImageStore.d"
+  const-values: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/BackgroundImageStore.swiftconstvalues"
+  object: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/BackgroundImageStore.o"
+  swift-dependencies: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/BackgroundImageStore.swiftdeps"
+  diagnostics: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/x86_64/BackgroundImageStore.dia"

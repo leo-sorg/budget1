@@ -1,0 +1,24 @@
+"/Users/user286010/BudgetApp/Budget/Styles/EmojiTextField.swift":
+  const-values: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/EmojiTextField.swiftconstvalues"
+  swift-dependencies: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/EmojiTextField.swiftdeps"
+  dependencies: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/EmojiTextField.d"
+  object: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/EmojiTextField.o"
+  diagnostics: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/EmojiTextField.dia"
+"/Users/user286010/BudgetApp/Budget/Styles/EmojiHelperButton.swift":
+  swift-dependencies: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/EmojiHelperButton.swiftdeps"
+  diagnostics: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/EmojiHelperButton.dia"
+  const-values: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/EmojiHelperButton.swiftconstvalues"
+  dependencies: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/EmojiHelperButton.d"
+  object: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/EmojiHelperButton.o"
+"/Users/user286010/BudgetApp/Budget/Styles/KeyboardScrollCoordinator.swift":
+  object: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/KeyboardScrollCoordinator.o"
+  diagnostics: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/KeyboardScrollCoordinator.dia"
+  swift-dependencies: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/KeyboardScrollCoordinator.swiftdeps"
+  const-values: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/KeyboardScrollCoordinator.swiftconstvalues"
+  dependencies: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/KeyboardScrollCoordinator.d"
+"/Users/user286010/BudgetApp/Budget/Styles/KeyboardManager.swift":
+  dependencies: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/KeyboardManager.d"
+  const-values: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/KeyboardManager.swiftconstvalues"
+  swift-dependencies: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/KeyboardManager.swiftdeps"
+  diagnostics: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/KeyboardManager.dia"
+  object: "/Users/user286010/BudgetApp/build/Build/Intermediates.noindex/Budget.build/Debug-iphonesimulator/Budget.build/Objects-normal/arm64/KeyboardManager.o"

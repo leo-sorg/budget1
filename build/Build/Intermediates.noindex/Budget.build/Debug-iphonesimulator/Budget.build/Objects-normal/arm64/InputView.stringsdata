@@ -1,0 +1,104 @@
+{
+  "source": "/Users/user286010/BudgetApp/Budget/Main Screens/InputView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Oops",
+        "location": {
+          "startingColumn": 16,
+          "startingLine": 80
+        }
+      },
+      {
+        "comment": "",
+        "key": "Description",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 40
+        }
+      },
+      {
+        "comment": "",
+        "key": "Saved ✔︎",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 339
+        }
+      },
+      {
+        "comment": "",
+        "key": "OK",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 81
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 97
+        }
+      },
+      {
+        "comment": "",
+        "key": "Done",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 101
+        }
+      },
+      {
+        "comment": "",
+        "key": "Payment Type",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 162
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add default payment types",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 167
+        }
+      },
+      {
+        "comment": "",
+        "key": "Category",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 196
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add default categories",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 201
+        }
+      },
+      {
+        "comment": "",
+        "key": "Value",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 250
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 502
+        }
+      }
+    ]
+  },
+  "version": 1
+}

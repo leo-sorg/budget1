@@ -1,0 +1,280 @@
+{
+  "source": "/Users/user286010/BudgetApp/Budget/Main Screens/ManageView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Oops",
+        "location": {
+          "startingColumn": 16,
+          "startingLine": 121
+        }
+      },
+      {
+        "comment": "",
+        "key": "OK",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 125
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 131
+        }
+      },
+      {
+        "comment": "",
+        "key": "Done",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 135
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add Category",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 334
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 47,
+          "startingLine": 338
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add New",
+        "location": {
+          "startingColumn": 58,
+          "startingLine": 338
+        }
+      },
+      {
+        "comment": "",
+        "key": "Name",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 358
+        }
+      },
+      {
+        "comment": "",
+        "key": "Emoji (optional)",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 367
+        }
+      },
+      {
+        "comment": "",
+        "key": "Type",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 380
+        }
+      },
+      {
+        "comment": "",
+        "key": "Expense",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 389
+        }
+      },
+      {
+        "comment": "",
+        "key": "Income",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 402
+        }
+      },
+      {
+        "comment": "",
+        "key": "Category List",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 429
+        }
+      },
+      {
+        "comment": "",
+        "key": "No categories found. Add one above or pull to refresh.",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 440
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add Payment Type",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 467
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 471
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add New",
+        "location": {
+          "startingColumn": 57,
+          "startingLine": 471
+        }
+      },
+      {
+        "comment": "",
+        "key": "Payment Type",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 490
+        }
+      },
+      {
+        "comment": "",
+        "key": "Emoji (optional)",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 499
+        }
+      },
+      {
+        "comment": "",
+        "key": "Payment Type List",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 526
+        }
+      },
+      {
+        "comment": "",
+        "key": "No payment methods found. Add one above or pull to refresh.",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 537
+        }
+      },
+      {
+        "comment": "",
+        "key": "Background Options",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 561
+        }
+      },
+      {
+        "comment": "",
+        "key": "Choose Color",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 567
+        }
+      },
+      {
+        "comment": "",
+        "key": "Hex Color Code",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 611
+        }
+      },
+      {
+        "comment": "",
+        "key": "#",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 616
+        }
+      },
+      {
+        "comment": "",
+        "key": "Reset to Default",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 664
+        }
+      },
+      {
+        "comment": "",
+        "key": "Choose Image",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 652
+        }
+      },
+      {
+        "comment": "",
+        "key": "Current:",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 672
+        }
+      },
+      {
+        "comment": "",
+        "key": "Custom Image",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 676
+        }
+      },
+      {
+        "comment": "",
+        "key": "Custom Color",
+        "location": {
+          "startingColumn": 48,
+          "startingLine": 677
+        }
+      },
+      {
+        "comment": "",
+        "key": "Default Color",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 678
+        }
+      },
+      {
+        "comment": "",
+        "key": "Loading...",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 696
+        }
+      },
+      {
+        "comment": "",
+        "key": "Couldn't load data",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 710
+        }
+      },
+      {
+        "comment": "",
+        "key": "Try Again",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 720
+        }
+      }
+    ]
+  },
+  "version": 1
+}

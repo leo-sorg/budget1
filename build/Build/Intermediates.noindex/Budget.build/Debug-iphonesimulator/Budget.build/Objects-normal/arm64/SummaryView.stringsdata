@@ -1,0 +1,112 @@
+{
+  "source": "/Users/user286010/BudgetApp/Budget/Main Screens/SummaryView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Loading transactions...",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 96
+        }
+      },
+      {
+        "comment": "",
+        "key": "Couldn't get transactions",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 110
+        }
+      },
+      {
+        "comment": "",
+        "key": "Try Again",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 120
+        }
+      },
+      {
+        "comment": "",
+        "key": "Totals",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 425
+        }
+      },
+      {
+        "comment": "",
+        "key": "By category",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 463
+        }
+      },
+      {
+        "comment": "",
+        "key": "No data for this month",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 468
+        }
+      },
+      {
+        "comment": "",
+        "key": "By payment method",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 486
+        }
+      },
+      {
+        "comment": "",
+        "key": "No data for this month",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 491
+        }
+      },
+      {
+        "comment": "",
+        "key": "All transactions",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 509
+        }
+      },
+      {
+        "comment": "",
+        "key": "No transactions for this month",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 514
+        }
+      },
+      {
+        "comment": "",
+        "key": "💰",
+        "location": {
+          "startingColumn": 56,
+          "startingLine": 549
+        }
+      },
+      {
+        "comment": "",
+        "key": "💸",
+        "location": {
+          "startingColumn": 65,
+          "startingLine": 549
+        }
+      },
+      {
+        "comment": "",
+        "key": "• %@",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 562
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -1,0 +1,24 @@
+{
+  "source": "/Users/user286010/BudgetApp/Budget/Main Screens/HistoryView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Work in Progress",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 16
+        }
+      },
+      {
+        "comment": "",
+        "key": "This feature is under development",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 20
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -1,0 +1,5 @@
+{
+  "command-runner.commands": {
+    "▶️ Run iOS App": "workbench.action.tasks.runTask iOS: Build & Run (verbose)"
+  }
+}

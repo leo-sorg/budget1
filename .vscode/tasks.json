@@ -1,0 +1,15 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "iOS: Build & Run (verbose)",
+      "type": "shell",
+      "command": "/bin/bash",
+      "args": ["-lc", "./scripts/run-ios.sh"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": true },
+      "presentation": { "reveal": "always", "focus": true, "panel": "shared", "clear": true }
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "source": "/Users/user286010/BudgetApp/Budget/Styles/EmojiHelperButton.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Pick Emoji",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 66
+        }
+      },
+      {
+        "comment": "",
+        "key": "Choose Emoji",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 113
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 117
+        }
+      }
+    ]
+  },
+  "version": 1
+}
