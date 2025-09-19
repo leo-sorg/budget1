@@ -6,7 +6,7 @@
 	<integer>11</integer>
 	<key>logs</key>
 	<dict>
-		<key>57290833-D4F7-4754-B457-4E0FC6813187</key>
+		<key>FB1F0FCB-6229-423B-9336-774CBD73C7CB</key>
 		<dict>
 			<key>className</key>
 			<string>IDECommandLineBuildLog</string>
@@ -15,13 +15,13 @@
 			<key>domainType</key>
 			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
 			<key>fileName</key>
-			<string>57290833-D4F7-4754-B457-4E0FC6813187.xcactivitylog</string>
+			<string>FB1F0FCB-6229-423B-9336-774CBD73C7CB.xcactivitylog</string>
 			<key>hasPrimaryLog</key>
 			<true/>
 			<key>primaryObservable</key>
 			<dict>
 				<key>highLevelStatus</key>
-				<string>S</string>
+				<string>W</string>
 				<key>totalNumberOfAnalyzerIssues</key>
 				<integer>0</integer>
 				<key>totalNumberOfErrors</key>
@@ -29,7 +29,7 @@
 				<key>totalNumberOfTestFailures</key>
 				<integer>0</integer>
 				<key>totalNumberOfWarnings</key>
-				<integer>0</integer>
+				<integer>14</integer>
 			</dict>
 			<key>schemeIdentifier-containerName</key>
 			<string>Budget project</string>
@@ -40,13 +40,13 @@
 			<key>signature</key>
 			<string>Building project Budget with scheme Budget and configuration Debug</string>
 			<key>timeStartedRecording</key>
-			<real>779939791.51978505</real>
+			<real>779944825.26306701</real>
 			<key>timeStoppedRecording</key>
-			<real>779939795.87322104</real>
+			<real>779944838.83530402</real>
 			<key>title</key>
 			<string>Building project Budget with scheme Budget and configuration Debug</string>
 			<key>uniqueIdentifier</key>
-			<string>57290833-D4F7-4754-B457-4E0FC6813187</string>
+			<string>FB1F0FCB-6229-423B-9336-774CBD73C7CB</string>
 		</dict>
 	</dict>
 </dict>

@@ -1,4 +1,11 @@
 {
+  "swift.path": "/usr/bin/swift",
+  "swift.buildPath": "${workspaceFolder}/.build",
+  "swift.sourcekit-lsp.serverPath": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/sourcekit-lsp",
+  "swift.SDK": "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk",
+  "files.associations": {
+    "*.swift": "swift"
+  },
   "command-runner.commands": {
     "▶️ Run iOS App": "workbench.action.tasks.runTask iOS: Build & Run (verbose)"
   }

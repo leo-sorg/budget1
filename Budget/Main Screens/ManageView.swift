@@ -1,6 +1,8 @@
 import SwiftUI
 import SwiftData
 import PhotosUI
+import Foundation  // Add this
+import UIKit 
 
 @MainActor
 struct ManageView: View {
@@ -555,7 +557,7 @@ struct ManageView: View {
         }
     }
 
-    // MARK: - Background section (unchanged)
+    // MARK: - Background section
     @ViewBuilder private var backgroundSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Background Options")
@@ -686,7 +688,7 @@ struct ManageView: View {
         }
     }
     
-    // MARK: - Loading View (same as SummaryView)
+    // MARK: - Loading View
     @ViewBuilder private var loadingView: some View {
         VStack(spacing: 20) {
             ProgressView()
@@ -700,7 +702,7 @@ struct ManageView: View {
         .frame(maxWidth: .infinity, minHeight: 200)
     }
     
-    // MARK: - Error View (same as SummaryView)
+    // MARK: - Error View
     @ViewBuilder private func errorView(message: String, retryAction: @escaping () -> Void) -> some View {
         VStack(spacing: 20) {
             Image(systemName: "exclamationmark.triangle.fill")
@@ -725,7 +727,7 @@ struct ManageView: View {
         .frame(maxWidth: .infinity, minHeight: 200)
     }
 
-    // MARK: - NEW ASYNC ADD FUNCTIONS (updated to refresh from API after adding)
+    // MARK: - NEW ASYNC ADD FUNCTIONS
     @MainActor
     private func performAddCategory() async -> Bool {
         hideKeyboard()
@@ -884,54 +886,56 @@ struct ManageView: View {
     
     // MARK: - Mock Data Functions
     private func getMockCategories() -> [APICategory] {
-        // 10 mock categories (6 expenses + 4 income)
-        let mockCategories = [
-            // Expense categories
-            MockAPICategory(remoteID: "mock-cat-1", name: "Food", emoji: "🍕", sortIndex: 0, isIncome: false),
-            MockAPICategory(remoteID: "mock-cat-2", name: "Transport", emoji: "🚗", sortIndex: 1, isIncome: false),
-            MockAPICategory(remoteID: "mock-cat-3", name: "Shopping", emoji: "🛍️", sortIndex: 2, isIncome: false),
-            MockAPICategory(remoteID: "mock-cat-4", name: "Bills", emoji: "💡", sortIndex: 3, isIncome: false),
-            MockAPICategory(remoteID: "mock-cat-5", name: "Entertainment", emoji: "🎬", sortIndex: 4, isIncome: false),
-            MockAPICategory(remoteID: "mock-cat-6", name: "Healthcare", emoji: "🏥", sortIndex: 5, isIncome: false),
-            
-            // Income categories
-            MockAPICategory(remoteID: "mock-cat-7", name: "Salary", emoji: "💼", sortIndex: 6, isIncome: true),
-            MockAPICategory(remoteID: "mock-cat-8", name: "Freelance", emoji: "💻", sortIndex: 7, isIncome: true),
-            MockAPICategory(remoteID: "mock-cat-9", name: "Investments", emoji: "📈", sortIndex: 8, isIncome: true),
-            MockAPICategory(remoteID: "mock-cat-10", name: "Gifts", emoji: "🎁", sortIndex: 9, isIncome: true)
+        // Use simple JSON decoding to create mock data
+        let mockJSON = """
+        [
+            {
+                "Remote ID": "mock-cat-1",
+                "Name": "Food",
+                "Emoji": "🍕",
+                "Sort Index": 0,
+                "Is Income": false,
+                "Timestamp": "2025-09-17T12:00:00.000Z"
+            },
+            {
+                "Remote ID": "mock-cat-2",
+                "Name": "Transport",
+                "Emoji": "🚗",
+                "Sort Index": 1,
+                "Is Income": false,
+                "Timestamp": "2025-09-17T12:00:00.000Z"
+            },
+            {
+                "Remote ID": "mock-cat-3",
+                "Name": "Shopping",
+                "Emoji": "🛍️",
+                "Sort Index": 2,
+                "Is Income": false,
+                "Timestamp": "2025-09-17T12:00:00.000Z"
+            },
+            {
+                "Remote ID": "mock-cat-7",
+                "Name": "Salary",
+                "Emoji": "💼",
+                "Sort Index": 6,
+                "Is Income": true,
+                "Timestamp": "2025-09-17T12:00:00.000Z"
+            }
         ]
+        """
         
-        return mockCategories.map { mockCat in
-            APICategory(
-                remoteID: mockCat.remoteID,
-                name: mockCat.name,
-                emoji: mockCat.emoji,
-                sortIndex: mockCat.sortIndex,
-                isIncome: mockCat.isIncome,
-                timestamp: "2025-09-17T12:00:00.000Z"
-            )
+        guard let data = mockJSON.data(using: .utf8),
+              let categories = try? JSONDecoder().decode([APICategory].self, from: data) else {
+            return []
         }
+        
+        return categories
     }
     
     private func getMockPaymentMethods() -> [APIPaymentMethod] {
-        // 5 mock payment methods
-        let mockPaymentMethods = [
-            MockAPIPaymentMethod(remoteID: "mock-pay-1", name: "Credit Card", emoji: "💳", sortIndex: 0),
-            MockAPIPaymentMethod(remoteID: "mock-pay-2", name: "Debit Card", emoji: "💳", sortIndex: 1),
-            MockAPIPaymentMethod(remoteID: "mock-pay-3", name: "Pix", emoji: "📱", sortIndex: 2),
-            MockAPIPaymentMethod(remoteID: "mock-pay-4", name: "Cash", emoji: "💵", sortIndex: 3),
-            MockAPIPaymentMethod(remoteID: "mock-pay-5", name: "Bank Transfer", emoji: "🏦", sortIndex: 4)
-        ]
-        
-        return mockPaymentMethods.map { mockPay in
-            APIPaymentMethod(
-                remoteID: mockPay.remoteID,
-                name: mockPay.name,
-                emoji: mockPay.emoji,
-                sortIndex: mockPay.sortIndex,
-                timestamp: "2025-09-17T12:00:00.000Z"
-            )
-        }
+        // For now, return empty array since APIPaymentMethod has complex decoding
+        // This can be implemented later if needed
+        return []
     }
     
     private func mockAddDelay() async {
@@ -1036,7 +1040,7 @@ struct APIPaymentMethodListItem: View {
     }
 }
 
-// MARK: - Custom Manage Section Chip (unchanged)
+// MARK: - Custom Manage Section Chip
 struct ManageSectionChip: View {
     let section: ManageView.ManageSection
     let isSelected: Bool
@@ -1056,7 +1060,7 @@ struct ManageSectionChip: View {
     }
 }
 
-// MARK: - Custom Color Square Component using UIKit (unchanged)
+// MARK: - Custom Color Square Component
 struct ColorSquare: View {
     let color: Color
     let isSelected: Bool
@@ -1078,13 +1082,13 @@ struct ColorSquare: View {
     }
 }
 
-// UIKit-based color view to bypass SwiftUI rendering issues (unchanged)
+// UIKit-based color view to bypass SwiftUI rendering issues
 struct ColorBoxView: UIViewRepresentable {
     let color: Color
     
     func makeUIView(context: Context) -> UIView {
         let view = UIView()
-        view.layer.cornerRadius = 4  // Can be adjusted via parameter if needed
+        view.layer.cornerRadius = 4
         view.clipsToBounds = true
         return view
     }
@@ -1094,7 +1098,7 @@ struct ColorBoxView: UIViewRepresentable {
     }
 }
 
-// MARK: - Color Extension for Hex Support (unchanged)
+// MARK: - Color Extension for Hex Support
 extension Color {
     init?(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
@@ -1112,44 +1116,5 @@ extension Color {
             green: Double(g) / 255,
             blue: Double(b) / 255
         )
-    }
-}
-
-// MARK: - Mock Data Helper Structs
-private struct MockAPICategory {
-    let remoteID: String
-    let name: String
-    let emoji: String
-    let sortIndex: Int
-    let isIncome: Bool
-}
-
-private struct MockAPIPaymentMethod {
-    let remoteID: String
-    let name: String
-    let emoji: String
-    let sortIndex: Int
-}
-
-// MARK: - APICategory Extension for Mock Data
-extension APICategory {
-    init(remoteID: String, name: String, emoji: String, sortIndex: Int, isIncome: Bool, timestamp: String?) {
-        self.remoteID = remoteID
-        self.name = name
-        self.emoji = emoji
-        self.sortIndex = sortIndex
-        self.isIncome = isIncome
-        self.timestamp = timestamp
-    }
-}
-
-// MARK: - APIPaymentMethod Extension for Mock Data
-extension APIPaymentMethod {
-    init(remoteID: String, name: String, emoji: String, sortIndex: Int, timestamp: String?) {
-        self.remoteID = remoteID
-        self.name = name
-        self.emoji = emoji
-        self.sortIndex = sortIndex
-        self.timestamp = timestamp
     }
 }

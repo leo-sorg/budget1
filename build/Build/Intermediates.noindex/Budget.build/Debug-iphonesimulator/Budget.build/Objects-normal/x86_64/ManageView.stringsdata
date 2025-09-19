@@ -7,7 +7,7 @@
         "key": "Oops",
         "location": {
           "startingColumn": 16,
-          "startingLine": 121
+          "startingLine": 116
         }
       },
       {
@@ -15,7 +15,7 @@
         "key": "OK",
         "location": {
           "startingColumn": 20,
-          "startingLine": 125
+          "startingLine": 120
         }
       },
       {
@@ -23,7 +23,7 @@
         "key": "Cancel",
         "location": {
           "startingColumn": 24,
-          "startingLine": 131
+          "startingLine": 126
         }
       },
       {
@@ -31,7 +31,7 @@
         "key": "Done",
         "location": {
           "startingColumn": 24,
-          "startingLine": 135
+          "startingLine": 130
         }
       },
       {
@@ -39,7 +39,7 @@
         "key": "Add Category",
         "location": {
           "startingColumn": 26,
-          "startingLine": 334
+          "startingLine": 323
         }
       },
       {
@@ -47,7 +47,7 @@
         "key": "Cancel",
         "location": {
           "startingColumn": 47,
-          "startingLine": 338
+          "startingLine": 327
         }
       },
       {
@@ -55,7 +55,7 @@
         "key": "Add New",
         "location": {
           "startingColumn": 58,
-          "startingLine": 338
+          "startingLine": 327
         }
       },
       {
@@ -63,7 +63,7 @@
         "key": "Name",
         "location": {
           "startingColumn": 34,
-          "startingLine": 358
+          "startingLine": 346
         }
       },
       {
@@ -71,7 +71,7 @@
         "key": "Emoji (optional)",
         "location": {
           "startingColumn": 38,
-          "startingLine": 367
+          "startingLine": 355
         }
       },
       {
@@ -79,7 +79,7 @@
         "key": "Type",
         "location": {
           "startingColumn": 34,
-          "startingLine": 380
+          "startingLine": 368
         }
       },
       {
@@ -87,7 +87,7 @@
         "key": "Expense",
         "location": {
           "startingColumn": 42,
-          "startingLine": 389
+          "startingLine": 377
         }
       },
       {
@@ -95,7 +95,7 @@
         "key": "Income",
         "location": {
           "startingColumn": 42,
-          "startingLine": 402
+          "startingLine": 390
         }
       },
       {
@@ -103,7 +103,7 @@
         "key": "Category List",
         "location": {
           "startingColumn": 22,
-          "startingLine": 429
+          "startingLine": 417
         }
       },
       {
@@ -111,7 +111,7 @@
         "key": "No categories found. Add one above or pull to refresh.",
         "location": {
           "startingColumn": 26,
-          "startingLine": 440
+          "startingLine": 426
         }
       },
       {
@@ -119,7 +119,7 @@
         "key": "Add Payment Type",
         "location": {
           "startingColumn": 26,
-          "startingLine": 467
+          "startingLine": 451
         }
       },
       {
@@ -127,7 +127,7 @@
         "key": "Cancel",
         "location": {
           "startingColumn": 46,
-          "startingLine": 471
+          "startingLine": 455
         }
       },
       {
@@ -135,7 +135,7 @@
         "key": "Add New",
         "location": {
           "startingColumn": 57,
-          "startingLine": 471
+          "startingLine": 455
         }
       },
       {
@@ -143,7 +143,7 @@
         "key": "Payment Type",
         "location": {
           "startingColumn": 34,
-          "startingLine": 490
+          "startingLine": 473
         }
       },
       {
@@ -151,7 +151,7 @@
         "key": "Emoji (optional)",
         "location": {
           "startingColumn": 38,
-          "startingLine": 499
+          "startingLine": 482
         }
       },
       {
@@ -159,7 +159,7 @@
         "key": "Payment Type List",
         "location": {
           "startingColumn": 22,
-          "startingLine": 526
+          "startingLine": 509
         }
       },
       {
@@ -167,7 +167,7 @@
         "key": "No payment methods found. Add one above or pull to refresh.",
         "location": {
           "startingColumn": 26,
-          "startingLine": 537
+          "startingLine": 518
         }
       },
       {
@@ -175,7 +175,7 @@
         "key": "Background Options",
         "location": {
           "startingColumn": 18,
-          "startingLine": 561
+          "startingLine": 540
         }
       },
       {
@@ -183,7 +183,7 @@
         "key": "Choose Color",
         "location": {
           "startingColumn": 22,
-          "startingLine": 567
+          "startingLine": 546
         }
       },
       {
@@ -191,7 +191,7 @@
         "key": "Hex Color Code",
         "location": {
           "startingColumn": 26,
-          "startingLine": 611
+          "startingLine": 589
         }
       },
       {
@@ -199,7 +199,7 @@
         "key": "#",
         "location": {
           "startingColumn": 30,
-          "startingLine": 616
+          "startingLine": 594
         }
       },
       {
@@ -207,7 +207,7 @@
         "key": "Reset to Default",
         "location": {
           "startingColumn": 28,
-          "startingLine": 664
+          "startingLine": 641
         }
       },
       {
@@ -215,7 +215,7 @@
         "key": "Choose Image",
         "location": {
           "startingColumn": 26,
-          "startingLine": 652
+          "startingLine": 629
         }
       },
       {
@@ -223,7 +223,7 @@
         "key": "Current:",
         "location": {
           "startingColumn": 26,
-          "startingLine": 672
+          "startingLine": 649
         }
       },
       {
@@ -231,7 +231,7 @@
         "key": "Custom Image",
         "location": {
           "startingColumn": 46,
-          "startingLine": 676
+          "startingLine": 653
         }
       },
       {
@@ -239,7 +239,7 @@
         "key": "Custom Color",
         "location": {
           "startingColumn": 48,
-          "startingLine": 677
+          "startingLine": 654
         }
       },
       {
@@ -247,7 +247,7 @@
         "key": "Default Color",
         "location": {
           "startingColumn": 25,
-          "startingLine": 678
+          "startingLine": 655
         }
       },
       {
@@ -255,7 +255,7 @@
         "key": "Loading...",
         "location": {
           "startingColumn": 18,
-          "startingLine": 696
+          "startingLine": 673
         }
       },
       {
@@ -263,7 +263,7 @@
         "key": "Couldn't load data",
         "location": {
           "startingColumn": 18,
-          "startingLine": 710
+          "startingLine": 686
         }
       },
       {
@@ -271,7 +271,7 @@
         "key": "Try Again",
         "location": {
           "startingColumn": 20,
-          "startingLine": 720
+          "startingLine": 696
         }
       }
     ]
