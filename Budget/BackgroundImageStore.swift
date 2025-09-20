@@ -29,15 +29,12 @@ final class BackgroundImageStore: ObservableObject {
             // Small delay to ensure all loading operations complete
             try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
             self.isInitialized = true
-            print("🎨 BackgroundImageStore: Initialization complete")
             
             // Instead of forcing objectWillChange, configure tab bar properly
             if self.useCustomColor {
                 TabBarAppearance.configure(with: self.backgroundColor)
-                print("🎨 BackgroundImageStore: Configured TabBar with custom color")
             } else {
                 TabBarAppearance.configure(with: AppAppearance.shared.appBackgroundColor)
-                print("🎨 BackgroundImageStore: Configured TabBar with default color")
             }
         }
     }
@@ -57,30 +54,19 @@ final class BackgroundImageStore: ObservableObject {
     }
     
     func setColor(_ newColor: Color) {
-        print("🔥 BackgroundImageStore.setColor() STARTED")
-        print("🔥 Input color: \(newColor)")
-        print("🔥 Current state BEFORE - useCustomColor: \(useCustomColor), backgroundColor: \(backgroundColor)")
-        
         // UPDATE GLOBAL APP APPEARANCE FIRST
         AppAppearance.shared.setBackgroundColor(newColor)
         
         // Ensure we're on the main thread and update atomically
         Task { @MainActor in
-            print("🔥 Inside Task @MainActor - about to update state")
-            
             // Update all properties at once to prevent intermediate states
             let wasUsingCustomColor = self.useCustomColor
             let oldImage = self.image
             let oldBackgroundColor = self.backgroundColor
             
-            print("🔥 Stored old values - wasUsingCustomColor: \(wasUsingCustomColor), oldBackgroundColor: \(oldBackgroundColor)")
-            
             self.image = nil // Clear image first
             self.useCustomColor = true
             self.backgroundColor = newColor
-            
-            print("🔥 State updated - useCustomColor: \(self.useCustomColor), backgroundColor: \(self.backgroundColor)")
-            print("🔥 About to save to disk and update TabBar")
             
             // Only save and clean up files if we successfully set the new state
             do {
@@ -90,27 +76,19 @@ final class BackgroundImageStore: ObservableObject {
                 if oldImage != nil {
                     try? FileManager.default.removeItem(at: self.fileURL)
                 }
-                print("🔥 Successfully saved color to disk")
                 
                 // Update the tab bar appearance with the new background color
-                print("🔥 About to call TabBarAppearance.updateForBackgroundChange")
                 TabBarAppearance.updateForBackgroundChange(newColor)
-                print("🔥 TabBar appearance update completed")
                 
                 // Force a UI update
-                print("🔥 About to trigger objectWillChange")
                 self.objectWillChange.send()
-                print("🔥 objectWillChange.send() completed")
                 
             } catch {
                 // If something goes wrong, revert the state
-                print("🔥 ERROR saving color settings: \(error)")
                 self.useCustomColor = wasUsingCustomColor
                 self.image = oldImage
                 self.backgroundColor = oldBackgroundColor
             }
-            
-            print("🔥 BackgroundImageStore.setColor() COMPLETED")
         }
     }
     
@@ -150,7 +128,6 @@ final class BackgroundImageStore: ObservableObject {
                 backgroundColor = loadedColor
                 // UPDATE GLOBAL APP APPEARANCE WITH SAVED COLOR
                 AppAppearance.shared.setBackgroundColor(loadedColor)
-                print("🎨 Loaded saved color and updated global AppAppearance: \(loadedColor)")
             }
         } else {
             // If no saved data, ensure we start with proper defaults

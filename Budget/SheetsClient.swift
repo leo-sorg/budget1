@@ -80,7 +80,6 @@ struct SheetsClient {
                     let apiResponse = try JSONDecoder().decode(APIResponse.self, from: data)
                     completion(.success(apiResponse))
                 } catch {
-                    print("❌ Transactions decode error: \(error)")
                     completion(.failure(error))
                 }
             case .failure(let error):
@@ -101,19 +100,14 @@ struct SheetsClient {
             return
         }
         
-        print("🔗 Categories URL: \(url.absoluteString)")
-        
         performGETRequest(url: url) { result in
             switch result {
             case .success(let data):
                 do {
                     let apiResponse = try JSONDecoder().decode(APICategoriesResponse.self, from: data)
-                    print("✅ Successfully decoded \(apiResponse.data.count) categories")
                     completion(.success(apiResponse))
                 } catch {
-                    print("❌ Categories decode error: \(error)")
                     if let responseString = String(data: data, encoding: .utf8) {
-                        print("📄 Raw categories response: \(responseString)")
                     }
                     completion(.failure(error))
                 }
@@ -135,19 +129,14 @@ struct SheetsClient {
             return
         }
         
-        print("🔗 Payment Methods URL: \(url.absoluteString)")
-        
         performGETRequest(url: url) { result in
             switch result {
             case .success(let data):
                 do {
                     let apiResponse = try JSONDecoder().decode(APIPaymentMethodsResponse.self, from: data)
-                    print("✅ Successfully decoded \(apiResponse.data.count) payment methods")
                     completion(.success(apiResponse))
                 } catch {
-                    print("❌ Payment Methods decode error: \(error)")
                     if let responseString = String(data: data, encoding: .utf8) {
-                        print("📄 Raw payment methods response: \(responseString)")
                     }
                     completion(.failure(error))
                 }
@@ -162,13 +151,11 @@ struct SheetsClient {
     private func performGETRequest(url: URL, completion: @escaping (Result<Data, Error>) -> Void) {
         URLSession.shared.dataTask(with: url) { data, response, error in
             if let error = error {
-                print("❌ Network error: \(error)")
                 completion(.failure(error))
                 return
             }
             
             if let httpResponse = response as? HTTPURLResponse {
-                print("📈 HTTP Status: \(httpResponse.statusCode)")
                 if httpResponse.statusCode != 200 {
                     completion(.failure(SheetsError.httpError(httpResponse.statusCode)))
                     return
@@ -176,7 +163,6 @@ struct SheetsClient {
             }
             
             guard let data = data else {
-                print("❌ No data received")
                 completion(.failure(SheetsError.noData))
                 return
             }
@@ -184,7 +170,6 @@ struct SheetsClient {
             // Check if response is HTML (error page) instead of JSON
             if let responseString = String(data: data, encoding: .utf8),
                responseString.lowercased().contains("<html") {
-                print("❌ Received HTML instead of JSON: \(responseString.prefix(200))")
                 completion(.failure(SheetsError.htmlResponse))
                 return
             }
@@ -214,7 +199,6 @@ struct SheetsClient {
             let http = resp as? HTTPURLResponse
             let status = http?.statusCode ?? -1
             let text = String(data: data ?? Data(), encoding: .utf8) ?? "<no body>"
-            print("📤 POST response: status=\(status) body=\(text)")
             completion(.init(status: status, body: text))
         }.resume()
     }

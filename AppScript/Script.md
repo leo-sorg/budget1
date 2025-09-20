@@ -25,7 +25,6 @@ function doPost(e) {
 
     return ContentService.createTextOutput('Success').setMimeType(ContentService.MimeType.TEXT);
   } catch (error) {
-    console.error('Error in doPost:', error);
     return ContentService.createTextOutput('Error: ' + error.message).setMimeType(ContentService.MimeType.TEXT);
   }
 }
@@ -57,7 +56,6 @@ function doGet(e) {
       data: []
     })).setMimeType(ContentService.MimeType.JSON);
   } catch (error) {
-    console.error('Error in doGet:', error);
     return ContentService.createTextOutput(JSON.stringify({
       success: false,
       message: 'Error: ' + error.message,
@@ -71,7 +69,6 @@ function getOrCreateSpreadsheet() {
   const SPREADSHEET_ID = '1cabXQLcwfX8_FRCpkgM88JFRYaAc_EGoJzLnMTbZ6a4';
   try {
     const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
-    console.log('Successfully opened existing spreadsheet');
     return spreadsheet;
   } catch (error) {
     console.error('Error opening spreadsheet:', error);
@@ -90,7 +87,6 @@ function handleTransaction(spreadsheet, data) {
   // Adjust amount based on transactionType
   if (data.transactionType && data.transactionType.toLowerCase() === 'expense') {
     parsedAmount = Math.abs(parsedAmount) * -1;
-    console.log('💸 EXPENSE -> negative amount:', parsedAmount);
   } else if (data.transactionType && data.transactionType.toLowerCase() === 'income') {
     parsedAmount = Math.abs(parsedAmount);
     console.log('💰 INCOME -> positive amount:', parsedAmount);
@@ -115,9 +111,7 @@ function handleTransaction(spreadsheet, data) {
     const targetRow = lastRow + 1;
     sheet.getRange(targetRow, 1, 1, rowData.length).setValues([rowData]);
     SpreadsheetApp.flush();
-    console.log('✅ Added transaction at row', targetRow, rowData);
   } catch (e) {
-    console.error('❌ Write failed:', e);
     throw new Error('Failed to write transaction: ' + e.message);
   } finally {
     lock.releaseLock();
@@ -202,7 +196,6 @@ function findRowByRemoteId(sheet, remoteId) {
 // -------- Amount parsing --------
 function parseAmount(amount) {
   if (typeof amount === 'number') {
-    console.log('Amount numeric:', amount);
     return amount;
   }
 
@@ -230,7 +223,6 @@ function parseAmount(amount) {
 
     const parsed = parseFloat(cleanAmount);
     if (isNaN(parsed)) {
-      console.error('Could not parse amount:', amount, '->', cleanAmount);
       return 0;
     }
     return parsed;

@@ -81,12 +81,8 @@ struct SummaryView: View {
             }
         }
         .background {
-            // DEBUG: Force magenta background to test
             AppAppearance.shared.appBackgroundColor
                 .ignoresSafeArea(.all)
-                .onAppear {
-                    print("🔥 SummaryView: FORCING MAGENTA BACKGROUND")
-                }
         }
         .onAppear {
             // Fetch transactions for current month when screen appears
@@ -172,14 +168,11 @@ struct SummaryView: View {
                             if apiResponse.success {
                                 self.apiTransactions = apiResponse.data
                                 self.errorMessage = nil
-                                print("✅ Refreshed \(self.apiTransactions.count) transactions")
                             } else {
                                 self.errorMessage = apiResponse.message
-                                print("❌ Refresh Error: \(apiResponse.message)")
                             }
                             
                         case .failure(let error):
-                            print("❌ Refresh Error: \(error)")
                             self.errorMessage = error.localizedDescription
                         }
                         
@@ -205,14 +198,11 @@ struct SummaryView: View {
                         // The API should be returning them in the correct order already
                         self.apiTransactions = apiResponse.data
                         self.errorMessage = nil
-                        print("✅ Successfully loaded \(self.apiTransactions.count) transactions for \(self.selectedMonth)/\(self.selectedYear)")
                     } else {
                         self.errorMessage = apiResponse.message
-                        print("❌ API Error: \(apiResponse.message)")
                     }
                     
                 case .failure(let error):
-                    print("❌ Error: \(error)")
                     self.errorMessage = error.localizedDescription
                 }
             }

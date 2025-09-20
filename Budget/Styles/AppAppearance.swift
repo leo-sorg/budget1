@@ -16,13 +16,10 @@ class AppAppearance: ObservableObject {
     // Update the background color globally
     func setBackgroundColor(_ newColor: Color) {
         appBackgroundColor = newColor
-        print("🎨 AppAppearance: Updated global background color to: \(newColor)")
         updateDynamicColors()
     }
     
     static func configure() {
-        print("🔧 AppAppearance.configure() called")
-        print("🔧 Using background color: \(shared.appBackgroundColor)")
         
         // CRITICAL: FORCE ALL WINDOWS TO NOT OVERRIDE INTERFACE STYLE
         DispatchQueue.main.async {
@@ -33,7 +30,6 @@ class AppAppearance: ObservableObject {
                         window.overrideUserInterfaceStyle = .unspecified
                         // ALSO SET BACKGROUND COLOR AT WINDOW LEVEL
                         window.backgroundColor = UIColor(shared.appBackgroundColor)
-                        print("🔧 Set window background to: \(shared.appBackgroundColor)")
                         print("🔧 Set window.overrideUserInterfaceStyle to .unspecified")
                     }
                 }
@@ -44,7 +40,6 @@ class AppAppearance: ObservableObject {
     }
     
     func updateDynamicColors() {
-        print("🔧 AppAppearance.updateDynamicColors() called")
         AppAppearance.configureGeneralAppearance()
         
         // Update window backgrounds when color changes
@@ -53,7 +48,6 @@ class AppAppearance: ObservableObject {
                 if let windowScene = scene as? UIWindowScene {
                     for window in windowScene.windows {
                         window.backgroundColor = UIColor(self.appBackgroundColor)
-                        print("🔧 Updated window background to new color: \(self.appBackgroundColor)")
                     }
                 }
             }
@@ -61,7 +55,6 @@ class AppAppearance: ObservableObject {
     }
     
     private static func configureGeneralAppearance() {
-        print("🔧 Configuring general app appearance (non-TabBar)")
         
         // Navigation Bar - Transparent (ONLY thing that should be clear)
         let navBarAppearance = UINavigationBarAppearance()
@@ -82,7 +75,5 @@ class AppAppearance: ObservableObject {
         // STOP CLEARING EVERYTHING - this was making the screen black!
         // Only clear table view separators
         UITableView.appearance().separatorStyle = .none
-        
-        print("🔧 General app appearance configured")
     }
 }

@@ -113,12 +113,8 @@ struct ManageView: View {
             }
         }
         .background {
-            // DEBUG: Force magenta background to test
             AppAppearance.shared.appBackgroundColor
                 .ignoresSafeArea(.all)
-                .onAppear {
-                    print("🔥 ManageView: FORCING MAGENTA BACKGROUND")
-                }
         }
         .onAppear {
             // Load data when view appears
@@ -216,14 +212,11 @@ struct ManageView: View {
                 case .success(let response):
                     if response.success {
                         self.categories = response.data.sorted { $0.sortIndex < $1.sortIndex }
-                        print("✅ Successfully loaded \(self.categories.count) categories")
                     } else {
                         self.categoriesError = response.message
-                        print("❌ Categories API Error: \(response.message)")
                     }
                     
                 case .failure(let error):
-                    print("❌ Categories Error: \(error)")
                     self.categoriesError = error.localizedDescription
                 }
             }
@@ -239,14 +232,11 @@ struct ManageView: View {
                 case .success(let response):
                     if response.success {
                         self.methods = response.data.sorted { $0.sortIndex < $1.sortIndex }
-                        print("✅ Successfully loaded \(self.methods.count) payment methods")
                     } else {
                         self.paymentMethodsError = response.message
-                        print("❌ Payment Methods API Error: \(response.message)")
                     }
                     
                 case .failure(let error):
-                    print("❌ Payment Methods Error: \(error)")
                     self.paymentMethodsError = error.localizedDescription
                 }
             }
@@ -289,14 +279,11 @@ struct ManageView: View {
                         if response.success {
                             self.categories = response.data.sorted { $0.sortIndex < $1.sortIndex }
                             self.categoriesError = nil
-                            print("✅ Refreshed \(self.categories.count) categories")
                         } else {
                             self.categoriesError = response.message
-                            print("❌ Refresh Categories Error: \(response.message)")
                         }
                         
                     case .failure(let error):
-                        print("❌ Refresh Categories Error: \(error)")
                         self.categoriesError = error.localizedDescription
                     }
                     
@@ -316,14 +303,11 @@ struct ManageView: View {
                         if response.success {
                             self.methods = response.data.sorted { $0.sortIndex < $1.sortIndex }
                             self.paymentMethodsError = nil
-                            print("✅ Refreshed \(self.methods.count) payment methods")
                         } else {
                             self.paymentMethodsError = response.message
-                            print("❌ Refresh Payment Methods Error: \(response.message)")
                         }
                         
                     case .failure(let error):
-                        print("❌ Refresh Payment Methods Error: \(error)")
                         self.paymentMethodsError = error.localizedDescription
                     }
                     
@@ -578,7 +562,6 @@ struct ManageView: View {
                             color: color,
                             isSelected: store.useCustomColor && store.backgroundColor == color,
                             action: {
-                                print("🔥 ManageView: ColorSquare tapped for color: \(color)")
                                 store.setColor(color)
                             }
                         )
@@ -925,12 +908,9 @@ struct ManageView: View {
     private func applyHexColor() {
         let cleanHex = hexColorInput.replacingOccurrences(of: "#", with: "")
         if let color = Color.fromHex(cleanHex) {
-            print("🔥 ManageView: applyHexColor() called with hex: \(hexColorInput), color: \(color)")
             store.setColor(color)
             showHexInput = false
             hexColorInput = ""
-        } else {
-            print("🔥 ManageView: applyHexColor() failed - invalid hex: \(hexColorInput)")
         }
     }
     
