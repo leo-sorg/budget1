@@ -356,7 +356,7 @@ struct ManageView: View {
                             }
                         }
                     }
-                    .buttonStyle(AppSmallButtonStyle())
+                    .appSmallButtonStyle()
                 }
                 
                 if showCategoryForm {
@@ -481,7 +481,7 @@ struct ManageView: View {
                             }
                         }
                     }
-                    .buttonStyle(AppSmallButtonStyle())
+                    .appSmallButtonStyle()
                 }
                 
                 if showPaymentForm {
@@ -654,7 +654,7 @@ struct ManageView: View {
                 PhotosPicker(selection: $pickerItem, matching: .images, photoLibrary: .shared()) {
                     Text("Choose Image")
                 }
-                .buttonStyle(AppButtonStyle())
+                .appButtonStyle()
                 .onChange(of: pickerItem) { oldValue, newValue in
                     Task { await loadSelection(newValue) }
                 }
@@ -667,7 +667,7 @@ struct ManageView: View {
                     Button("Reset to Default") {
                         store.resetToDefault()
                     }
-                    .buttonStyle(AppButtonStyle())
+                    .appButtonStyle()
                 }
                 
                 // Current status indicator
@@ -723,7 +723,7 @@ struct ManageView: View {
             Button("Try Again") {
                 retryAction()
             }
-            .buttonStyle(AppSmallButtonStyle())
+            .appSmallButtonStyle()
         }
         .frame(maxWidth: .infinity, minHeight: 200)
     }

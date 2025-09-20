@@ -60,7 +60,24 @@ struct SectionContainer<Content: View>: View {
     }
 }
 
-// MARK: - Material Container (system only)
+// MARK: - Glass Container (Apple Liquid Glass)
+struct GlassContainer<Content: View>: View {
+    let spacing: CGFloat
+    let content: Content
+    
+    init(spacing: CGFloat = 20.0, @ViewBuilder content: () -> Content) {
+        self.spacing = spacing
+        self.content = content()
+    }
+    
+    var body: some View {
+        GlassEffectContainer(spacing: spacing) {
+            content
+        }
+    }
+}
+
+// MARK: - Material Container (Updated to use Liquid Glass)
 struct MaterialContainer<Content: View>: View {
     let content: Content
     
@@ -72,14 +89,7 @@ struct MaterialContainer<Content: View>: View {
         content
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(.ultraThinMaterial)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .strokeBorder(.thinMaterial, lineWidth: 1)
-            )
+            .glassEffect(.regular, in: .rect(cornerRadius: 8))
     }
 }
 
@@ -88,10 +98,13 @@ extension View {
         MaterialContainer { self }
     }
     
-    // Keep compatibility helper; map to default liquid glass button styles
+    // Updated to use proper Liquid Glass API
     func appMaterialButton(isDestructive: Bool = false) -> some View {
-        // We use our custom liquid-glass button style everywhere for consistency.
-        // Callers can apply a role or color as needed where the Button is created.
         self.buttonStyle(AppSmallButtonStyle())
+    }
+    
+    // Helper for using GlassEffectContainer easily
+    func glassContainer(spacing: CGFloat = 20.0) -> some View {
+        GlassContainer(spacing: spacing) { self }
     }
 }

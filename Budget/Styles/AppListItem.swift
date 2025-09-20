@@ -44,11 +44,11 @@ struct AppListItem<Content: View, TrailingContent: View>: View {
                     .buttonStyle(.plain)
                     .tint(.red)
                 }
-                .background(.regularMaterial)
+                .glassEffect(.regular, in: .rect(cornerRadius: 12))
                 .transition(.opacity)
             }
             
-            // Main content — Liquid glass via helper
+            // Main content — Liquid glass via Apple's Liquid Glass API
             HStack(spacing: 12) {
                 content
                 Spacer()
@@ -301,7 +301,7 @@ struct PaymentMethodListItem: View {
     }
 }
 
-// MARK: - List Section with standard controls and system colors
+// MARK: - List Section with Liquid Glass container and system colors
 struct AppListSection<Items: RandomAccessCollection, ItemContent: View>: View where Items.Element: Identifiable {
     let title: String
     let emptyMessage: String
@@ -340,9 +340,11 @@ struct AppListSection<Items: RandomAccessCollection, ItemContent: View>: View wh
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
-                    VStack(spacing: 8) {
-                        ForEach(items) { item in
-                            itemContent(item)
+                    GlassEffectContainer(spacing: 8.0) {
+                        VStack(spacing: 8) {
+                            ForEach(items) { item in
+                                itemContent(item)
+                            }
                         }
                     }
                 }
