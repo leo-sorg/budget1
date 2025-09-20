@@ -6,14 +6,12 @@ struct RootSwitcherView: View {
 
     var body: some View {
         ZStack {
-            // FORCE THE FUCKING BACKGROUND TO SHOW
-            Color.red
+            // FORCE BLUE BACKGROUND TO TEST - THIS SHOULD BE VISIBLE
+            AppAppearance.shared.appBackgroundColor
                 .ignoresSafeArea(.all)
                 .onAppear {
-                    print("🔥🔥🔥 FORCING RED BACKGROUND - IF THIS DOESN'T SHOW, THE PROBLEM IS NOT BACKGROUND LOGIC")
-                    print("🔥🔥🔥 bgStore.dim = \(bgStore.dim)")
-                    print("🔥🔥🔥 bgStore.blur = \(bgStore.blur)")
-                    print("🔥🔥🔥 bgStore.image = \(bgStore.image != nil)")
+                    print("🔥 FORCING BLUE BACKGROUND: \(AppAppearance.shared.appBackgroundColor)")
+                    print("🔥 If this shows white instead of blue, something is overriding colors")
                 }
             
             // Content with splash/main transition
@@ -65,23 +63,26 @@ struct RootSwitcherView: View {
                         }
                     }
             } else {
+                // THIS IS THE DEFAULT CASE - MAKE SURE IT SHOWS BLUE NOT WHITE
                 ZStack {
-                    AppAppearance.appBackgroundColor
-                    LinearGradient(
-                        colors: [
-                            Color.white.opacity(0.02),
-                            Color.clear,
-                            Color.black.opacity(0.02)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
+                    AppAppearance.shared.appBackgroundColor
+                    // TEMPORARILY REMOVE GRADIENT TO SEE BLUE CLEARLY
+                    // LinearGradient(
+                    //     colors: [
+                    //         Color.white.opacity(0.02),
+                    //         Color.clear,
+                    //         Color.black.opacity(0.02)
+                    //     ],
+                    //     startPoint: .top,
+                    //     endPoint: .bottom
+                    // )
                 }
                 .ignoresSafeArea(.all)
                 .onAppear { 
-                    print("🔥 RootSwitcher: SHOWING DEFAULT APP BACKGROUND: \(AppAppearance.appBackgroundColor)")
+                    print("🔥 RootSwitcher: SHOWING DEFAULT APP BACKGROUND: \(AppAppearance.shared.appBackgroundColor)")
                     print("🔥 RootSwitcher: useCustomColor = \(bgStore.useCustomColor)")
                     print("🔥 RootSwitcher: backgroundColor = \(bgStore.backgroundColor)")
+                    print("🔥 RootSwitcher: This should be BLUE not white!")
                 }
             }
         }
@@ -93,42 +94,14 @@ struct RootSwitcherView: View {
             // Ensure the background is always present, even if other layers interfere
             backgroundLayer
             
-            TabView {
-                InputView()
-                    .tabItem {
-                        Image(systemName: "house.fill")
-                        Text("Home")
-                    }
-                    .tag(0)
-                
-                HistoryView()
-                    .tabItem {
-                        Image(systemName: "square.grid.2x2.fill")
-                        Text("New")
-                    }
-                    .tag(1)
-                
-                SummaryView()
-                    .tabItem {
-                        Image(systemName: "dot.radiowaves.left.and.right")
-                        Text("Radio")
-                    }
-                    .tag(2)
-                
-                ManageView()
-                    .tabItem {
-                        Image(systemName: "music.note.list")
-                        Text("Library")
-                    }
-                    .tag(3)
-            }
+            HomeTabView()
             .onAppear {
                 print("🎨 mainAppView appeared")
                 // Configure tab bar with the current background
                 if bgStore.useCustomColor {
                     TabBarAppearance.configure(with: bgStore.backgroundColor)
                 } else {
-                    TabBarAppearance.configure(with: AppAppearance.appBackgroundColor)
+                    TabBarAppearance.configure(with: AppAppearance.shared.appBackgroundColor)
                 }
             }
         }
@@ -138,7 +111,7 @@ struct RootSwitcherView: View {
 struct SplashView: View {
     var body: some View {
         ZStack {
-            AppAppearance.appBackgroundColor.ignoresSafeArea(.all)
+            AppAppearance.shared.appBackgroundColor.ignoresSafeArea(.all)
             Text("Budget")
                 .font(.system(size: 32, weight: .bold))
                 .foregroundColor(.white)

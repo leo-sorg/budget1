@@ -80,6 +80,14 @@ struct SummaryView: View {
                 await refreshData()
             }
         }
+        .background {
+            // DEBUG: Force magenta background to test
+            AppAppearance.shared.appBackgroundColor
+                .ignoresSafeArea(.all)
+                .onAppear {
+                    print("🔥 SummaryView: FORCING MAGENTA BACKGROUND")
+                }
+        }
         .onAppear {
             // Fetch transactions for current month when screen appears
             fetchTransactionsForSelectedMonth()

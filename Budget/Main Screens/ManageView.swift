@@ -112,6 +112,14 @@ struct ManageView: View {
                 await refreshCurrentSection()
             }
         }
+        .background {
+            // DEBUG: Force magenta background to test
+            AppAppearance.shared.appBackgroundColor
+                .ignoresSafeArea(.all)
+                .onAppear {
+                    print("🔥 ManageView: FORCING MAGENTA BACKGROUND")
+                }
+        }
         .onAppear {
             // Load data when view appears
             loadDataForCurrentSection()

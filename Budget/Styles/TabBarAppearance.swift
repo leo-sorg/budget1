@@ -23,12 +23,27 @@ enum TabBarAppearance {
         
         print("🔥 Set tabBarAppearance.backgroundColor to: \(uiBackgroundColor)")
         
-        // Simple item colors
-        let normalColor = UIColor.white
+        // Simple item colors with better contrast
+        let normalColor = UIColor.systemGray
         let selectedColor = UIColor.white
         
+        print("🔥 Setting tab colors - Normal: \(normalColor), Selected: \(selectedColor)")
+        
         tabBarAppearance.stackedLayoutAppearance.normal.iconColor = normalColor
+        tabBarAppearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: normalColor]
         tabBarAppearance.stackedLayoutAppearance.selected.iconColor = selectedColor
+        tabBarAppearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: selectedColor]
+        
+        // Also configure compact and inline layouts for better compatibility
+        tabBarAppearance.compactInlineLayoutAppearance.normal.iconColor = normalColor
+        tabBarAppearance.compactInlineLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: normalColor]
+        tabBarAppearance.compactInlineLayoutAppearance.selected.iconColor = selectedColor
+        tabBarAppearance.compactInlineLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: selectedColor]
+        
+        tabBarAppearance.inlineLayoutAppearance.normal.iconColor = normalColor
+        tabBarAppearance.inlineLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: normalColor]
+        tabBarAppearance.inlineLayoutAppearance.selected.iconColor = selectedColor
+        tabBarAppearance.inlineLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: selectedColor]
         
         // Apply to the tab bar appearance proxy
         let tabBar = UITabBar.appearance()
@@ -56,11 +71,35 @@ enum TabBarAppearance {
     }
     
     private static func forceRefreshExistingTabBars() {
+        print("🔥 forceRefreshExistingTabBars() STARTED")
         for scene in UIApplication.shared.connectedScenes {
+            print("🔥 Checking scene: \(scene)")
             if let windowScene = scene as? UIWindowScene {
+                print("🔥 Found windowScene with \(windowScene.windows.count) windows")
                 for window in windowScene.windows {
+                    print("🔥 Checking window: \(window)")
                     if let tabBarController = window.rootViewController?.findTabBarController() {
-                        print("🔥 Found tab bar controller! Forcing appearance refresh")
+                        print("🔥 Found tab bar controller! Tab bar items count: \(tabBarController.tabBar.items?.count ?? 0)")
+                        
+                        // Log each tab item with more detail
+                        if let items = tabBarController.tabBar.items {
+                            for (index, item) in items.enumerated() {
+                                let title = item.title ?? "nil"
+                                let hasImage = item.image != nil
+                                let imageDescription = item.image?.description ?? "nil"
+                                print("🔥 Tab \(index): title='\(title)', hasImage=\(hasImage), image=\(imageDescription)")
+                                
+                                // Special debugging for the manage tab (index 3)
+                                if index == 3 {
+                                    print("🔥 MANAGE TAB DETAILS:")
+                                    print("🔥   - Title: '\(title)'")
+                                    print("🔥   - Has Image: \(hasImage)")
+                                    print("🔥   - Image Size: \(item.image?.size ?? CGSize.zero)")
+                                    print("🔥   - Badge Value: \(item.badgeValue ?? "nil")")
+                                    print("🔥   - Is Enabled: \(item.isEnabled)")
+                                }
+                            }
+                        }
                         
                         // Force the tab bar to re-read its appearance
                         tabBarController.tabBar.setNeedsLayout()

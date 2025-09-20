@@ -25,5 +25,13 @@ struct HistoryView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .background {
+            // DEBUG: Force magenta background to test
+            AppAppearance.shared.appBackgroundColor
+                .ignoresSafeArea(.all)
+                .onAppear {
+                    print("🔥 HistoryView: FORCING MAGENTA BACKGROUND")
+                }
+        }
     }
 }

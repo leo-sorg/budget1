@@ -1,82 +1,59 @@
 import SwiftUI
 
-// MARK: - iOS 26 Liquid Glass Chip Components (Official Apple API)
+// MARK: - Simple Capsule Chip Buttons
 
-/// Payment method chip with native iOS 26 Liquid Glass design
+/// Payment method chip button
 struct PaymentChipView: View {
     let paymentMethod: PaymentMethod
     let isSelected: Bool
     let onTap: () -> Void
     
     var body: some View {
-        HStack(spacing: 8) {
-            // Icon or emoji
-            Group {
+        Button(action: onTap) {
+            HStack(spacing: 8) {
                 if let emoji = paymentMethod.emoji, !emoji.isEmpty {
                     Text(emoji)
-                        .font(.system(size: 16))
                 } else {
                     Image(systemName: "creditcard.fill")
                         .font(.system(size: 14))
-                        .foregroundStyle(.secondary)
                 }
+                
+                Text(paymentMethod.name)
+                    .font(.system(size: 16, weight: .medium))
             }
-            
-            // Payment method name
-            Text(paymentMethod.name)
-                .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(.primary)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .glassEffect(isSelected ? .regular.tint(.accentColor.opacity(0.3)).interactive() : .regular.interactive())
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .glassEffect(.regular.interactive(), in: .capsule)
-        .background(
-            isSelected ? Color.appAccent.opacity(0.25) : Color.clear,
-            in: .capsule
-        )
-        .scaleEffect(isSelected ? 1.05 : 1.0)
-        .animation(.bouncy(duration: 0.3), value: isSelected)
-        .onTapGesture {
-            onTap()
-        }
+        .buttonStyle(.plain)
     }
 }
 
-/// Category chip with native iOS 26 Liquid Glass design
+/// Category chip button
 struct CategoryChipView: View {
     let category: Category
     let isSelected: Bool
     let onTap: () -> Void
     
     var body: some View {
-        HStack(spacing: 6) {
-            // Emoji if available
-            if let emoji = category.emoji, !emoji.isEmpty {
-                Text(emoji)
-                    .font(.system(size: 16))
+        Button(action: onTap) {
+            HStack(spacing: 6) {
+                if let emoji = category.emoji, !emoji.isEmpty {
+                    Text(emoji)
+                }
+                
+                Text(category.name)
+                    .font(.system(size: 16, weight: .medium))
             }
-            
-            // Category name
-            Text(category.name)
-                .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(.primary)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .glassEffect(isSelected ? .regular.tint(.accentColor.opacity(0.3)).interactive() : .regular.interactive())
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .glassEffect(.regular.interactive(), in: .capsule)
-        .background(
-            isSelected ? Color.appAccent.opacity(0.25) : Color.clear,
-            in: .capsule
-        )
-        .scaleEffect(isSelected ? 1.05 : 1.0)
-        .animation(.bouncy(duration: 0.3), value: isSelected)
-        .onTapGesture {
-            onTap()
-        }
+        .buttonStyle(.plain)
     }
 }
 
-/// Month navigation chip with native iOS 26 Liquid Glass design
+/// Month navigation chip button
 struct MonthChipView: View {
     let month: Int
     let year: Int
@@ -84,21 +61,14 @@ struct MonthChipView: View {
     let onTap: () -> Void
     
     var body: some View {
-        Text(monthYearString)
-            .font(.system(size: 16, weight: .medium))
-            .foregroundStyle(.primary)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .glassEffect(.regular.interactive(), in: .capsule)
-            .background(
-                isSelected ? Color.appAccent.opacity(0.25) : Color.clear,
-                in: .capsule
-            )
-            .scaleEffect(isSelected ? 1.05 : 1.0)
-            .animation(.bouncy(duration: 0.3), value: isSelected)
-            .onTapGesture {
-                onTap()
-            }
+        Button(action: onTap) {
+            Text(monthYearString)
+                .font(.system(size: 16, weight: .medium))
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .glassEffect(isSelected ? .regular.tint(.accentColor.opacity(0.3)).interactive() : .regular.interactive())
+        }
+        .buttonStyle(.plain)
     }
     
     private var monthYearString: String {
@@ -118,89 +88,75 @@ struct MonthChipView: View {
     }
 }
 
-/// Manage section chip with native iOS 26 Liquid Glass design
+/// Manage section chip button
 struct ManageSectionChip: View {
     let section: ManageView.ManageSection
     let isSelected: Bool
     let onTap: () -> Void
     
     var body: some View {
-        Text(section.rawValue)
-            .font(.system(size: 16, weight: .medium))
-            .foregroundStyle(.primary)
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
-            .glassEffect(.regular.interactive(), in: .capsule)
-            .background(
-                isSelected ? Color.appAccent.opacity(0.25) : Color.clear,
-                in: .capsule
-            )
-            .scaleEffect(isSelected ? 1.05 : 1.0)
-            .animation(.bouncy(duration: 0.3), value: isSelected)
-            .onTapGesture {
-                onTap()
-            }
+        Button(action: onTap) {
+            Text(section.rawValue)
+                .font(.system(size: 16, weight: .medium))
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .glassEffect(isSelected ? .regular.tint(.accentColor.opacity(0.3)).interactive() : .regular.interactive())
+        }
+        .buttonStyle(.plain)
     }
 }
 
-/// Generic liquid glass chip for forms (like Expense/Income selectors)
+/// Generic chip button
 struct LiquidGlassChip: View {
     let title: String
     let isSelected: Bool
     let onTap: () -> Void
     
     var body: some View {
-        Text(title)
-            .font(.system(size: 16, weight: .medium))
-            .foregroundStyle(.primary)
-            .padding(.horizontal, 24)
-            .padding(.vertical, 12)
-            .glassEffect(.regular.interactive(), in: .capsule)
-            .background(
-                isSelected ? Color.appAccent.opacity(0.25) : Color.clear,
-                in: .capsule
-            )
-            .scaleEffect(isSelected ? 1.05 : 1.0)
-            .animation(.bouncy(duration: 0.3), value: isSelected)
-            .onTapGesture {
-                onTap()
-            }
+        Button(action: onTap) {
+            Text(title)
+                .font(.system(size: 16, weight: .medium))
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .glassEffect(isSelected ? .regular.tint(.accentColor.opacity(0.3)).interactive() : .regular.interactive())
+        }
+        .buttonStyle(.plain)
     }
 }
 
-// MARK: - Chip Container System
+// MARK: - Proper Scroll Containers
 
 /// Single row horizontal chip scroll container
 struct ChipScrollContainer<Content: View>: View {
     let spacing: CGFloat
-    let alignment: HorizontalAlignment
     let content: Content
     
     init(
         spacing: CGFloat = 8,
-        alignment: HorizontalAlignment = .leading,
         @ViewBuilder content: () -> Content
     ) {
         self.spacing = spacing
-        self.alignment = alignment
         self.content = content()
     }
     
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: spacing) {
+            HStack(spacing: spacing) {
                 content
                 Spacer(minLength: 0)
             }
+            .padding(.horizontal, 0)
+            .padding(.vertical, 4) // Add vertical padding to prevent clipping
             .scrollTargetLayout()
         }
         .scrollTargetBehavior(.viewAligned)
-        .scrollClipDisabled()
-        .contentMargins(.horizontal, 0)
+        .scrollClipDisabled() // Allow content to extend beyond scroll bounds
+        .scrollBounceBehavior(.basedOnSize)
+        .frame(height: 50) // Set explicit height to prevent vertical clipping
     }
 }
 
-/// Right-to-left chip scroll container (newest first)
+/// Right-to-left chip scroll container
 struct ChipScrollContainerRTL<Content: View>: View {
     let spacing: CGFloat
     let content: Content
@@ -212,20 +168,23 @@ struct ChipScrollContainerRTL<Content: View>: View {
     
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: spacing) {
-                content
+            HStack(spacing: spacing) {
                 Spacer(minLength: 0)
+                content
             }
+            .padding(.horizontal, 0)
+            .padding(.vertical, 4) // Add vertical padding to prevent clipping
             .scrollTargetLayout()
         }
         .scrollTargetBehavior(.viewAligned)
-        .scrollClipDisabled()
-        .contentMargins(.horizontal, 0)
+        .scrollClipDisabled() // Allow content to extend beyond scroll bounds
+        .scrollBounceBehavior(.basedOnSize)
+        .frame(height: 50) // Set explicit height to prevent vertical clipping
         .environment(\.layoutDirection, .rightToLeft)
     }
 }
 
-/// Double row chip container for categories - SIMPLIFIED
+/// Double row chip container
 struct DoubleRowChipContainer<FirstRowContent: View, SecondRowContent: View>: View {
     let spacing: CGFloat
     let firstRowContent: FirstRowContent
@@ -243,34 +202,35 @@ struct DoubleRowChipContainer<FirstRowContent: View, SecondRowContent: View>: Vi
     
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            VStack(alignment: .leading, spacing: spacing) {
+            VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: spacing) {
                     firstRowContent
+                    Spacer()
                 }
                 
                 if let secondRowContent = secondRowContent {
                     HStack(spacing: spacing) {
                         secondRowContent
+                        Spacer()
                     }
                 }
             }
+            .padding(.horizontal, 0)
+            .padding(.vertical, 4) // Add vertical padding to prevent clipping
         }
-        .scrollClipDisabled()
+        .scrollClipDisabled() // Allow content to extend beyond scroll bounds
+        .scrollBounceBehavior(.basedOnSize)
+        .frame(height: secondRowContent != nil ? 110 : 50) // Adjust height based on content
     }
 }
 
-// MARK: - View Modifiers for Backwards Compatibility
+// MARK: - View Modifiers
 
 struct SingleRowChipScrollModifier<ChipContent: View>: ViewModifier {
     let chips: ChipContent
     
     func body(content: Content) -> some View {
-        content
-            .overlay(
-                ChipScrollContainer {
-                    chips
-                }
-            )
+        content.overlay(ChipScrollContainer { chips })
     }
 }
 
@@ -278,12 +238,7 @@ struct SingleRowChipScrollRightModifier<ChipContent: View>: ViewModifier {
     let chips: ChipContent
     
     func body(content: Content) -> some View {
-        content
-            .overlay(
-                ChipScrollContainerRTL {
-                    chips
-                }
-            )
+        content.overlay(ChipScrollContainerRTL { chips })
     }
 }
 
@@ -291,31 +246,25 @@ struct DoubleRowChipScrollModifier<FirstRowContent: View, SecondRowContent: View
     let firstRowChips: FirstRowContent
     let secondRowChips: SecondRowContent?
     
-    init(firstRowChips: FirstRowContent, secondRowChips: SecondRowContent? = nil) {
-        self.firstRowChips = firstRowChips
-        self.secondRowChips = secondRowChips
-    }
-    
     func body(content: Content) -> some View {
-        content
-            .overlay(
-                DoubleRowChipContainer(
-                    firstRow: { firstRowChips },
-                    secondRow: { secondRowChips }
-                )
+        content.overlay(
+            DoubleRowChipContainer(
+                firstRow: { firstRowChips },
+                secondRow: { secondRowChips }
             )
+        )
     }
 }
 
 // MARK: - View Extensions
 
 extension View {
-    /// Add single row chip scroll behavior (left-aligned)
+    /// Add single row chip scroll behavior
     func singleRowChipScroll<ChipContent: View>(@ViewBuilder chips: () -> ChipContent) -> some View {
         self.modifier(SingleRowChipScrollModifier(chips: chips()))
     }
     
-    /// Add single row chip scroll behavior (right-aligned, newest first)
+    /// Add single row chip scroll behavior (right-aligned)
     func singleRowChipScrollRight<ChipContent: View>(@ViewBuilder chips: () -> ChipContent) -> some View {
         self.modifier(SingleRowChipScrollRightModifier(chips: chips()))
     }

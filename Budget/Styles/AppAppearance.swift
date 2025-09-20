@@ -2,20 +2,62 @@ import SwiftUI
 import UIKit
 
 // MARK: - General App Appearance (Non-TabBar)
-enum AppAppearance {
+@MainActor
+class AppAppearance: ObservableObject {
     
-    // DEFINE BACKGROUND COLOR - TESTING WITH BRIGHT BLUE
-    static let appBackgroundColor: Color = Color.blue
+    // DYNAMIC BACKGROUND COLOR - starts with magenta, can be changed
+    @Published var appBackgroundColor: Color = Color(red: 1.0, green: 0.0, blue: 1.0) // BRIGHT MAGENTA
+    
+    // Shared instance for global access
+    static let shared = AppAppearance()
+    
+    private init() {}
+    
+    // Update the background color globally
+    func setBackgroundColor(_ newColor: Color) {
+        appBackgroundColor = newColor
+        print("🎨 AppAppearance: Updated global background color to: \(newColor)")
+        updateDynamicColors()
+    }
     
     static func configure() {
         print("🔧 AppAppearance.configure() called")
-        print("🔧 Using test background color: \(appBackgroundColor)")
+        print("🔧 Using background color: \(shared.appBackgroundColor)")
+        
+        // CRITICAL: FORCE ALL WINDOWS TO NOT OVERRIDE INTERFACE STYLE
+        DispatchQueue.main.async {
+            for scene in UIApplication.shared.connectedScenes {
+                if let windowScene = scene as? UIWindowScene {
+                    for window in windowScene.windows {
+                        // SET TO UNSPECIFIED - DO NOT FORCE ANY MODE
+                        window.overrideUserInterfaceStyle = .unspecified
+                        // ALSO SET BACKGROUND COLOR AT WINDOW LEVEL
+                        window.backgroundColor = UIColor(shared.appBackgroundColor)
+                        print("🔧 Set window background to: \(shared.appBackgroundColor)")
+                        print("🔧 Set window.overrideUserInterfaceStyle to .unspecified")
+                    }
+                }
+            }
+        }
+        
         configureGeneralAppearance()
     }
     
-    static func updateDynamicColors() {
+    func updateDynamicColors() {
         print("🔧 AppAppearance.updateDynamicColors() called")
-        configureGeneralAppearance()
+        AppAppearance.configureGeneralAppearance()
+        
+        // Update window backgrounds when color changes
+        DispatchQueue.main.async {
+            for scene in UIApplication.shared.connectedScenes {
+                if let windowScene = scene as? UIWindowScene {
+                    for window in windowScene.windows {
+                        window.backgroundColor = UIColor(self.appBackgroundColor)
+                        print("🔧 Updated window background to new color: \(self.appBackgroundColor)")
+                    }
+                }
+            }
+        }
     }
     
     private static func configureGeneralAppearance() {

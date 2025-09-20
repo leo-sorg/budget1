@@ -80,13 +80,21 @@ struct InputView: View {
             }
             .scrollDismissesKeyboard(.interactively)
         }
+        .background {
+            // DEBUG: Force blue background to test
+            AppAppearance.shared.appBackgroundColor
+                .ignoresSafeArea(.all)
+                .onAppear {
+                    print("🔥 InputView: FORCING BLUE BACKGROUND")
+                }
+        }
         .overlay(alignment: .top) { toastOverlay }
         .animation(.default, value: showSavedToast)
         .onAppear {
             print("🎨 InputView appeared - checking background system")
             print("🎨 InputView: bgStore.useCustomColor = \(bgStore.useCustomColor)")
             print("🎨 InputView: bgStore.backgroundColor = \(bgStore.backgroundColor)")
-            print("🎨 InputView: AppAppearance.appBackgroundColor = \(AppAppearance.appBackgroundColor)")
+            print("🎨 InputView: AppAppearance.appBackgroundColor = \(AppAppearance.shared.appBackgroundColor)")
         }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notification in
             if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {

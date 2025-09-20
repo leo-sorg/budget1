@@ -5,29 +5,29 @@ struct HomeTabView: View {
         TabView {
             InputView()
                 .tabItem {
-                    Image(systemName: "house.fill")
-                    Text("Home")
+                    Image(systemName: "plus.circle.fill")
+                    Text("Input")
                 }
                 .tag(0)
             
             HistoryView()
                 .tabItem {
-                    Image(systemName: "square.grid.2x2.fill")
-                    Text("New")
+                    Image(systemName: "hammer.fill")
+                    Text("WIP")
                 }
                 .tag(1)
             
             SummaryView()
                 .tabItem {
-                    Image(systemName: "dot.radiowaves.left.and.right")
-                    Text("Radio")
+                    Image(systemName: "chart.line.uptrend.xyaxis")
+                    Text("Summary")
                 }
                 .tag(2)
             
             ManageView()
                 .tabItem {
-                    Image(systemName: "music.note.list")
-                    Text("Library")
+                    Image(systemName: "slider.horizontal.3")
+                    Text("Manage")
                 }
                 .tag(3)
         }

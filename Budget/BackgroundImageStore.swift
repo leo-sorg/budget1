@@ -5,7 +5,7 @@ final class BackgroundImageStore: ObservableObject {
     @Published var image: UIImage? = nil
     @Published var blur: CGFloat = 0
     @Published var dim: Double = 0
-    @Published var backgroundColor: Color = AppAppearance.appBackgroundColor
+    @Published var backgroundColor: Color = AppAppearance.shared.appBackgroundColor
     @Published var useCustomColor: Bool = false
     @Published var isInitialized: Bool = false
 
@@ -36,7 +36,7 @@ final class BackgroundImageStore: ObservableObject {
                 TabBarAppearance.configure(with: self.backgroundColor)
                 print("🎨 BackgroundImageStore: Configured TabBar with custom color")
             } else {
-                TabBarAppearance.configure(with: AppAppearance.appBackgroundColor)
+                TabBarAppearance.configure(with: AppAppearance.shared.appBackgroundColor)
                 print("🎨 BackgroundImageStore: Configured TabBar with default color")
             }
         }
@@ -60,6 +60,9 @@ final class BackgroundImageStore: ObservableObject {
         print("🔥 BackgroundImageStore.setColor() STARTED")
         print("🔥 Input color: \(newColor)")
         print("🔥 Current state BEFORE - useCustomColor: \(useCustomColor), backgroundColor: \(backgroundColor)")
+        
+        // UPDATE GLOBAL APP APPEARANCE FIRST
+        AppAppearance.shared.setBackgroundColor(newColor)
         
         // Ensure we're on the main thread and update atomically
         Task { @MainActor in
@@ -113,9 +116,15 @@ final class BackgroundImageStore: ObservableObject {
     
     func resetToDefault() {
         Task { @MainActor in
+            // Reset to default magenta color
+            let defaultColor = Color(red: 1.0, green: 0.0, blue: 1.0) // BRIGHT MAGENTA
+            
+            // UPDATE GLOBAL APP APPEARANCE FIRST
+            AppAppearance.shared.setBackgroundColor(defaultColor)
+            
             self.image = nil
             self.useCustomColor = false
-            self.backgroundColor = AppAppearance.appBackgroundColor
+            self.backgroundColor = AppAppearance.shared.appBackgroundColor
             
             try? FileManager.default.removeItem(at: self.fileURL)
             try? FileManager.default.removeItem(at: self.colorFileURL)
@@ -133,16 +142,20 @@ final class BackgroundImageStore: ObservableObject {
            let json = try? JSONDecoder().decode(ColorData.self, from: data) {
             useCustomColor = json.useCustomColor
             if useCustomColor {
-                backgroundColor = Color(
+                let loadedColor = Color(
                     red: json.red,
                     green: json.green,
                     blue: json.blue
                 )
+                backgroundColor = loadedColor
+                // UPDATE GLOBAL APP APPEARANCE WITH SAVED COLOR
+                AppAppearance.shared.setBackgroundColor(loadedColor)
+                print("🎨 Loaded saved color and updated global AppAppearance: \(loadedColor)")
             }
         } else {
             // If no saved data, ensure we start with proper defaults
             useCustomColor = false
-            backgroundColor = AppAppearance.appBackgroundColor
+            backgroundColor = AppAppearance.shared.appBackgroundColor
         }
     }
     
