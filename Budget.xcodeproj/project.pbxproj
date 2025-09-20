@@ -27,6 +27,7 @@
 		75C847D22E74CBDC00DFA6D1 /* Budget.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Budget.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		75C847DF2E74CBDE00DFA6D1 /* BudgetTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BudgetTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		75C847E92E74CBDE00DFA6D1 /* BudgetUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BudgetUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F9470C8D2E7E374900656306 /* AppScript */ = {isa = PBXFileReference; lastKnownFileType = folder; path = AppScript; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -75,6 +76,7 @@
 		75C847C92E74CBDC00DFA6D1 = {
 			isa = PBXGroup;
 			children = (
+				F9470C8D2E7E374900656306 /* AppScript */,
 				75C847D42E74CBDC00DFA6D1 /* Budget */,
 				75C847E22E74CBDE00DFA6D1 /* BudgetTests */,
 				75C847EC2E74CBDE00DFA6D1 /* BudgetUITests */,
