@@ -8,8 +8,8 @@ final class KeyboardScrollCoordinator: ObservableObject {
         let accessoryHeight: CGFloat
     }
 
-    static let standardAccessoryHeight: CGFloat = 44
-    static let emojiAccessoryHeight: CGFloat = 44
+    nonisolated static let standardAccessoryHeight: CGFloat = 44
+    nonisolated static let emojiAccessoryHeight: CGFloat = 44
 
     @Published private(set) var scrollOffset: CGFloat = 0
 
@@ -19,6 +19,7 @@ final class KeyboardScrollCoordinator: ObservableObject {
     private var activeField: ActiveField?
     private var resetWorkItem: DispatchWorkItem?
     private var updateWorkItem: DispatchWorkItem?
+    private var screenHeight: CGFloat = 0
 
     init(basePadding: CGFloat = 20) {
         self.basePadding = basePadding
@@ -43,8 +44,25 @@ final class KeyboardScrollCoordinator: ObservableObject {
         scheduleUpdate(delayed: true)
     }
 
-    func keyboardWillShow(height: CGFloat) {
+    func keyboardWillShow(height: CGFloat, in window: UIWindow? = nil) {
         keyboardHeight = height
+        
+        // Update screen height from window context if available, fallback to current screen
+        if let window = window {
+            screenHeight = window.screen.bounds.height
+        } else if screenHeight == 0 {
+            // Fallback: try to get any connected scene's screen
+            if let windowScene = UIApplication.shared.connectedScenes
+                .compactMap({ $0 as? UIWindowScene })
+                .first {
+                screenHeight = windowScene.screen.bounds.height
+            } else {
+                // Last resort fallback: Use a reasonable default for modern devices
+                // This handles edge cases where no window scene is available
+                screenHeight = 844 // iPhone 14/13/12 standard height
+            }
+        }
+        
         scheduleUpdate(delayed: false)
     }
 
@@ -70,12 +88,12 @@ final class KeyboardScrollCoordinator: ObservableObject {
 
     private func scheduleUpdate(delayed: Bool) {
         cancelUpdateWorkItem()
-        guard keyboardHeight > 0, buttonFrame != .zero, activeField != nil else { return }
+        guard keyboardHeight > 0, buttonFrame != .zero, activeField != nil, screenHeight > 0 else { return }
 
         let workItem = DispatchWorkItem { [weak self] in
             guard let self, let activeField = self.activeField else { return }
 
-            let keyboardTop = UIScreen.main.bounds.height - self.keyboardHeight
+            let keyboardTop = self.screenHeight - self.keyboardHeight
             let target = keyboardTop - (self.basePadding + activeField.accessoryHeight)
             let buttonBottom = self.buttonFrame.maxY
             let offset = buttonBottom > target ? -(buttonBottom - target) : 0

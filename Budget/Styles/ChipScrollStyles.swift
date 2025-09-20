@@ -7,6 +7,7 @@ struct PaymentChipView: View {
     let paymentMethod: PaymentMethod
     let isSelected: Bool
     let onTap: () -> Void
+    let namespace: Namespace.ID
     
     var body: some View {
         Button(action: onTap) {
@@ -23,9 +24,12 @@ struct PaymentChipView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-            .glassEffect(isSelected ? .regular.tint(.accentColor.opacity(0.3)).interactive() : .regular.interactive())
         }
         .buttonStyle(.plain)
+        .glassEffect(
+            isSelected ? .regular.tint(.accentColor.opacity(0.2)).interactive() : .clear.interactive()
+        )
+        .glassEffectID(isSelected ? "selectedChip" : nil, in: namespace)
     }
 }
 
@@ -34,6 +38,7 @@ struct CategoryChipView: View {
     let category: Category
     let isSelected: Bool
     let onTap: () -> Void
+    let namespace: Namespace.ID
     
     var body: some View {
         Button(action: onTap) {
@@ -47,9 +52,12 @@ struct CategoryChipView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-            .glassEffect(isSelected ? .regular.tint(.accentColor.opacity(0.3)).interactive() : .regular.interactive())
         }
         .buttonStyle(.plain)
+        .glassEffect(
+            isSelected ? .regular.tint(.accentColor.opacity(0.2)).interactive() : .clear.interactive()
+        )
+        .glassEffectID(isSelected ? "selectedChip" : nil, in: namespace)
     }
 }
 
@@ -59,6 +67,7 @@ struct MonthChipView: View {
     let year: Int
     let isSelected: Bool
     let onTap: () -> Void
+    let namespace: Namespace.ID
     
     var body: some View {
         Button(action: onTap) {
@@ -66,9 +75,12 @@ struct MonthChipView: View {
                 .font(.system(size: 16, weight: .medium))
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
-                .glassEffect(isSelected ? .regular.tint(.accentColor.opacity(0.3)).interactive() : .regular.interactive())
         }
         .buttonStyle(.plain)
+        .glassEffect(
+            isSelected ? .regular.tint(.accentColor.opacity(0.2)).interactive() : .clear.interactive()
+        )
+        .glassEffectID(isSelected ? "selectedChip" : nil, in: namespace)
     }
     
     private var monthYearString: String {
@@ -93,6 +105,7 @@ struct ManageSectionChip: View {
     let section: ManageView.ManageSection
     let isSelected: Bool
     let onTap: () -> Void
+    let namespace: Namespace.ID
     
     var body: some View {
         Button(action: onTap) {
@@ -100,9 +113,12 @@ struct ManageSectionChip: View {
                 .font(.system(size: 16, weight: .medium))
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
-                .glassEffect(isSelected ? .regular.tint(.accentColor.opacity(0.3)).interactive() : .regular.interactive())
         }
         .buttonStyle(.plain)
+        .glassEffect(
+            isSelected ? .regular.tint(.accentColor.opacity(0.2)).interactive() : .clear.interactive()
+        )
+        .glassEffectID(isSelected ? "selectedChip" : nil, in: namespace)
     }
 }
 
@@ -111,6 +127,7 @@ struct LiquidGlassChip: View {
     let title: String
     let isSelected: Bool
     let onTap: () -> Void
+    let namespace: Namespace.ID
     
     var body: some View {
         Button(action: onTap) {
@@ -118,9 +135,25 @@ struct LiquidGlassChip: View {
                 .font(.system(size: 16, weight: .medium))
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
-                .glassEffect(isSelected ? .regular.tint(.accentColor.opacity(0.3)).interactive() : .regular.interactive())
         }
         .buttonStyle(.plain)
+        .glassEffect(
+            isSelected ? .regular.tint(.accentColor.opacity(0.2)).interactive() : .clear.interactive()
+        )
+        .glassEffectID(isSelected ? "selectedChip" : nil, in: namespace)
+    }
+}
+
+// MARK: - Glass Container Chip Groups
+
+/// Container for morphing chips with glass effects
+struct ChipGroup<Content: View>: View {
+    @ViewBuilder let content: Content
+    
+    var body: some View {
+        GlassEffectContainer(spacing: 8) {
+            content
+        }
     }
 }
 
@@ -141,13 +174,15 @@ struct ChipScrollContainer<Content: View>: View {
     
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: spacing) {
-                content
-                Spacer(minLength: 0)
+            ChipGroup {
+                HStack(spacing: spacing) {
+                    content
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 0)
+                .padding(.vertical, 4) // Add vertical padding to prevent clipping
+                .scrollTargetLayout()
             }
-            .padding(.horizontal, 0)
-            .padding(.vertical, 4) // Add vertical padding to prevent clipping
-            .scrollTargetLayout()
         }
         .scrollTargetBehavior(.viewAligned)
         .scrollClipDisabled() // Allow content to extend beyond scroll bounds
@@ -168,13 +203,15 @@ struct ChipScrollContainerRTL<Content: View>: View {
     
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: spacing) {
-                Spacer(minLength: 0)
-                content
+            ChipGroup {
+                HStack(spacing: spacing) {
+                    Spacer(minLength: 0)
+                    content
+                }
+                .padding(.horizontal, 0)
+                .padding(.vertical, 4) // Add vertical padding to prevent clipping
+                .scrollTargetLayout()
             }
-            .padding(.horizontal, 0)
-            .padding(.vertical, 4) // Add vertical padding to prevent clipping
-            .scrollTargetLayout()
         }
         .scrollTargetBehavior(.viewAligned)
         .scrollClipDisabled() // Allow content to extend beyond scroll bounds
@@ -189,13 +226,19 @@ struct DoubleRowChipContainer<FirstRowContent: View, SecondRowContent: View>: Vi
     let spacing: CGFloat
     let firstRowContent: FirstRowContent
     let secondRowContent: SecondRowContent?
+    let firstRowNamespace: Namespace.ID
+    let secondRowNamespace: Namespace.ID?
     
     init(
         spacing: CGFloat = 8,
+        firstRowNamespace: Namespace.ID,
+        secondRowNamespace: Namespace.ID? = nil,
         @ViewBuilder firstRow: () -> FirstRowContent,
         @ViewBuilder secondRow: () -> SecondRowContent? = { nil }
     ) {
         self.spacing = spacing
+        self.firstRowNamespace = firstRowNamespace
+        self.secondRowNamespace = secondRowNamespace
         self.firstRowContent = firstRow()
         self.secondRowContent = secondRow()
     }
@@ -203,15 +246,19 @@ struct DoubleRowChipContainer<FirstRowContent: View, SecondRowContent: View>: Vi
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: spacing) {
-                    firstRowContent
-                    Spacer()
+                ChipGroup {
+                    HStack(spacing: spacing) {
+                        firstRowContent
+                        Spacer()
+                    }
                 }
                 
                 if let secondRowContent = secondRowContent {
-                    HStack(spacing: spacing) {
-                        secondRowContent
-                        Spacer()
+                    ChipGroup {
+                        HStack(spacing: spacing) {
+                            secondRowContent
+                            Spacer()
+                        }
                     }
                 }
             }
@@ -245,10 +292,14 @@ struct SingleRowChipScrollRightModifier<ChipContent: View>: ViewModifier {
 struct DoubleRowChipScrollModifier<FirstRowContent: View, SecondRowContent: View>: ViewModifier {
     let firstRowChips: FirstRowContent
     let secondRowChips: SecondRowContent?
+    let firstRowNamespace: Namespace.ID
+    let secondRowNamespace: Namespace.ID?
     
     func body(content: Content) -> some View {
         content.overlay(
             DoubleRowChipContainer(
+                firstRowNamespace: firstRowNamespace,
+                secondRowNamespace: secondRowNamespace,
                 firstRow: { firstRowChips },
                 secondRow: { secondRowChips }
             )
@@ -271,12 +322,16 @@ extension View {
     
     /// Add double row chip scroll behavior
     func doubleRowChipScroll<FirstRowContent: View, SecondRowContent: View>(
+        firstRowNamespace: Namespace.ID,
+        secondRowNamespace: Namespace.ID? = nil,
         @ViewBuilder firstRow: () -> FirstRowContent,
         @ViewBuilder secondRow: () -> SecondRowContent? = { nil }
     ) -> some View {
         self.modifier(DoubleRowChipScrollModifier(
             firstRowChips: firstRow(),
-            secondRowChips: secondRow()
+            secondRowChips: secondRow(),
+            firstRowNamespace: firstRowNamespace,
+            secondRowNamespace: secondRowNamespace
         ))
     }
 }

@@ -77,7 +77,7 @@ struct EmojiTextFieldRepresentable: UIViewRepresentable {
 
         let cancelItem = UIBarButtonItem(title: "Cancel", style: .plain, target: coordinator, action: #selector(Coordinator.cancelTapped))
         let flexible = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
-        let doneItem = UIBarButtonItem(title: "Done", style: .done, target: coordinator, action: #selector(Coordinator.doneTapped))
+        let doneItem = UIBarButtonItem(title: "Done", style: .prominent, target: coordinator, action: #selector(Coordinator.doneTapped))
         toolbar.items = [cancelItem, flexible, doneItem]
 
         return toolbar

@@ -62,18 +62,16 @@ struct SectionContainer<Content: View>: View {
 
 // MARK: - Glass Container (Apple Liquid Glass)
 struct GlassContainer<Content: View>: View {
-    let spacing: CGFloat
     let content: Content
     
-    init(spacing: CGFloat = 20.0, @ViewBuilder content: () -> Content) {
-        self.spacing = spacing
+    init(@ViewBuilder content: () -> Content) {
         self.content = content()
     }
     
     var body: some View {
-        GlassEffectContainer(spacing: spacing) {
-            content
-        }
+        content
+            .padding(20)
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))
     }
 }
 
@@ -103,8 +101,8 @@ extension View {
         self.buttonStyle(AppSmallButtonStyle())
     }
     
-    // Helper for using GlassEffectContainer easily
-    func glassContainer(spacing: CGFloat = 20.0) -> some View {
-        GlassContainer(spacing: spacing) { self }
+    // Helper for using glass effects easily
+    func glassContainer() -> some View {
+        GlassContainer { self }
     }
 }

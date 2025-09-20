@@ -173,7 +173,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1640;
-				LastUpgradeCheck = 1640;
+				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					75C847D12E74CBDC00DFA6D1 = {
 						CreatedOnToolsVersion = 16.4;
@@ -330,6 +330,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				"SWIFT_ACTIVE_COMPILATION_CONDITIONS[arch=*]" = HAS_GLASS_BACKGROUND_EFFECT;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -389,6 +390,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				"SWIFT_ACTIVE_COMPILATION_CONDITIONS[arch=*]" = HAS_GLASS_BACKGROUND_EFFECT;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				TARGETED_DEVICE_FAMILY = "";

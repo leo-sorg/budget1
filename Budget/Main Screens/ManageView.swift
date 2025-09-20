@@ -59,6 +59,10 @@ struct ManageView: View {
     @State private var showPaymentForm = false
     @State private var pickerItem: PhotosPickerItem?
     @State private var showHexInput = false
+    
+    // Namespace for morphing effects
+    @Namespace private var manageSectionNamespace
+    @Namespace private var categoryTypeNamespace
 
     var body: some View {
         VStack(spacing: 0) {
@@ -83,7 +87,8 @@ struct ManageView: View {
                                         // Dismiss keyboard to avoid scroll interference
                                         hideKeyboard()
                                     }
-                                }
+                                },
+                                namespace: manageSectionNamespace
                             )
                         }
                     }
@@ -380,7 +385,8 @@ struct ManageView: View {
                                     onTap: {
                                         newCategoryIsIncome = false
                                         hideKeyboard()
-                                    }
+                                    },
+                                    namespace: categoryTypeNamespace
                                 )
                                 
                                 LiquidGlassChip(
@@ -389,7 +395,8 @@ struct ManageView: View {
                                     onTap: {
                                         newCategoryIsIncome = true
                                         hideKeyboard()
-                                    }
+                                    },
+                                    namespace: categoryTypeNamespace
                                 )
                             }
                         }
@@ -425,17 +432,15 @@ struct ManageView: View {
                         .foregroundColor(.appText.opacity(0.6))
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
-                    GlassEffectContainer(spacing: 8) {
-                        LazyVStack(spacing: 8) {
-                            ForEach(categories, id: \.remoteID) { category in
-                                APICategoryListItem(
-                                    category: category,
-                                    onDelete: {
-                                        // TODO: Implement API delete if needed
-                                        alertMessage = "Deleting from API not yet implemented"
-                                    }
-                                )
-                            }
+                    LazyVStack(spacing: 8) {
+                        ForEach(categories, id: \.remoteID) { category in
+                            APICategoryListItem(
+                                category: category,
+                                onDelete: {
+                                    // TODO: Implement API delete if needed
+                                    alertMessage = "Deleting from API not yet implemented"
+                                }
+                            )
                         }
                     }
                 }
@@ -523,17 +528,15 @@ struct ManageView: View {
                         .foregroundColor(.appText.opacity(0.6))
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
-                    GlassEffectContainer(spacing: 8) {
-                        LazyVStack(spacing: 8) {
-                            ForEach(methods, id: \.remoteID) { method in
-                                APIPaymentMethodListItem(
-                                    paymentMethod: method,
-                                    onDelete: {
-                                        // TODO: Implement API delete if needed
-                                        alertMessage = "Deleting from API not yet implemented"
-                                    }
-                                )
-                            }
+                    LazyVStack(spacing: 8) {
+                        ForEach(methods, id: \.remoteID) { method in
+                            APIPaymentMethodListItem(
+                                paymentMethod: method,
+                                onDelete: {
+                                    // TODO: Implement API delete if needed
+                                    alertMessage = "Deleting from API not yet implemented"
+                                }
+                            )
                         }
                     }
                 }

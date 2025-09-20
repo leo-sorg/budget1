@@ -22,6 +22,10 @@ struct InputView: View {
     
     // Focus state for auto-scroll
     @StateObject private var keyboardScroll = KeyboardScrollCoordinator()
+    
+    // Namespaces for morphing effects
+    @Namespace private var paymentChipNamespace
+    @Namespace private var categoryChipNamespace
 
     // Computed properties to get selected models safely
     private var selectedCategory: Category? {
@@ -92,7 +96,9 @@ struct InputView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notification in
             if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
-                keyboardScroll.keyboardWillShow(height: keyboardFrame.height)
+                // Try to get the window from the notification's object if it's a view
+                let window = (notification.object as? UIView)?.window
+                keyboardScroll.keyboardWillShow(height: keyboardFrame.height, in: window)
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
@@ -198,7 +204,8 @@ struct InputView: View {
                                         selectedMethodID = pm.remoteID
                                     }
                                     dismissKeyboard()
-                                }
+                                },
+                                namespace: paymentChipNamespace
                             )
                         }
                     }
@@ -221,6 +228,7 @@ struct InputView: View {
                 Color.clear
                     .frame(height: categories.count > 1 ? 100 : 50)
                     .doubleRowChipScroll(
+                        firstRowNamespace: categoryChipNamespace,
                         firstRow: {
                             ForEach(Array(stride(from: 0, to: categories.count, by: 2)), id: \.self) { index in
                                 CategoryChipView(
@@ -231,7 +239,8 @@ struct InputView: View {
                                             selectedCategoryID = categories[index].remoteID
                                         }
                                         dismissKeyboard()
-                                    }
+                                    },
+                                    namespace: categoryChipNamespace
                                 )
                             }
                         },
@@ -246,7 +255,8 @@ struct InputView: View {
                                                 selectedCategoryID = categories[index].remoteID
                                             }
                                             dismissKeyboard()
-                                        }
+                                        },
+                                        namespace: categoryChipNamespace
                                     )
                                 }
                             } else {

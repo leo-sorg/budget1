@@ -23,74 +23,77 @@ struct AppListItem<Content: View, TrailingContent: View>: View {
     }
     
     var body: some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .trailing) {
-                // Delete action area revealed on swipe — pure system visuals
-                if onDelete != nil && (offset < 0 || isSwiped) {
-                    HStack {
-                        Spacer()
-                        Button(role: .destructive) {
-                            withAnimation(.easeOut(duration: 0.25)) {
-                                offset = -screenWidth
-                            }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-                                onDelete?()
-                            }
-                        } label: {
-                            Label("Delete", systemImage: "trash.fill")
-                                .labelStyle(.iconOnly)
-                                .font(.system(size: 18, weight: .semibold))
-                                .frame(width: revealWidth)
-                                .frame(maxHeight: .infinity)
-                        }
-                        .buttonStyle(.plain)
-                        .tint(.red)
-                    }
-                    .glassEffect(.regular, in: .rect(cornerRadius: 12))
-                    .transition(.opacity)
-                }
-                
-                // Main content — Liquid glass via Apple's Liquid Glass API
-                HStack(spacing: 12) {
-                    content
+        ZStack(alignment: .trailing) {
+            // Delete action area revealed on swipe — glass system visuals
+            if onDelete != nil && (offset < 0 || isSwiped) {
+                HStack {
                     Spacer()
-                    trailingContent
-                }
-                .foregroundStyle(.primary)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
-                .offset(x: offset)
-                .modifier(SwipeToDeleteModifier(
-                    onDelete: onDelete,
-                    offset: $offset,
-                    isSwiped: $isSwiped,
-                    revealWidth: revealWidth
-                ))
-                .onTapGesture {
-                    if isSwiped {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            offset = 0
-                            isSwiped = false
+                    Button(role: .destructive) {
+                        withAnimation(.easeOut(duration: 0.25)) {
+                            offset = -screenWidth
                         }
-                    }
-                }
-                .accessibilityActions {
-                    if onDelete != nil {
-                        Button("Delete", role: .destructive) {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                             onDelete?()
                         }
+                    } label: {
+                        Label("Delete", systemImage: "trash.fill")
+                            .labelStyle(.iconOnly)
+                            .font(.system(size: 18, weight: .semibold))
+                            .frame(width: revealWidth)
+                            .frame(maxHeight: .infinity)
+                    }
+                    .buttonStyle(.plain)
+                    .tint(.red)
+                }
+                .glassEffect(.regular, in: .rect(cornerRadius: 12))
+                .transition(.opacity)
+            }
+            
+            // Main content — Liquid glass per item
+            HStack(spacing: 12) {
+                content
+                Spacer()
+                trailingContent
+            }
+            .foregroundStyle(.primary)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
+            .offset(x: offset)
+            .modifier(SwipeToDeleteModifier(
+                onDelete: onDelete,
+                offset: $offset,
+                isSwiped: $isSwiped,
+                revealWidth: revealWidth
+            ))
+            .onTapGesture {
+                if isSwiped {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        offset = 0
+                        isSwiped = false
                     }
                 }
             }
-            .onAppear {
-                screenWidth = geometry.size.width
-            }
-            .onChange(of: geometry.size.width) { oldValue, newValue in
-                screenWidth = newValue
+            .accessibilityActions {
+                if onDelete != nil {
+                    Button("Delete", role: .destructive) {
+                        onDelete?()
+                    }
+                }
             }
         }
-        .clipped()
+        .background {
+            // Use GeometryReader just for getting screen width, without constraining layout
+            GeometryReader { geometry in
+                Color.clear
+                    .onAppear {
+                        screenWidth = geometry.size.width
+                    }
+                    .onChange(of: geometry.size.width) { oldValue, newValue in
+                        screenWidth = newValue
+                    }
+            }
+        }
     }
 }
 
@@ -349,13 +352,12 @@ struct AppListSection<Items: RandomAccessCollection, ItemContent: View>: View wh
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
-                    GlassEffectContainer(spacing: 8.0) {
-                        VStack(spacing: 8) {
-                            ForEach(items) { item in
-                                itemContent(item)
-                            }
+                    VStack(spacing: 8) {
+                        ForEach(items) { item in
+                            itemContent(item)
                         }
                     }
+                    .padding(12)
                 }
             }
         }

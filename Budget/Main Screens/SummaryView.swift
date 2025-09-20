@@ -14,6 +14,13 @@ struct SummaryView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
 
+    // Segmented control state
+    @State private var selectedSegment = 0 // 0: History, 1: By Category, 2: By Payment
+    @Namespace private var segmentedControlNamespace
+    
+    // Namespace for month chip morphing
+    @Namespace private var monthChipNamespace
+    
     // Set this to false to use real API, true to use mock data
     private let useMockData = false
 
@@ -39,7 +46,8 @@ struct SummaryView: View {
                                         // Fetch transactions for the new month
                                         fetchTransactionsForSelectedMonth()
                                     }
-                                }
+                                },
+                                namespace: monthChipNamespace
                             )
                             .environment(\.layoutDirection, LayoutDirection.leftToRight) // Reset text direction inside chips
                         }
@@ -60,14 +68,11 @@ struct SummaryView: View {
                         // Totals Section with liquid glass
                         totalsSection
                         
-                        // By Category Section with list component
-                        byCategorySection
+                        // Segmented Control
+                        segmentedControlSection
                         
-                        // By Payment Method Section with list component
-                        byPaymentSection
-                        
-                        // All Transactions Section
-                        allTransactionsSection
+                        // Content based on selected segment
+                        selectedContentSection
                     }
                     
                     // Extra padding at bottom for tab bar
@@ -87,6 +92,84 @@ struct SummaryView: View {
         .onAppear {
             // Fetch transactions for current month when screen appears
             fetchTransactionsForSelectedMonth()
+        }
+    }
+    
+    // MARK: - Segmented Control Section
+    @ViewBuilder private var segmentedControlSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Segmented Control without GlassEffectContainer to avoid double tinting
+            HStack(spacing: 0) {
+                // History Segment
+                Button("History") {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        selectedSegment = 0
+                    }
+                }
+                .font(.system(size: 16, weight: .medium))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background {
+                    if selectedSegment == 0 {
+                        RoundedRectangle(cornerRadius: 18)
+                            .glassEffect(.regular.tint(.accentColor.opacity(0.3)).interactive())
+                            .matchedGeometryEffect(id: "selectedSegment", in: segmentedControlNamespace)
+                    }
+                }
+                
+                // By Category Segment  
+                Button("By Category") {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        selectedSegment = 1
+                    }
+                }
+                .font(.system(size: 16, weight: .medium))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background {
+                    if selectedSegment == 1 {
+                        RoundedRectangle(cornerRadius: 18)
+                            .glassEffect(.regular.tint(.accentColor.opacity(0.3)).interactive())
+                            .matchedGeometryEffect(id: "selectedSegment", in: segmentedControlNamespace)
+                    }
+                }
+                
+                // By Payment Segment
+                Button("By Payment") {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        selectedSegment = 2
+                    }
+                }
+                .font(.system(size: 16, weight: .medium))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background {
+                    if selectedSegment == 2 {
+                        RoundedRectangle(cornerRadius: 18)
+                            .glassEffect(.regular.tint(.accentColor.opacity(0.3)).interactive())
+                            .matchedGeometryEffect(id: "selectedSegment", in: segmentedControlNamespace)
+                    }
+                }
+            }
+            .padding(4)
+            .background {
+                RoundedRectangle(cornerRadius: 22)
+                    .glassEffect(.clear, in: .rect(cornerRadius: 22))
+            }
+        }
+    }
+    
+    // MARK: - Selected Content Section
+    @ViewBuilder private var selectedContentSection: some View {
+        switch selectedSegment {
+        case 0:
+            allTransactionsSection
+        case 1:
+            byCategorySection
+        case 2:
+            byPaymentSection
+        default:
+            allTransactionsSection
         }
     }
     
@@ -458,23 +541,17 @@ struct SummaryView: View {
     
     @ViewBuilder private var byCategorySection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("By category")
-                .font(.headline)
-                .foregroundColor(.appText)
-            
             if byCategory.isEmpty {
                 Text("No data for this month")
                     .foregroundColor(.appText.opacity(0.6))
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else {
-                GlassEffectContainer(spacing: 8) {
-                    VStack(spacing: 8) {
-                        ForEach(byCategoryKeys, id: \.self) { key in
-                            SummaryCategoryItem(
-                                name: key,
-                                amount: byCategory[key] ?? 0
-                            )
-                        }
+                VStack(spacing: 8) {
+                    ForEach(byCategoryKeys, id: \.self) { key in
+                        SummaryCategoryItem(
+                            name: key,
+                            amount: byCategory[key] ?? 0
+                        )
                     }
                 }
             }
@@ -483,23 +560,17 @@ struct SummaryView: View {
     
     @ViewBuilder private var byPaymentSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("By payment method")
-                .font(.headline)
-                .foregroundColor(.appText)
-            
             if byPayment.isEmpty {
                 Text("No data for this month")
                     .foregroundColor(.appText.opacity(0.6))
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else {
-                GlassEffectContainer(spacing: 8) {
-                    VStack(spacing: 8) {
-                        ForEach(byPaymentKeys, id: \.self) { key in
-                            SummaryPaymentItem(
-                                name: key,
-                                amount: byPayment[key] ?? 0
-                            )
-                        }
+                VStack(spacing: 8) {
+                    ForEach(byPaymentKeys, id: \.self) { key in
+                        SummaryPaymentItem(
+                            name: key,
+                            amount: byPayment[key] ?? 0
+                        )
                     }
                 }
             }
@@ -508,10 +579,6 @@ struct SummaryView: View {
     
     @ViewBuilder private var allTransactionsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("All transactions")
-                .font(.headline)
-                .foregroundColor(.appText)
-            
             if apiTransactions.isEmpty {
                 Text("No transactions for this month")
                     .foregroundColor(.appText.opacity(0.6))
@@ -681,31 +748,5 @@ struct SummaryPaymentItem: View {
         f.numberStyle = .currency
         f.locale = Locale(identifier: "pt_BR")
         return f.string(for: NSDecimalNumber(decimal: value)) ?? "R$ 0,00"
-    }
-}
-// MARK: - Glass Effect Container
-
-struct GlassEffectContainer<Content: View>: View {
-    let spacing: CGFloat
-    let content: () -> Content
-    
-    init(spacing: CGFloat = 0, @ViewBuilder content: @escaping () -> Content) {
-        self.spacing = spacing
-        self.content = content
-    }
-    
-    var body: some View {
-        VStack(spacing: spacing) {
-            content()
-        }
-        .padding(16)
-        .background {
-            RoundedRectangle(cornerRadius: 16)
-                .fill(.ultraThinMaterial)
-                .background {
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(.black.opacity(0.1))
-                }
-        }
     }
 }
