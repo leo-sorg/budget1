@@ -42,44 +42,46 @@ struct HomeTabView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.clear)
             
-            // Liquid Glass Tab Bar
+            // PROPER LIQUID GLASS TAB BAR
             LiquidGlassTabBar(selection: $selection)
                 .padding(.horizontal, 20)
-                .padding(.bottom, 34) // Safe area + visual padding
+                .padding(.bottom, 34)
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
-        .tint(.appAccent)
     }
 }
 
-/// Liquid Glass Tab Bar following proper Apple design guidelines
+/// Liquid Glass Tab Bar following Apple documentation
 private struct LiquidGlassTabBar: View {
     @Binding var selection: HomeTabView.Tab
-    @Namespace private var tabTransition
+    @Namespace private var glassNamespace
     
     var body: some View {
-        GlassEffectContainer(spacing: 8.0) {
-            HStack(spacing: 8) {
+        // Use GlassEffectContainer for proper liquid glass behavior
+        GlassEffectContainer(spacing: 20.0) {
+            HStack(spacing: 0) {
                 ForEach(HomeTabView.Tab.allCases, id: \.self) { tab in
-                    TabBarButton(
+                    LiquidGlassTabButton(
                         tab: tab,
                         isSelected: selection == tab,
-                        namespace: tabTransition
+                        namespace: glassNamespace
                     ) {
-                        withAnimation(.easeInOut(duration: 0.3)) {
+                        withAnimation(.bouncy(duration: 0.4)) {
                             selection = tab
                         }
                     }
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 8)
         }
+        // Apply glass effect to the container with proper corner radius
+        .glassEffect(.regular, in: .rect(cornerRadius: 28))
     }
 }
 
-/// Clean tab bar button following Apple's standard design
-private struct TabBarButton: View {
+/// Individual tab button with proper Liquid Glass behavior
+private struct LiquidGlassTabButton: View {
     let tab: HomeTabView.Tab
     let isSelected: Bool
     let namespace: Namespace.ID
@@ -90,26 +92,27 @@ private struct TabBarButton: View {
             VStack(spacing: 4) {
                 Image(systemName: tab.icon)
                     .font(.system(size: 18, weight: .medium))
-                    .symbolRenderingMode(.hierarchical)
+                    .foregroundColor(isSelected ? .white : .white.opacity(0.6))
                 
                 Text(tab.title)
                     .font(.caption2.weight(.medium))
                     .lineLimit(1)
+                    .foregroundColor(isSelected ? .white : .white.opacity(0.6))
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 48)
-            .foregroundStyle(isSelected ? .primary : .secondary)
-            .contentShape(Rectangle())
+            .frame(height: 52)
             .background {
                 if isSelected {
-                    Capsule()
-                        .fill(.thinMaterial)
-                        .matchedGeometryEffect(id: "selectedTab", in: namespace)
+                    // Use separate glass effect for active tab with interactive behavior
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(.clear)
+                        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 20))
+                        .matchedGeometryEffect(id: "activeTab", in: namespace)
                 }
             }
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .animation(.bouncy(duration: 0.4), value: isSelected)
     }
 }
-
-
