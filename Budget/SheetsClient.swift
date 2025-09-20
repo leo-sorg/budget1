@@ -280,7 +280,6 @@ struct APICategory: Codable {
     let isIncome: Bool
     let timestamp: String?
     
-    // Simple camelCase - matches what the fixed script returns
     enum CodingKeys: String, CodingKey {
         case remoteID
         case name
@@ -288,6 +287,37 @@ struct APICategory: Codable {
         case sortIndex
         case isIncome
         case timestamp
+    }
+    
+    // Tolerant decoder: handle emoji as string/number/bool/null; sortIndex as int/string/double
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.remoteID = try c.decode(String.self, forKey: .remoteID)
+        self.name = try c.decode(String.self, forKey: .name)
+        
+        if let s = try? c.decode(String.self, forKey: .emoji) {
+            self.emoji = s
+        } else if let n = try? c.decode(Double.self, forKey: .emoji) {
+            self.emoji = n == 0 ? "" : String(n)
+        } else if let b = try? c.decode(Bool.self, forKey: .emoji) {
+            self.emoji = b ? "true" : ""
+        } else {
+            self.emoji = ""
+        }
+        
+        if let i = try? c.decode(Int.self, forKey: .sortIndex) {
+            self.sortIndex = i
+        } else if let s = try? c.decode(String.self, forKey: .sortIndex),
+                  let i = Int(s.trimmingCharacters(in: .whitespacesAndNewlines)) {
+            self.sortIndex = i
+        } else if let d = try? c.decode(Double.self, forKey: .sortIndex) {
+            self.sortIndex = Int(d)
+        } else {
+            self.sortIndex = 0
+        }
+        
+        self.timestamp = try? c.decode(String.self, forKey: .timestamp)
+        self.isIncome = (try? c.decode(Bool.self, forKey: .isIncome)) ?? false
     }
 }
 
@@ -305,13 +335,47 @@ struct APIPaymentMethod: Codable {
     let sortIndex: Int
     let timestamp: String?
     
-    // Simple camelCase - matches what the fixed script returns
     enum CodingKeys: String, CodingKey {
         case remoteID
         case name
         case emoji
         case sortIndex
         case timestamp
+    }
+    
+    // Custom decoder to tolerate non-string emoji and mixed sortIndex types
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        
+        self.remoteID = try c.decode(String.self, forKey: .remoteID)
+        self.name = try c.decode(String.self, forKey: .name)
+        
+        // emoji can come as a string, number, bool, or null -> coerce to ""
+        if let s = try? c.decode(String.self, forKey: .emoji) {
+            self.emoji = s
+        } else if let n = try? c.decode(Double.self, forKey: .emoji) {
+            // If Sheets gave 0 (or any number), treat as empty string
+            self.emoji = n == 0 ? "" : String(n)
+        } else if let b = try? c.decode(Bool.self, forKey: .emoji) {
+            self.emoji = b ? "true" : ""
+        } else {
+            self.emoji = ""
+        }
+        
+        // sortIndex may be Int or String; default to 0 if missing
+        if let i = try? c.decode(Int.self, forKey: .sortIndex) {
+            self.sortIndex = i
+        } else if let s = try? c.decode(String.self, forKey: .sortIndex),
+                  let i = Int(s.trimmingCharacters(in: .whitespacesAndNewlines)) {
+            self.sortIndex = i
+        } else if let d = try? c.decode(Double.self, forKey: .sortIndex) {
+            self.sortIndex = Int(d)
+        } else {
+            self.sortIndex = 0
+        }
+        
+        // timestamp as optional string; ignore non-strings
+        self.timestamp = (try? c.decode(String.self, forKey: .timestamp))
     }
 }
 

@@ -59,9 +59,10 @@ struct APIDecodingTests {
         #expect(resp.data[0].sortIndex == 1)
     }
 
-    @Test("Category emoji basic case")
-    func categoryEmojiBasic() throws {
-        let json = """
+    @Test("Category emoji basic and tolerant")
+    func categoryEmojiCases() throws {
+        // Valid emoji
+        let json1 = """
         {
             "success": true,
             "message": "ok",
@@ -71,9 +72,22 @@ struct APIDecodingTests {
             ]
         }
         """
-        let resp = try JSONDecoder().decode(APICategoriesResponse.self, from: Data(json.utf8))
-        #expect(resp.data.count == 1)
-        #expect(resp.data[0].emoji == "🍕")
-        #expect(resp.data[0].isIncome == false)
+        let resp1 = try JSONDecoder().decode(APICategoriesResponse.self, from: Data(json1.utf8))
+        #expect(resp1.data.first?.emoji == "🍕")
+
+        // Numeric emoji -> tolerated as ""
+        let json2 = """
+        {
+            "success": true,
+            "message": "ok",
+            "total": 1,
+            "data": [
+                { "remoteID": "cat-2", "name": "Transport", "emoji": 0, "sortIndex": "1", "isIncome": false, "timestamp": null }
+            ]
+        }
+        """
+        let resp2 = try JSONDecoder().decode(APICategoriesResponse.self, from: Data(json2.utf8))
+        #expect(resp2.data.first?.emoji == "")
+        #expect(resp2.data.first?.sortIndex == 1)
     }
 }

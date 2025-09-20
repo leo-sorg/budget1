@@ -989,9 +989,15 @@ struct APICategoryListItem: View {
         AppListItem(
             content: {
                 HStack(spacing: 12) {
-                    // Emoji
-                    Text(category.emoji.isEmpty ? "🏷️" : category.emoji)
-                        .font(.system(size: 20))
+                    // Emoji or neutral tag icon
+                    if isValidEmoji(category.emoji) {
+                        Text(category.emoji)
+                            .font(.system(size: 20))
+                    } else {
+                        Image(systemName: "tag.fill")
+                            .font(.system(size: 18))
+                            .foregroundColor(.white.opacity(0.6))
+                    }
                     
                     // Name
                     Text(category.name)
@@ -1016,8 +1022,8 @@ struct APIPaymentMethodListItem: View {
         AppListItem(
             content: {
                 HStack(spacing: 12) {
-                    // Payment method emoji (fallback to card icon)
-                    if !paymentMethod.emoji.isEmpty {
+                    // Emoji or neutral credit card icon
+                    if isValidEmoji(paymentMethod.emoji) {
                         Text(paymentMethod.emoji)
                             .font(.system(size: 20))
                     } else {
@@ -1038,6 +1044,22 @@ struct APIPaymentMethodListItem: View {
             onDelete: onDelete
         )
     }
+}
+
+// MARK: - Emoji validation helper
+private func isValidEmoji(_ s: String) -> Bool {
+    // Accept a single visible grapheme cluster that is not alphanumeric or punctuation.
+    // This is a pragmatic filter to reject values like "0", "1", "A" that may come from sheets.
+    guard !s.isEmpty else { return false }
+    let chars = Array(s)
+    if chars.count != 1 { return false }
+    if let scalar = s.unicodeScalars.first {
+        // Reject obvious ASCII letters/digits and common punctuation
+        if CharacterSet.alphanumerics.contains(scalar) { return false }
+        if CharacterSet.punctuationCharacters.contains(scalar) { return false }
+        if CharacterSet.whitespacesAndNewlines.contains(scalar) { return false }
+    }
+    return true
 }
 
 // MARK: - Custom Manage Section Chip

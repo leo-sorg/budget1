@@ -99,56 +99,88 @@ private struct SwipeToDeleteModifier: ViewModifier {
     
     func body(content: Content) -> some View {
         if onDelete != nil {
-            content
-                .gesture(
-                    DragGesture(minimumDistance: 20, coordinateSpace: .local)
-                        .onChanged { value in
-                            let horizontalAmount = value.translation.width
-                            let verticalAmount = value.translation.height
-                            
-                            // Much more strict: only handle clearly horizontal gestures
-                            // If vertical movement is more than 30% of horizontal, ignore
-                            if abs(verticalAmount) > abs(horizontalAmount) * 0.3 {
-                                return
-                            }
-                            
-                            // Only handle left swipes for delete
-                            if horizontalAmount < 0 {
-                                offset = max(-100, horizontalAmount)
-                            } else if isSwiped {
-                                offset = min(0, -80 + horizontalAmount)
-                            }
-                        }
-                        .onEnded { value in
-                            let horizontalAmount = value.translation.width
-                            let verticalAmount = value.translation.height
-                            
-                            // Same strict check for vertical gestures
-                            if abs(verticalAmount) > abs(horizontalAmount) * 0.3 {
-                                withAnimation(.spring(response: 0.15, dampingFraction: 0.9)) {
-                                    offset = 0
-                                    isSwiped = false
-                                }
-                                return
-                            }
-                            
-                            // Handle horizontal swipe completion
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                let threshold: CGFloat = -40
-                                if offset < threshold {
-                                    offset = -80
-                                    isSwiped = true
-                                } else {
-                                    offset = 0
-                                    isSwiped = false
+            let drag = DragGesture(minimumDistance: 10, coordinateSpace: .local)
+                .onChanged { value in
+                    // Capture the first event for this drag
+                    if !startedOnThisRow {
+                        startedOnThisRow = true
+                        initialTranslation = value.translation
+                    }
+                    
+                    let dx = value.translation.width
+                    let dy = value.translation.height
+                    
+                    // If we haven't locked yet, decide when to lock:
+                    // - Require some horizontal movement
+                    // - Horizontal must dominate vertical by a factor
+                    if !swipeLocked {
+                        let horizontalDelta = abs(dx - initialTranslation.width)
+                        let verticalDelta = abs(dy - initialTranslation.height)
+                        
+                        // Thresholds for activation
+                        let activationHorizontal: CGFloat = 8
+                        let dominanceRatio: CGFloat = 0.6 // horizontal should be at least ~60% of vertical to consider swipe
+                        
+                        if horizontalDelta > activationHorizontal && horizontalDelta > verticalDelta * dominanceRatio {
+                            swipeLocked = true
+                        } else {
+                            // Not locked yet; if user is mostly vertical, reset to avoid sticky partial offsets
+                            if verticalDelta > horizontalDelta {
+                                withAnimation(.spring(response: 0.2, dampingFraction: 0.9)) {
+                                    if !isSwiped { offset = 0 }
                                 }
                             }
+                            return
                         }
-                )
-                .simultaneousGesture(
-                    // Add a tap gesture to close swipe if tapped
-                    TapGesture()
-                        .onEnded { _ in
+                    }
+                    
+                    // Once locked, we control the gesture even with some vertical drift
+                    // Only support left swipe to reveal delete, and right swipe to close when already open
+                    if dx < 0 {
+                        // Swiping left to open
+                        offset = max(-100, dx)
+                    } else if isSwiped {
+                        // Row is open; allow partial right swipe to close
+                        offset = min(0, -80 + dx)
+                    } else {
+                        // Ignore opening to the right
+                        offset = 0
+                    }
+                }
+                .onEnded { value in
+                    defer {
+                        // Reset per-gesture state
+                        swipeLocked = false
+                        startedOnThisRow = false
+                        initialTranslation = .zero
+                    }
+                    
+                    // If we didn't lock, do nothing special
+                    guard swipeLocked else {
+                        withAnimation(.spring(response: 0.2, dampingFraction: 0.9)) {
+                            if !isSwiped { offset = 0 }
+                        }
+                        return
+                    }
+                    
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        let threshold: CGFloat = -40
+                        if offset < threshold {
+                            offset = -80
+                            isSwiped = true
+                        } else {
+                            offset = 0
+                            isSwiped = false
+                        }
+                    }
+                }
+            
+            // Use highPriorityGesture so this row keeps control once swipeLocked is true
+            return AnyView(
+                content
+                    .highPriorityGesture(drag, including: .all)
+                    .simultaneousGesture(
+                        TapGesture().onEnded {
                             if isSwiped {
                                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                     offset = 0
@@ -156,9 +188,10 @@ private struct SwipeToDeleteModifier: ViewModifier {
                                 }
                             }
                         }
-                )
+                    )
+            )
         } else {
-            content
+            return AnyView(content)
         }
     }
 }
