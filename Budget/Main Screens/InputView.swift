@@ -81,18 +81,12 @@ struct InputView: View {
             .scrollDismissesKeyboard(.interactively)
         }
         .background {
-            // DEBUG: Force blue background to test
             AppAppearance.shared.appBackgroundColor
                 .ignoresSafeArea(.all)
-                .onAppear {
-                    print("🔥 InputView: FORCING BLUE BACKGROUND")
-                }
         }
         .overlay(alignment: .top) { toastOverlay }
         .animation(.default, value: showSavedToast)
         .onAppear {
-            print("🎨 InputView appeared - checking background system")
-            print("🎨 InputView: bgStore.useCustomColor = \(bgStore.useCustomColor)")
             print("🎨 InputView: bgStore.backgroundColor = \(bgStore.backgroundColor)")
             print("🎨 InputView: AppAppearance.appBackgroundColor = \(AppAppearance.shared.appBackgroundColor)")
         }

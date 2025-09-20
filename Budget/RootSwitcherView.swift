@@ -6,13 +6,8 @@ struct RootSwitcherView: View {
 
     var body: some View {
         ZStack {
-            // FORCE BLUE BACKGROUND TO TEST - THIS SHOULD BE VISIBLE
             AppAppearance.shared.appBackgroundColor
                 .ignoresSafeArea(.all)
-                .onAppear {
-                    print("🔥 FORCING BLUE BACKGROUND: \(AppAppearance.shared.appBackgroundColor)")
-                    print("🔥 If this shows white instead of blue, something is overriding colors")
-                }
             
             // Content with splash/main transition
             if showSplash {
@@ -36,24 +31,15 @@ struct RootSwitcherView: View {
     
     @ViewBuilder
     private var backgroundLayer: some View {
-        let _ = print("🔥 RootSwitcher: backgroundLayer rebuilding - useCustomColor: \(bgStore.useCustomColor), backgroundColor: \(bgStore.backgroundColor)")
-        
         Group {
             if bgStore.useCustomColor {
                 bgStore.backgroundColor
                     .ignoresSafeArea(.all)
-                    .onAppear { 
-                        print("🔥 RootSwitcher: SHOWING CUSTOM COLOR: \(bgStore.backgroundColor)")
-                        print("🔥 RootSwitcher: useCustomColor = \(bgStore.useCustomColor)")
-                    }
             } else if let image = bgStore.image {
                 Image(uiImage: image)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .ignoresSafeArea(.all)
-                    .onAppear { 
-                        print("🔥 RootSwitcher: Showing background image")
-                    }
                     .overlay {
                         if bgStore.dim > 0 || bgStore.blur > 0 {
                             Color.black
@@ -63,27 +49,20 @@ struct RootSwitcherView: View {
                         }
                     }
             } else {
-                // THIS IS THE DEFAULT CASE - MAKE SURE IT SHOWS BLUE NOT WHITE
                 ZStack {
                     AppAppearance.shared.appBackgroundColor
-                    // TEMPORARILY REMOVE GRADIENT TO SEE BLUE CLEARLY
-                    // LinearGradient(
-                    //     colors: [
-                    //         Color.white.opacity(0.02),
-                    //         Color.clear,
-                    //         Color.black.opacity(0.02)
-                    //     ],
-                    //     startPoint: .top,
-                    //     endPoint: .bottom
-                    // )
+                    // Subtle gradient overlay
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.02),
+                            Color.clear,
+                            Color.black.opacity(0.02)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
                 }
                 .ignoresSafeArea(.all)
-                .onAppear { 
-                    print("🔥 RootSwitcher: SHOWING DEFAULT APP BACKGROUND: \(AppAppearance.shared.appBackgroundColor)")
-                    print("🔥 RootSwitcher: useCustomColor = \(bgStore.useCustomColor)")
-                    print("🔥 RootSwitcher: backgroundColor = \(bgStore.backgroundColor)")
-                    print("🔥 RootSwitcher: This should be BLUE not white!")
-                }
             }
         }
     }
@@ -96,7 +75,6 @@ struct RootSwitcherView: View {
             
             HomeTabView()
             .onAppear {
-                print("🎨 mainAppView appeared")
                 // Configure tab bar with the current background
                 if bgStore.useCustomColor {
                     TabBarAppearance.configure(with: bgStore.backgroundColor)

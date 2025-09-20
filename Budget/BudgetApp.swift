@@ -7,38 +7,27 @@ struct BudgetApp: App {
 
     init() {
         // Configure general app appearance (everything except TabBar)
-        AppAppearance.configure() // RE-ENABLED TO APPLY BLUE BACKGROUND
+        AppAppearance.configure()
     }
 
     var body: some Scene {
         WindowGroup {
             ZStack {
-                // FORCE BRIGHT MAGENTA BACKGROUND AT THE ROOT LEVEL
                 AppAppearance.shared.appBackgroundColor
                     .ignoresSafeArea(.all)
-                    .onAppear {
-                        print("🔥🔥🔥 ROOT LEVEL BRIGHT MAGENTA BACKGROUND")
-                    }
                 
                 appContent
                     .environmentObject(bgStore)
                     .environmentObject(AppAppearance.shared)
-                    // NO COLOR SCHEME FORCING - let system decide
                     .tint(.appAccent)
             }
             .onReceive(bgStore.objectWillChange) { _ in
-                print("🔥 BudgetApp: bgStore.objectWillChange triggered!")
-                print("🔥 BudgetApp: useCustomColor: \(bgStore.useCustomColor), backgroundColor: \(bgStore.backgroundColor)")
-                
                 // Update tab bar when background changes, but keep general appearance separate
                 if bgStore.useCustomColor {
-                    print("🔥 BudgetApp: Using custom color, updating tab bar")
                     TabBarAppearance.updateForBackgroundChange(bgStore.backgroundColor)
                 } else {
-                    print("🔥 BudgetApp: Using default color, updating tab bar")
                     TabBarAppearance.updateForBackgroundChange(AppAppearance.shared.appBackgroundColor)
                 }
-                print("🔥 BudgetApp: objectWillChange handling completed")
             }
             .onAppear {
                 // Configure tab bar with initial background color and force transparency

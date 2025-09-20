@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Button State Manager
 @MainActor
-final class ButtonStateManager: ObservableObject, Equatable {
+final class ButtonStateManager: ObservableObject, @MainActor Equatable {
     @Published var isLoading = false
     @Published var showSuccess = false
     private let id = UUID()

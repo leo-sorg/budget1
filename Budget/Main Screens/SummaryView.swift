@@ -211,7 +211,7 @@ struct SummaryView: View {
     
     // MARK: - Mock Data Generator
     private func getMockTransactionsForMonth() -> [APITransaction] {
-        let (startDate, endDate) = selectedDateRange
+        let (startDate, _) = selectedDateRange
         let calendar = Calendar.current
         
         // Categories for expenses and income
@@ -377,14 +377,14 @@ struct SummaryView: View {
     
     private var totalIncome: Decimal {
         apiTransactions.reduce(0) { result, transaction in
-            let amount = Decimal(transaction.amount) ?? 0
+            let amount = Decimal(transaction.amount)
             return result + max(amount, 0)
         }
     }
 
     private var totalExpenses: Decimal {
         apiTransactions.reduce(0) { result, transaction in
-            let amount = Decimal(transaction.amount) ?? 0
+            let amount = Decimal(transaction.amount)
             return result + min(amount, 0)
         }
     }
@@ -395,7 +395,7 @@ struct SummaryView: View {
         var dict: [String: Decimal] = [:]
         for transaction in apiTransactions {
             let name = transaction.categoryName.isEmpty ? "Uncategorized" : transaction.categoryName
-            let amount = Decimal(transaction.amount) ?? 0
+            let amount = Decimal(transaction.amount)
             dict[name, default: 0] += amount
         }
         // Sort high → low
@@ -408,7 +408,7 @@ struct SummaryView: View {
         var dict: [String: Decimal] = [:]
         for transaction in apiTransactions {
             let name = transaction.paymentMethod.isEmpty ? "—" : transaction.paymentMethod
-            let amount = Decimal(transaction.amount) ?? 0
+            let amount = Decimal(transaction.amount)
             dict[name, default: 0] += amount
         }
         return dict.sorted { $0.value > $1.value }
