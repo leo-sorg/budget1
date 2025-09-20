@@ -2,6 +2,8 @@ import SwiftUI
 import SwiftData
 
 struct HistoryView: View {
+    @EnvironmentObject private var bgStore: BackgroundImageStore
+    
     var body: some View {
         VStack(spacing: 0) {
             // Header using reusable component
@@ -22,7 +24,6 @@ struct HistoryView: View {
                     .foregroundColor(.white.opacity(0.6))
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.clear)
         }
     }
 }

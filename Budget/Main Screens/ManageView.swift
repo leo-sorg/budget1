@@ -108,8 +108,6 @@ struct ManageView: View {
                 }
                 .padding()
             }
-            .scrollContentBackground(.hidden)
-            .background(Color.clear)
             .refreshable {
                 await refreshCurrentSection()
             }
@@ -572,6 +570,7 @@ struct ManageView: View {
                             color: color,
                             isSelected: store.useCustomColor && store.backgroundColor == color,
                             action: {
+                                print("🔥 ManageView: ColorSquare tapped for color: \(color)")
                                 store.setColor(color)
                             }
                         )
@@ -917,10 +916,13 @@ struct ManageView: View {
     
     private func applyHexColor() {
         let cleanHex = hexColorInput.replacingOccurrences(of: "#", with: "")
-        if let color = Color(hex: cleanHex) {
+        if let color = Color.fromHex(cleanHex) {
+            print("🔥 ManageView: applyHexColor() called with hex: \(hexColorInput), color: \(color)")
             store.setColor(color)
             showHexInput = false
             hexColorInput = ""
+        } else {
+            print("🔥 ManageView: applyHexColor() failed - invalid hex: \(hexColorInput)")
         }
     }
     

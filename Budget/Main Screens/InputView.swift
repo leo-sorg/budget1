@@ -5,12 +5,16 @@ import SwiftData
 @MainActor
 struct InputView: View {
     @Environment(\.modelContext) private var ctx
-    @State private var categories: [Category] = []
-    @State private var paymentMethods: [PaymentMethod] = []
+    @EnvironmentObject private var bgStore: BackgroundImageStore
+    
+    // Use @Query instead of @State to avoid model context issues
+    @Query(sort: \Category.name) private var categories: [Category]
+    @Query(sort: \PaymentMethod.name) private var paymentMethods: [PaymentMethod]
+    
     @State private var amountText = ""
     @State private var date = Date()
-    @State private var selectedCategory: Category?
-    @State private var selectedMethod: PaymentMethod?
+    @State private var selectedCategoryID: String?
+    @State private var selectedMethodID: String?
     @State private var descriptionText = ""
     @State private var showDatePicker = false
     @State private var showSavedToast = false
@@ -18,6 +22,17 @@ struct InputView: View {
     
     // Focus state for auto-scroll
     @StateObject private var keyboardScroll = KeyboardScrollCoordinator()
+
+    // Computed properties to get selected models safely
+    private var selectedCategory: Category? {
+        guard let id = selectedCategoryID else { return nil }
+        return categories.first { $0.remoteID == id }
+    }
+    
+    private var selectedMethod: PaymentMethod? {
+        guard let id = selectedMethodID else { return nil }
+        return paymentMethods.first { $0.remoteID == id }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -63,12 +78,16 @@ struct InputView: View {
                 .padding()
                 .offset(y: keyboardScroll.scrollOffset)
             }
-            .scrollContentBackground(.hidden)
-            .background(Color.clear)
             .scrollDismissesKeyboard(.interactively)
         }
         .overlay(alignment: .top) { toastOverlay }
         .animation(.default, value: showSavedToast)
+        .onAppear {
+            print("🎨 InputView appeared - checking background system")
+            print("🎨 InputView: bgStore.useCustomColor = \(bgStore.useCustomColor)")
+            print("🎨 InputView: bgStore.backgroundColor = \(bgStore.backgroundColor)")
+            print("🎨 InputView: AppAppearance.appBackgroundColor = \(AppAppearance.appBackgroundColor)")
+        }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notification in
             if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
                 keyboardScroll.keyboardWillShow(height: keyboardFrame.height)
@@ -83,13 +102,9 @@ struct InputView: View {
             Text(alertMessage ?? "")
         }
         .task {
-            categories = (try? ctx.fetch(FetchDescriptor<Category>(sortBy: [SortDescriptor(\.name)]))) ?? []
-            paymentMethods = (try? ctx.fetch(FetchDescriptor<PaymentMethod>(sortBy: [SortDescriptor(\.name)]))) ?? []
+            // Seed defaults if needed - @Query will automatically update
             if categories.isEmpty || paymentMethods.isEmpty {
                 seedDefaults()
-                // Reload after seeding defaults
-                categories = (try? ctx.fetch(FetchDescriptor<Category>(sortBy: [SortDescriptor(\.name)]))) ?? []
-                paymentMethods = (try? ctx.fetch(FetchDescriptor<PaymentMethod>(sortBy: [SortDescriptor(\.name)]))) ?? []
             }
         }
         .toolbar {
@@ -166,8 +181,6 @@ struct InputView: View {
             if paymentMethods.isEmpty {
                 Button("Add default payment types") {
                     seedDefaults(paymentsOnly: true)
-                    // Refresh the payment methods after seeding
-                    paymentMethods = (try? ctx.fetch(FetchDescriptor<PaymentMethod>(sortBy: [SortDescriptor(\.name)]))) ?? []
                 }
                 .buttonStyle(AppButtonStyle())
             } else {
@@ -177,10 +190,10 @@ struct InputView: View {
                         ForEach(paymentMethods) { pm in
                             PaymentChipView(
                                 paymentMethod: pm,
-                                isSelected: selectedMethod == pm,
+                                isSelected: selectedMethodID == pm.remoteID,
                                 onTap: {
                                     withAnimation(.easeInOut(duration: 0.2)) {
-                                        selectedMethod = pm
+                                        selectedMethodID = pm.remoteID
                                     }
                                     dismissKeyboard()
                                 }
@@ -200,8 +213,6 @@ struct InputView: View {
             if categories.isEmpty {
                 Button("Add default categories") {
                     seedDefaults(categoriesOnly: true)
-                    // Refresh the categories after seeding
-                    categories = (try? ctx.fetch(FetchDescriptor<Category>(sortBy: [SortDescriptor(\.name)]))) ?? []
                 }
                 .buttonStyle(AppButtonStyle())
             } else {
@@ -212,10 +223,10 @@ struct InputView: View {
                             ForEach(Array(stride(from: 0, to: categories.count, by: 2)), id: \.self) { index in
                                 CategoryChipView(
                                     category: categories[index],
-                                    isSelected: selectedCategory == categories[index],
+                                    isSelected: selectedCategoryID == categories[index].remoteID,
                                     onTap: {
                                         withAnimation(.easeInOut(duration: 0.2)) {
-                                            selectedCategory = categories[index]
+                                            selectedCategoryID = categories[index].remoteID
                                         }
                                         dismissKeyboard()
                                     }
@@ -227,10 +238,10 @@ struct InputView: View {
                                 ForEach(Array(stride(from: 1, to: categories.count, by: 2)), id: \.self) { index in
                                     CategoryChipView(
                                         category: categories[index],
-                                        isSelected: selectedCategory == categories[index],
+                                        isSelected: selectedCategoryID == categories[index].remoteID,
                                         onTap: {
                                             withAnimation(.easeInOut(duration: 0.2)) {
-                                                selectedCategory = categories[index]
+                                                selectedCategoryID = categories[index].remoteID
                                             }
                                             dismissKeyboard()
                                         }
@@ -319,8 +330,8 @@ struct InputView: View {
             amountText = ""
             descriptionText = ""
             date = Date()
-            selectedCategory = nil
-            selectedMethod = nil
+            selectedCategoryID = nil
+            selectedMethodID = nil
             showDatePicker = false
             
             dismissKeyboard()

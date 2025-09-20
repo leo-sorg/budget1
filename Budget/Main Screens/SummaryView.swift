@@ -3,6 +3,7 @@ import SwiftData
 
 struct SummaryView: View {
     @Environment(\.modelContext) private var context
+    @EnvironmentObject private var bgStore: BackgroundImageStore
 
     // Month/Year selection (defaults to current)
     @State private var selectedMonth: Int = Calendar.current.component(.month, from: Date())
@@ -75,7 +76,6 @@ struct SummaryView: View {
                 }
                 .padding()
             }
-            .background(Color.clear)
             .refreshable {
                 await refreshData()
             }
