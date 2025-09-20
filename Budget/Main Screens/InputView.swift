@@ -339,9 +339,9 @@ struct InputView: View {
             Text("Saved ✔︎")
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
                 .foregroundColor(Color.appText)
                 .padding(.top, 60)
+                .glassEffect(.regular, in: .rect(cornerRadius: 8))
                 .transition(.move(edge: .top).combined(with: .opacity))
         }
     }
@@ -520,46 +520,7 @@ struct CalendarView: View {
             }
         }
         .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(.clear)
-                .background(
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(.ultraThinMaterial)
-                        .opacity(0.5)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    Color.white.opacity(0.25),
-                                    Color.white.opacity(0.15),
-                                    Color.white.opacity(0.15)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .opacity(0.6)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(
-                            LinearGradient(
-                                colors: [
-                                    Color.white.opacity(0.6),
-                                    Color.white.opacity(0.2),
-                                    Color.white.opacity(0.4)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 1
-                        )
-                        .opacity(0.7)
-                )
-        )
+        .glassEffect(.regular, in: .rect(cornerRadius: 16))
         .onAppear {
             currentMonth = selectedDate
         }

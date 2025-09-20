@@ -34,88 +34,7 @@ final class ButtonStateManager: ObservableObject, Equatable {
     }
 }
 
-// MARK: - Glass Button Background (Shared by both styles)
-private struct GlassButtonBackground: View {
-    let isPressed: Bool
-    let isLoading: Bool
-    let showSuccess: Bool
-    
-    init(isPressed: Bool) {
-        self.isPressed = isPressed
-        self.isLoading = false
-        self.showSuccess = false
-    }
-    
-    init(isPressed: Bool, isLoading: Bool, showSuccess: Bool) {
-        self.isPressed = isPressed
-        self.isLoading = isLoading
-        self.showSuccess = showSuccess
-    }
-    
-    var body: some View {
-        Capsule()
-            .fill(.clear)
-            .background(
-                Capsule()
-                    .fill(.ultraThinMaterial)
-                    .opacity(0.5)
-            )
-            .overlay(
-                Capsule()
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(isPressed ? 0.35 : 0.25),
-                                Color.white.opacity(isPressed ? 0.25 : 0.15),
-                                Color.white.opacity(isPressed ? 0.25 : 0.15)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .opacity(isPressed ? 1.0 : 0.6)
-            )
-            .overlay(
-                Capsule()
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(isPressed ? 0.7 : 0.6),
-                                Color.white.opacity(isPressed ? 0.3 : 0.2),
-                                Color.white.opacity(isPressed ? 0.5 : 0.4)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 1
-                    )
-                    .opacity(isPressed ? 1.0 : 0.7)
-            )
-            .overlay(
-                // Success overlay (only for main buttons)
-                Group {
-                    if showSuccess {
-                        Capsule()
-                            .fill(
-                                LinearGradient(
-                                    colors: [
-                                        Color.green.opacity(0.4),
-                                        Color.green.opacity(0.2)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .transition(.opacity)
-                    }
-                }
-            )
-            .scaleEffect(isPressed && (isLoading || showSuccess) ? 0.98 : 1.0)
-            .animation(.easeOut(duration: 0.1), value: isPressed)
-    }
-}
-
-// MARK: - Enhanced App Button Style with States
+// MARK: - Enhanced App Button Style with States (System Glass)
 struct AppButtonStyle: ButtonStyle {
     @StateObject private var stateManager = ButtonStateManager()
     
@@ -144,14 +63,11 @@ struct AppButtonStyle: ButtonStyle {
                     .transition(.opacity.combined(with: .scale))
             }
         }
-        .background(
-            GlassButtonBackground(
-                isPressed: configuration.isPressed,
-                isLoading: stateManager.isLoading,
-                showSuccess: stateManager.showSuccess
-            )
-        )
-        .buttonStyle(PlainButtonStyle())
+        .padding(.horizontal, 16)
+        .padding(.vertical, 16)
+        .frame(maxWidth: .infinity)
+        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 16))
+        .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
         .allowsHitTesting(!stateManager.isLoading)
         .animation(.easeInOut(duration: 0.2), value: stateManager.isLoading)
         .animation(.easeInOut(duration: 0.2), value: stateManager.showSuccess)
@@ -159,7 +75,7 @@ struct AppButtonStyle: ButtonStyle {
     }
 }
 
-// MARK: - Small Button Style - Same as original, no changes
+// MARK: - Small Button Style - System Glass
 struct AppSmallButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -167,8 +83,8 @@ struct AppSmallButtonStyle: ButtonStyle {
             .foregroundColor(.white)
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
-            .background(GlassButtonBackground(isPressed: configuration.isPressed))
-            .buttonStyle(PlainButtonStyle())
+            .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
     }
 }
 

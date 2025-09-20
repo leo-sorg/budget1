@@ -1,8 +1,10 @@
 import SwiftUI
 import SwiftData
 import PhotosUI
-import Foundation  // Add this
-import UIKit 
+import Foundation
+#if canImport(UIKit)
+import UIKit
+#endif
 
 @MainActor
 struct ManageView: View {
@@ -150,7 +152,6 @@ struct ManageView: View {
         case .payments:
             fetchPaymentMethods()
         case .background:
-            // Background section doesn't need API data
             break
         }
     }
@@ -163,7 +164,6 @@ struct ManageView: View {
         case .payments:
             await refreshPaymentMethods()
         case .background:
-            // Background section doesn't need refresh
             break
         }
     }
@@ -377,38 +377,30 @@ struct ManageView: View {
                             AppEmojiField(text: $newCategoryEmoji, placeholder: "e.g. 🍕")
                         }
                         
-                        // Type selector
+                        // Type selector using new Liquid Glass chips
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Type")
                                 .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.white.opacity(0.6))
+                                .foregroundStyle(.secondary)
                             
                             HStack(spacing: 12) {
-                                Button(action: {
-                                    newCategoryIsIncome = false
-                                    hideKeyboard()
-                                }) {
-                                    Text("Expense")
-                                        .font(.system(size: 16, weight: .medium))
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 24)
-                                        .padding(.vertical, 12)
-                                }
-                                .background(GlassChipBackground(isSelected: !newCategoryIsIncome))
-                                .buttonStyle(PlainButtonStyle())
+                                LiquidGlassChip(
+                                    title: "Expense",
+                                    isSelected: !newCategoryIsIncome,
+                                    onTap: {
+                                        newCategoryIsIncome = false
+                                        hideKeyboard()
+                                    }
+                                )
                                 
-                                Button(action: {
-                                    newCategoryIsIncome = true
-                                    hideKeyboard()
-                                }) {
-                                    Text("Income")
-                                        .font(.system(size: 16, weight: .medium))
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 24)
-                                        .padding(.vertical, 12)
-                                }
-                                .background(GlassChipBackground(isSelected: newCategoryIsIncome))
-                                .buttonStyle(PlainButtonStyle())
+                                LiquidGlassChip(
+                                    title: "Income",
+                                    isSelected: newCategoryIsIncome,
+                                    onTap: {
+                                        newCategoryIsIncome = true
+                                        hideKeyboard()
+                                    }
+                                )
                             }
                         }
                         
@@ -424,7 +416,7 @@ struct ManageView: View {
                             .fill(Color.white.opacity(0.05))
                     )
                 }
-            }
+            } // <-- this was the line with a stray ']' before; now fixed
             
             // Category list with loading states
             VStack(alignment: .leading, spacing: 16) {
@@ -443,16 +435,17 @@ struct ManageView: View {
                         .foregroundColor(.appText.opacity(0.6))
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
-                    LazyVStack(spacing: 8) {
-                        ForEach(categories, id: \.remoteID) { category in
-                            APICategoryListItem(
-                                category: category,
-                                onDelete: {
-                                    // TODO: Implement API delete if needed
-                                    // For now, just show that deletion is not available
-                                    alertMessage = "Deleting from API not yet implemented"
-                                }
-                            )
+                    GlassEffectContainer(spacing: 8) {
+                        LazyVStack(spacing: 8) {
+                            ForEach(categories, id: \.remoteID) { category in
+                                APICategoryListItem(
+                                    category: category,
+                                    onDelete: {
+                                        // TODO: Implement API delete if needed
+                                        alertMessage = "Deleting from API not yet implemented"
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -540,16 +533,17 @@ struct ManageView: View {
                         .foregroundColor(.appText.opacity(0.6))
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
-                    LazyVStack(spacing: 8) {
-                        ForEach(methods, id: \.remoteID) { method in
-                            APIPaymentMethodListItem(
-                                paymentMethod: method,
-                                onDelete: {
-                                    // TODO: Implement API delete if needed
-                                    // For now, just show that deletion is not available
-                                    alertMessage = "Deleting from API not yet implemented"
-                                }
-                            )
+                    GlassEffectContainer(spacing: 8) {
+                        LazyVStack(spacing: 8) {
+                            ForEach(methods, id: \.remoteID) { method in
+                                APIPaymentMethodListItem(
+                                    paymentMethod: method,
+                                    onDelete: {
+                                        // TODO: Implement API delete if needed
+                                        alertMessage = "Deleting from API not yet implemented"
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -572,7 +566,7 @@ struct ManageView: View {
                 
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 4), spacing: 10) {
                     // Show the 11 preset colors
-                    ForEach(Array(presetColors.enumerated()), id: \.offset) { index, colorTuple in
+                    ForEach(Array(presetColors.enumerated()), id: \.offset) { _, colorTuple in
                         let (color, _) = colorTuple
                         ColorSquare(
                             color: color,
@@ -742,24 +736,14 @@ struct ManageView: View {
         }
 
         if useMockData {
-            // Mock success for testing
             await mockAddDelay()
-            
-            // Clear form fields
             self.newCategory = ""
             self.newCategoryEmoji = ""
             self.newCategoryIsIncome = false
-            
-            // Wait for success animation to show before collapsing
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                withAnimation {
-                    self.showCategoryForm = false
-                }
+                withAnimation { self.showCategoryForm = false }
             }
-            
-            // Refresh categories from mock
             self.categories = self.getMockCategories()
-            
             return true
         } else {
             return await performRealAddCategory(name: name, emoji: emoji)
@@ -773,30 +757,19 @@ struct ManageView: View {
         let emoji = trimmed(newPaymentEmoji)
         guard !name.isEmpty else { return false }
 
-        // Check if payment method already exists
         if methods.contains(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) {
             alertMessage = "A payment method named \"\(name)\" already exists."
             return false
         }
 
         if useMockData {
-            // Mock success for testing
             await mockAddDelay()
-            
-            // Clear form fields
             self.newPayment = ""
             self.newPaymentEmoji = ""
-            
-            // Wait for success animation to show before collapsing
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                withAnimation {
-                    self.showPaymentForm = false
-                }
+                withAnimation { self.showPaymentForm = false }
             }
-            
-            // Refresh payment methods from mock
             self.methods = self.getMockPaymentMethods()
-            
             return true
         } else {
             return await performRealAddPayment(name: name, emoji: emoji)
@@ -809,7 +782,6 @@ struct ManageView: View {
         let next = (categories.map { $0.sortIndex }.max() ?? -1) + 1
         let remoteID = UUID().uuidString
 
-        // Post to sheets
         return await withCheckedContinuation { continuation in
             SHEETS.postCategory(
                 remoteID: remoteID,
@@ -820,21 +792,13 @@ struct ManageView: View {
             ) { response in
                 DispatchQueue.main.async {
                     if response.status == 200 {
-                        // Clear form fields
                         self.newCategory = ""
                         self.newCategoryEmoji = ""
                         self.newCategoryIsIncome = false
-                        
-                        // Wait for success animation to show before collapsing
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                            withAnimation {
-                                self.showCategoryForm = false
-                            }
+                            withAnimation { self.showCategoryForm = false }
                         }
-                        
-                        // Refresh categories from API
                         self.fetchRealAPICategories()
-                        
                         continuation.resume(returning: true)
                     } else {
                         self.alertMessage = "Could not save category: \(response.body)"
@@ -850,7 +814,6 @@ struct ManageView: View {
         let next = (methods.map { $0.sortIndex }.max() ?? -1) + 1
         let remoteID = UUID().uuidString
 
-        // Post to sheets
         return await withCheckedContinuation { continuation in
             SHEETS.postPayment(
                 remoteID: remoteID,
@@ -860,20 +823,12 @@ struct ManageView: View {
             ) { response in
                 DispatchQueue.main.async {
                     if response.status == 200 {
-                        // Clear form fields
                         self.newPayment = ""
                         self.newPaymentEmoji = ""
-                        
-                        // Wait for success animation to show before collapsing
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                            withAnimation {
-                                self.showPaymentForm = false
-                            }
+                            withAnimation { self.showPaymentForm = false }
                         }
-                        
-                        // Refresh payment methods from API
                         self.fetchRealAPIPaymentMethods()
-                        
                         continuation.resume(returning: true)
                     } else {
                         self.alertMessage = "Could not save payment method: \(response.body)"
@@ -886,7 +841,6 @@ struct ManageView: View {
     
     // MARK: - Mock Data Functions
     private func getMockCategories() -> [APICategory] {
-        // Use simple JSON decoding to create mock data
         let mockJSON = """
         [
             {
@@ -928,18 +882,14 @@ struct ManageView: View {
               let categories = try? JSONDecoder().decode([APICategory].self, from: data) else {
             return []
         }
-        
         return categories
     }
     
     private func getMockPaymentMethods() -> [APIPaymentMethod] {
-        // For now, return empty array since APIPaymentMethod has complex decoding
-        // This can be implemented later if needed
         return []
     }
     
     private func mockAddDelay() async {
-        // Simulate API call delay
         try? await Task.sleep(nanoseconds: 800_000_000) // 0.8 seconds
     }
 
@@ -975,7 +925,9 @@ struct ManageView: View {
     }
     
     private func hideKeyboard() {
+        #if canImport(UIKit)
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        #endif
     }
 }
 
@@ -1048,38 +1000,15 @@ struct APIPaymentMethodListItem: View {
 
 // MARK: - Emoji validation helper
 private func isValidEmoji(_ s: String) -> Bool {
-    // Accept a single visible grapheme cluster that is not alphanumeric or punctuation.
-    // This is a pragmatic filter to reject values like "0", "1", "A" that may come from sheets.
     guard !s.isEmpty else { return false }
     let chars = Array(s)
     if chars.count != 1 { return false }
     if let scalar = s.unicodeScalars.first {
-        // Reject obvious ASCII letters/digits and common punctuation
         if CharacterSet.alphanumerics.contains(scalar) { return false }
         if CharacterSet.punctuationCharacters.contains(scalar) { return false }
         if CharacterSet.whitespacesAndNewlines.contains(scalar) { return false }
     }
     return true
-}
-
-// MARK: - Custom Manage Section Chip
-struct ManageSectionChip: View {
-    let section: ManageView.ManageSection
-    let isSelected: Bool
-    let onTap: () -> Void
-    
-    var body: some View {
-        Button(action: onTap) {
-            Text(section.rawValue)
-                .font(.system(size: 16, weight: .medium))
-                .foregroundColor(.white)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 12)
-        }
-        // Using the public GlassChipBackground from ChipScrollStyles.swift
-        .background(GlassChipBackground(isSelected: isSelected))
-        .buttonStyle(PlainButtonStyle())
-    }
 }
 
 // MARK: - Custom Color Square Component
@@ -1104,7 +1033,8 @@ struct ColorSquare: View {
     }
 }
 
-// UIKit-based color view to bypass SwiftUI rendering issues
+// UIKit-based color view to bypass SwiftUI rendering issues (with fallback)
+#if canImport(UIKit)
 struct ColorBoxView: UIViewRepresentable {
     let color: Color
     
@@ -1119,6 +1049,14 @@ struct ColorBoxView: UIViewRepresentable {
         uiView.backgroundColor = UIColor(color)
     }
 }
+#else
+struct ColorBoxView: View {
+    let color: Color
+    var body: some View {
+        RoundedRectangle(cornerRadius: 4).fill(color)
+    }
+}
+#endif
 
 // MARK: - Color Extension for Hex Support
 extension Color {

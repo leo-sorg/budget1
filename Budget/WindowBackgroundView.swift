@@ -1,40 +1,50 @@
 import SwiftUI
 
-// MARK: - Default Background Color
-extension Color {
-    // CHANGE THIS COLOR TO SET THE DEFAULT BACKGROUND FOR THE ENTIRE APP
-    static let appDefaultBackground = Color(red: 0x22/255, green: 0x22/255, blue: 0x22/255) // #222222 - Dark grey
-}
-
 struct WindowBackgroundView: View {
     @EnvironmentObject private var store: BackgroundImageStore
 
     var body: some View {
         ZStack {
-            // Show either custom color or default background
-            if store.useCustomColor {
-                store.backgroundColor
-                    .ignoresSafeArea(.all)
-            } else if store.image == nil {
-                Color.appDefaultBackground
-                    .ignoresSafeArea(.all)
-            }
+            // Background color layer
+            backgroundColorLayer
             
-            // Show image on top if available
-            if let ui = store.image {
-                GeometryReader { proxy in
-                    Image(uiImage: ui)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: proxy.size.width, height: proxy.size.height)
-                        .clipped()
-                        .overlay(Color.black.opacity(store.dim))
-                        .blur(radius: store.blur)
-                }
-            }
+            // Image layer (if available)
+            backgroundImageLayer
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
         .ignoresSafeArea(.all)
+    }
+    
+    @ViewBuilder
+    private var backgroundColorLayer: some View {
+        if store.useCustomColor {
+            store.backgroundColor
+                .ignoresSafeArea(.all)
+        } else if store.image == nil {
+            Color.appBackground
+                .ignoresSafeArea(.all)
+        }
+    }
+    
+    @ViewBuilder
+    private var backgroundImageLayer: some View {
+        if let uiImage = store.image {
+            GeometryReader { geometry in
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .clipped()
+                    .overlay(overlayEffects)
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var overlayEffects: some View {
+        Color.black
+            .opacity(store.dim)
+            .blur(radius: store.blur)
     }
 }

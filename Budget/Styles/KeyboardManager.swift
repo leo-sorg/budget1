@@ -37,7 +37,7 @@ struct EmojiTextFieldRepresentable: UIViewRepresentable {
         textField.spellCheckingType = .no
         textField.returnKeyType = .done
         textField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        textField.setContentHuggingPriority(.defaultHigh, for: .vertical) // Important: don't expand vertically
+        textField.setContentHuggingPriority(.defaultHigh, for: .vertical)
         textField.addTarget(context.coordinator, action: #selector(Coordinator.textDidChange(_:)), for: .editingChanged)
         textField.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 4, height: 0))
         textField.leftViewMode = .always
@@ -138,51 +138,14 @@ struct EmojiTextFieldRepresentable: UIViewRepresentable {
     }
 }
 
-// MARK: - KEYBOARD SYSTEM WITH NO TOOLBARS (GLOBAL TOOLBAR WILL BE ADDED ELSEWHERE)
-
-// MARK: - Shared Glass Background
+// MARK: - Shared Glass Background (System Glass)
 struct GlassBackground: View {
     let isFocused: Bool
     
     var body: some View {
-        RoundedRectangle(cornerRadius: 12)
+        RoundedRectangle(cornerRadius: 12, style: .continuous)
             .fill(.clear)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(.ultraThinMaterial)
-                    .opacity(0.5)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(isFocused ? 0.35 : 0.25),
-                                Color.white.opacity(isFocused ? 0.25 : 0.15),
-                                Color.white.opacity(isFocused ? 0.25 : 0.15)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .opacity(isFocused ? 1.0 : 0.6)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(isFocused ? 0.7 : 0.6),
-                                Color.white.opacity(isFocused ? 0.3 : 0.2),
-                                Color.white.opacity(isFocused ? 0.5 : 0.4)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 1
-                    )
-                    .opacity(isFocused ? 1.0 : 0.7)
-            )
+            .glassEffect(isFocused ? .regular.interactive() : .regular, in: .rect(cornerRadius: 12))
     }
 }
 
@@ -217,7 +180,6 @@ struct AppCurrencyField: View {
                 onFocusChange?(newValue)
             }
             .onAppear { displayText = text }
-            // NO TOOLBAR HERE
     }
     
     private func formatCurrency(_ value: String) {
@@ -264,7 +226,6 @@ struct AppTextField: View {
             .onChange(of: isFocused) { _, newValue in
                 onFocusChange?(newValue)
             }
-            // NO TOOLBAR HERE
     }
 }
 
@@ -284,7 +245,7 @@ struct AppEmojiField: View {
     var body: some View {
         EmojiTextFieldRepresentable(text: $text, placeholder: placeholder, isFirstResponder: $isFocused)
             .focused($isFocused)
-            .frame(height: 20) // Fixed intrinsic height for the text field
+            .frame(height: 20)
             .frame(maxWidth: .infinity)
             .onChange(of: text) { _, newValue in
                 if newValue.count > 10 {
@@ -296,7 +257,6 @@ struct AppEmojiField: View {
             }
             .padding(12)
             .background(GlassBackground(isFocused: isFocused))
-            // NO TOOLBAR HERE
     }
 }
 

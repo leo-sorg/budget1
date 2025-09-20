@@ -1,11 +1,9 @@
-import Testing
+import XCTest
 @testable import Budget
 
-@Suite("API model decoding tolerance")
-struct APIDecodingTests {
+final class APIDecodingTests: XCTestCase {
 
-    @Test("Payment method emoji as empty string")
-    func paymentEmojiEmptyString() throws {
+    func testPaymentEmojiEmptyString() throws {
         let json = """
         {
             "success": true,
@@ -17,13 +15,12 @@ struct APIDecodingTests {
         }
         """
         let resp = try JSONDecoder().decode(APIPaymentMethodsResponse.self, from: Data(json.utf8))
-        #expect(resp.data.count == 1)
-        #expect(resp.data[0].emoji == "")
-        #expect(resp.data[0].sortIndex == 0)
+        XCTAssertEqual(resp.data.count, 1)
+        XCTAssertEqual(resp.data[0].emoji, "")
+        XCTAssertEqual(resp.data[0].sortIndex, 0)
     }
 
-    @Test("Payment method emoji as number 0")
-    func paymentEmojiNumberZero() throws {
+    func testPaymentEmojiNumberZero() throws {
         let json = """
         {
             "success": true,
@@ -35,14 +32,12 @@ struct APIDecodingTests {
         }
         """
         let resp = try JSONDecoder().decode(APIPaymentMethodsResponse.self, from: Data(json.utf8))
-        #expect(resp.data.count == 1)
-        // Our tolerant decoder converts numeric emoji to ""
-        #expect(resp.data[0].emoji == "")
-        #expect(resp.data[0].sortIndex == 2)
+        XCTAssertEqual(resp.data.count, 1)
+        XCTAssertEqual(resp.data[0].emoji, "")
+        XCTAssertEqual(resp.data[0].sortIndex, 2)
     }
 
-    @Test("Payment method emoji as real emoji")
-    func paymentEmojiValid() throws {
+    func testPaymentEmojiValid() throws {
         let json = """
         {
             "success": true,
@@ -54,13 +49,12 @@ struct APIDecodingTests {
         }
         """
         let resp = try JSONDecoder().decode(APIPaymentMethodsResponse.self, from: Data(json.utf8))
-        #expect(resp.data.count == 1)
-        #expect(resp.data[0].emoji == "💵")
-        #expect(resp.data[0].sortIndex == 1)
+        XCTAssertEqual(resp.data.count, 1)
+        XCTAssertEqual(resp.data[0].emoji, "💵")
+        XCTAssertEqual(resp.data[0].sortIndex, 1)
     }
 
-    @Test("Category emoji basic and tolerant")
-    func categoryEmojiCases() throws {
+    func testCategoryEmojiCases() throws {
         // Valid emoji
         let json1 = """
         {
@@ -73,7 +67,7 @@ struct APIDecodingTests {
         }
         """
         let resp1 = try JSONDecoder().decode(APICategoriesResponse.self, from: Data(json1.utf8))
-        #expect(resp1.data.first?.emoji == "🍕")
+        XCTAssertEqual(resp1.data.first?.emoji, "🍕")
 
         // Numeric emoji -> tolerated as ""
         let json2 = """
@@ -87,7 +81,7 @@ struct APIDecodingTests {
         }
         """
         let resp2 = try JSONDecoder().decode(APICategoriesResponse.self, from: Data(json2.utf8))
-        #expect(resp2.data.first?.emoji == "")
-        #expect(resp2.data.first?.sortIndex == 1)
+        XCTAssertEqual(resp2.data.first?.emoji, "")
+        XCTAssertEqual(resp2.data.first?.sortIndex, 1)
     }
 }

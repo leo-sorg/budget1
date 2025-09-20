@@ -5,7 +5,7 @@ final class BackgroundImageStore: ObservableObject {
     @Published var image: UIImage? = nil
     @Published var blur: CGFloat = 0
     @Published var dim: Double = 0
-    @Published var backgroundColor: Color = Color.appDefaultBackground
+    @Published var backgroundColor: Color = Color.appBackground
     @Published var useCustomColor: Bool = false
 
     private let fileURL: URL = {
@@ -51,7 +51,7 @@ final class BackgroundImageStore: ObservableObject {
     func resetToDefault() {
         image = nil
         useCustomColor = false
-        backgroundColor = Color.appDefaultBackground
+        backgroundColor = Color.appBackground
         try? FileManager.default.removeItem(at: fileURL)
         try? FileManager.default.removeItem(at: colorFileURL)
         

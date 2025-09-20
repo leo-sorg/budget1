@@ -19,14 +19,14 @@ struct SummaryView: View {
     var body: some View {
         VStack(spacing: 0) {
             // Header using reusable component
-            AppHeader(title: "SUMMARY")
+            AppHeader(title: "RADIO")
             
             // Month navigation chips (right-aligned, newest first)
             VStack(alignment: .leading, spacing: 12) {
                 Color.clear
                     .frame(height: 50)
                     .singleRowChipScrollRight {
-                        ForEach(Array(monthsArray.enumerated()), id: \.offset) { index, monthData in
+                        ForEach(Array(monthsArray.enumerated()), id: \.element.month) { index, monthData in
                             MonthChipView(
                                 month: monthData.month,
                                 year: monthData.year,
@@ -40,7 +40,7 @@ struct SummaryView: View {
                                     }
                                 }
                             )
-                            .environment(\.layoutDirection, .leftToRight) // Reset text direction inside chips
+                            .environment(\.layoutDirection, LayoutDirection.leftToRight) // Reset text direction inside chips
                         }
                     }
             }
@@ -469,12 +469,14 @@ struct SummaryView: View {
                     .foregroundColor(.appText.opacity(0.6))
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else {
-                VStack(spacing: 8) {
-                    ForEach(byCategoryKeys, id: \.self) { key in
-                        SummaryCategoryItem(
-                            name: key,
-                            amount: byCategory[key] ?? 0
-                        )
+                GlassEffectContainer(spacing: 8) {
+                    VStack(spacing: 8) {
+                        ForEach(byCategoryKeys, id: \.self) { key in
+                            SummaryCategoryItem(
+                                name: key,
+                                amount: byCategory[key] ?? 0
+                            )
+                        }
                     }
                 }
             }
@@ -492,12 +494,14 @@ struct SummaryView: View {
                     .foregroundColor(.appText.opacity(0.6))
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else {
-                VStack(spacing: 8) {
-                    ForEach(byPaymentKeys, id: \.self) { key in
-                        SummaryPaymentItem(
-                            name: key,
-                            amount: byPayment[key] ?? 0
-                        )
+                GlassEffectContainer(spacing: 8) {
+                    VStack(spacing: 8) {
+                        ForEach(byPaymentKeys, id: \.self) { key in
+                            SummaryPaymentItem(
+                                name: key,
+                                amount: byPayment[key] ?? 0
+                            )
+                        }
                     }
                 }
             }
@@ -618,43 +622,6 @@ struct APITransactionListItem: View {
         f.numberStyle = .currency
         f.locale = Locale(identifier: "pt_BR")
         return f.string(for: NSDecimalNumber(decimal: value)) ?? "R$ 0,00"
-    }
-}
-
-// MARK: - Month Chip Component with Glass Background
-
-struct MonthChipView: View {
-    let month: Int
-    let year: Int
-    let isSelected: Bool
-    let onTap: () -> Void
-    
-    var body: some View {
-        Button(action: onTap) {
-            Text(monthYearString)
-                .font(.system(size: 16, weight: .medium))
-                .foregroundColor(.white)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 12)
-        }
-        // Using the public GlassChipBackground from ChipScrollStyles.swift
-        .background(GlassChipBackground(isSelected: isSelected))
-        .buttonStyle(PlainButtonStyle())
-    }
-    
-    private var monthYearString: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM yyyy"
-        
-        var components = DateComponents()
-        components.month = month
-        components.year = year
-        components.day = 1
-        
-        if let date = Calendar.current.date(from: components) {
-            return formatter.string(from: date)
-        }
-        return "\(month)/\(year)"
     }
 }
 
