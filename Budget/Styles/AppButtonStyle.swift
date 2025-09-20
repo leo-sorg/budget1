@@ -34,7 +34,7 @@ final class ButtonStateManager: ObservableObject, Equatable {
     }
 }
 
-// MARK: - Enhanced App Button Style with States (System Glass)
+// MARK: - Enhanced App Button Style with Liquid Glass
 struct AppButtonStyle: ButtonStyle {
     @StateObject private var stateManager = ButtonStateManager()
     
@@ -66,16 +66,17 @@ struct AppButtonStyle: ButtonStyle {
         .padding(.horizontal, 16)
         .padding(.vertical, 16)
         .frame(maxWidth: .infinity)
-        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 16))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
         .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
         .allowsHitTesting(!stateManager.isLoading)
         .animation(.easeInOut(duration: 0.2), value: stateManager.isLoading)
         .animation(.easeInOut(duration: 0.2), value: stateManager.showSuccess)
+        .animation(.easeInOut(duration: 0.2), value: configuration.isPressed)
         .preference(key: ButtonStatePreferenceKey.self, value: stateManager)
     }
 }
 
-// MARK: - Small Button Style - System Glass
+// MARK: - Small Button Style with Glass Effect
 struct AppSmallButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -83,8 +84,70 @@ struct AppSmallButtonStyle: ButtonStyle {
             .foregroundColor(.white)
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
-            .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+    }
+}
+
+// MARK: - Glass Button Style (Custom implementation)
+struct GlassButtonStyle: ButtonStyle {
+    let isProminent: Bool
+    
+    init(isProminent: Bool = false) {
+        self.isProminent = isProminent
+    }
+    
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 16, weight: .semibold))
+            .foregroundColor(.white)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            .background(
+                isProminent ? .thickMaterial : .ultraThinMaterial,
+                in: RoundedRectangle(cornerRadius: 12)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(.white.opacity(0.1), lineWidth: 1)
+            )
+            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
+            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+    }
+}
+
+// MARK: - Glass Button Style Extensions
+extension ButtonStyle where Self == GlassButtonStyle {
+    static var glass: GlassButtonStyle { 
+        GlassButtonStyle(isProminent: false) 
+    }
+    
+    static var glassProminent: GlassButtonStyle { 
+        GlassButtonStyle(isProminent: true) 
+    }
+}
+
+// MARK: - Custom Glass Container for Multiple Buttons
+struct GlassButtonContainer<Content: View>: View {
+    let spacing: CGFloat
+    let content: Content
+    
+    init(spacing: CGFloat = 20, @ViewBuilder content: () -> Content) {
+        self.spacing = spacing
+        self.content = content()
+    }
+    
+    var body: some View {
+        VStack(spacing: spacing) {
+            content
+        }
+        .padding(20)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(.white.opacity(0.1), lineWidth: 1)
+        )
     }
 }
 
@@ -97,7 +160,7 @@ struct ButtonStatePreferenceKey: PreferenceKey {
     }
 }
 
-// MARK: - Enhanced Button View Wrapper (For main buttons only)
+// MARK: - Enhanced Button View Wrapper
 struct EnhancedButton: View {
     let title: String
     let action: () async -> Bool // Returns true if successful
@@ -108,20 +171,29 @@ struct EnhancedButton: View {
             Task {
                 guard let stateManager = stateManager else { return }
                 
-                // Start loading
+                // Start loading with haptic feedback
                 await MainActor.run {
                     stateManager.startLoading()
+                    // Light haptic feedback when starting
+                    let impact = UIImpactFeedbackGenerator(style: .light)
+                    impact.impactOccurred()
                 }
                 
                 // Perform action
                 let success = await action()
                 
-                // Show result
+                // Show result with appropriate haptic feedback
                 await MainActor.run {
                     if success {
                         stateManager.showSuccessAndReset()
+                        // Success haptic feedback
+                        let notification = UINotificationFeedbackGenerator()
+                        notification.notificationOccurred(.success)
                     } else {
                         stateManager.reset()
+                        // Error haptic feedback
+                        let notification = UINotificationFeedbackGenerator()
+                        notification.notificationOccurred(.error)
                     }
                 }
             }
@@ -133,7 +205,27 @@ struct EnhancedButton: View {
     }
 }
 
-// MARK: - View Extension for Easy Use (Optional helper)
+// MARK: - Liquid Glass Tab Bar Enhancements
+struct GlassTabViewModifier: ViewModifier {
+    let selectedTab: Binding<Int>
+    
+    func body(content: Content) -> some View {
+        content
+            .onChange(of: selectedTab.wrappedValue) { _, newValue in
+                // Haptic feedback on tab change
+                let selection = UISelectionFeedbackGenerator()
+                selection.selectionChanged()
+            }
+    }
+}
+
+extension View {
+    func glassTabBar(selectedTab: Binding<Int>) -> some View {
+        modifier(GlassTabViewModifier(selectedTab: selectedTab))
+    }
+}
+
+// MARK: - View Extension for Interactive Glass Effects
 extension View {
     func withButtonFeedback(
         isLoading: Binding<Bool>,
@@ -155,5 +247,18 @@ extension View {
                 }
             }
         )
+    }
+    
+    // Add glass effect with automatic interaction support
+    func interactiveGlass(
+        tint: Color? = nil,
+        cornerRadius: CGFloat = 16
+    ) -> some View {
+        self
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .stroke(.white.opacity(0.1), lineWidth: 1)
+            )
     }
 }
