@@ -9,7 +9,7 @@ struct RootSwitcherView: View {
                 SplashView()
                     .transition(.opacity)
             } else {
-                HomeTabView()
+                MainTabView()
                     .transition(.opacity)
             }
         }
@@ -53,6 +53,13 @@ struct SplashView: View {
             .font(.system(size: 32, weight: .bold))
             .foregroundColor(.white)
             .frame(width: 180, height: 180)
-            .glassEffect(.regular, in: .rect(cornerRadius: 32))
+            .background {
+                RoundedRectangle(cornerRadius: 32)
+                    .fill(.ultraThinMaterial)
+                    .background {
+                        RoundedRectangle(cornerRadius: 32)
+                            .fill(.black.opacity(0.1))
+                    }
+            }
     }
 }

@@ -685,3 +685,29 @@ struct SummaryPaymentItem: View {
         return f.string(for: NSDecimalNumber(decimal: value)) ?? "R$ 0,00"
     }
 }
+// MARK: - Glass Effect Container
+
+struct GlassEffectContainer<Content: View>: View {
+    let spacing: CGFloat
+    let content: () -> Content
+    
+    init(spacing: CGFloat = 0, @ViewBuilder content: @escaping () -> Content) {
+        self.spacing = spacing
+        self.content = content
+    }
+    
+    var body: some View {
+        VStack(spacing: spacing) {
+            content()
+        }
+        .padding(16)
+        .background {
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.ultraThinMaterial)
+                .background {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(.black.opacity(0.1))
+                }
+        }
+    }
+}
