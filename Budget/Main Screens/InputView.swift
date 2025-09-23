@@ -7,10 +7,18 @@ struct InputView: View {
     @Environment(\.modelContext) private var ctx
     @EnvironmentObject private var bgStore: BackgroundImageStore
     
-    // Use @Query instead of @State to avoid model context issues
-    @Query(sort: \Category.name) private var categories: [Category]
-    @Query(sort: \PaymentMethod.name) private var paymentMethods: [PaymentMethod]
+    // UPDATED: Use @State for API data instead of @Query for local data
+    @State private var apiCategories: [APICategory] = []
+    @State private var apiPaymentMethods: [APIPaymentMethod] = []
     
+    // API loading states
+    @State private var isLoadingCategories = false
+    @State private var isLoadingPaymentMethods = false
+    @State private var categoriesError: String?
+    @State private var paymentMethodsError: String?
+    @State private var isFirstLoad = true
+    
+    // Form state
     @State private var amountText = ""
     @State private var date = Date()
     @State private var selectedCategoryID: String?
@@ -27,15 +35,18 @@ struct InputView: View {
     @Namespace private var paymentChipNamespace
     @Namespace private var categoryChipNamespace
 
-    // Computed properties to get selected models safely
-    private var selectedCategory: Category? {
+    // Set this to false to use real API, true to use mock data
+    private let useMockData = false
+
+    // Computed properties to get selected models from API data
+    private var selectedCategory: APICategory? {
         guard let id = selectedCategoryID else { return nil }
-        return categories.first { $0.remoteID == id }
+        return apiCategories.first { $0.remoteID == id }
     }
     
-    private var selectedMethod: PaymentMethod? {
+    private var selectedMethod: APIPaymentMethod? {
         guard let id = selectedMethodID else { return nil }
-        return paymentMethods.first { $0.remoteID == id }
+        return apiPaymentMethods.first { $0.remoteID == id }
     }
 
     var body: some View {
@@ -72,7 +83,7 @@ struct InputView: View {
                         }
                     }
                     
-                    // Save button - UPDATED TO USE ENHANCED BUTTON
+                    // Save button
                     saveSection
                     
                     // Extra padding at bottom
@@ -90,22 +101,14 @@ struct InputView: View {
         }
         .overlay(alignment: .top) { toastOverlay }
         .animation(.default, value: showSavedToast)
+        .refreshable {
+            await refreshAPIData()
+        }
         .onAppear {
-            print("🎨 InputView: bgStore.backgroundColor = \(bgStore.backgroundColor)")
-            print("🎨 InputView: AppAppearance.appBackgroundColor = \(AppAppearance.shared.appBackgroundColor)")
-            
-            // Auto-select first chips when screen appears
-            if selectedCategoryID == nil && !categories.isEmpty {
-                selectedCategoryID = categories.first?.remoteID
-            }
-            
-            if selectedMethodID == nil && !paymentMethods.isEmpty {
-                selectedMethodID = paymentMethods.first?.remoteID
-            }
+            loadAPIData()
         }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notification in
             if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
-                // Try to get the window from the notification's object if it's a view
                 let window = (notification.object as? UIView)?.window
                 keyboardScroll.keyboardWillShow(height: keyboardFrame.height, in: window)
             }
@@ -118,12 +121,6 @@ struct InputView: View {
         } message: {
             Text(alertMessage ?? "")
         }
-        .task {
-            // Seed defaults if needed - @Query will automatically update
-            if categories.isEmpty || paymentMethods.isEmpty {
-                seedDefaults()
-            }
-        }
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Button("Cancel") {
@@ -135,6 +132,345 @@ struct InputView: View {
                 }
             }
         }
+    }
+    
+    // MARK: - API Data Loading Functions
+    
+    private func loadAPIData() {
+        if isFirstLoad {
+            // First time loading - use skeleton loading
+            fetchCategories()
+            fetchPaymentMethods()
+            isFirstLoad = false
+        } else {
+            // Subsequent loads - no loading feedback
+            fetchCategoriesQuietly()
+            fetchPaymentMethodsQuietly()
+        }
+    }
+    
+    @MainActor
+    private func refreshAPIData() async {
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask {
+                await refreshCategories()
+            }
+            group.addTask {
+                await refreshPaymentMethods()
+            }
+        }
+    }
+    
+    private func fetchCategories() {
+        isLoadingCategories = true
+        categoriesError = nil
+        
+        if useMockData {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.isLoadingCategories = false
+                self.apiCategories = self.getMockCategories()
+                self.autoSelectFirstCategory()
+            }
+        } else {
+            fetchRealAPICategories()
+        }
+    }
+    
+    private func fetchPaymentMethods() {
+        isLoadingPaymentMethods = true
+        paymentMethodsError = nil
+        
+        if useMockData {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.isLoadingPaymentMethods = false
+                self.apiPaymentMethods = self.getMockPaymentMethods()
+                self.autoSelectFirstPaymentMethod()
+            }
+        } else {
+            fetchRealAPIPaymentMethods()
+        }
+    }
+    
+    private func fetchCategoriesQuietly() {
+        // No loading state updates - silent background fetch
+        if useMockData {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.apiCategories = self.getMockCategories()
+                self.autoSelectFirstCategory()
+            }
+        } else {
+            SHEETS.getCategories { result in
+                DispatchQueue.main.async {
+                    switch result {
+                    case .success(let response):
+                        if response.success {
+                            self.apiCategories = response.data.sorted { $0.sortIndex < $1.sortIndex }
+                            self.categoriesError = nil
+                            self.autoSelectFirstCategory()
+                        } else {
+                            self.categoriesError = response.message
+                        }
+                        
+                    case .failure(let error):
+                        self.categoriesError = error.localizedDescription
+                    }
+                }
+            }
+        }
+    }
+    
+    private func fetchPaymentMethodsQuietly() {
+        // No loading state updates - silent background fetch
+        if useMockData {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.apiPaymentMethods = self.getMockPaymentMethods()
+                self.autoSelectFirstPaymentMethod()
+            }
+        } else {
+            SHEETS.getPaymentMethods { result in
+                DispatchQueue.main.async {
+                    switch result {
+                    case .success(let response):
+                        if response.success {
+                            self.apiPaymentMethods = response.data.sorted { $0.sortIndex < $1.sortIndex }
+                            self.paymentMethodsError = nil
+                            self.autoSelectFirstPaymentMethod()
+                        } else {
+                            self.paymentMethodsError = response.message
+                        }
+                        
+                    case .failure(let error):
+                        self.paymentMethodsError = error.localizedDescription
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Real API Functions
+    
+    private func fetchRealAPICategories() {
+        SHEETS.getCategories { result in
+            DispatchQueue.main.async {
+                self.isLoadingCategories = false
+                
+                switch result {
+                case .success(let response):
+                    if response.success {
+                        self.apiCategories = response.data.sorted { $0.sortIndex < $1.sortIndex }
+                        self.categoriesError = nil
+                        self.autoSelectFirstCategory()
+                    } else {
+                        self.categoriesError = response.message
+                    }
+                    
+                case .failure(let error):
+                    self.categoriesError = error.localizedDescription
+                }
+            }
+        }
+    }
+    
+    private func fetchRealAPIPaymentMethods() {
+        SHEETS.getPaymentMethods { result in
+            DispatchQueue.main.async {
+                self.isLoadingPaymentMethods = false
+                
+                switch result {
+                case .success(let response):
+                    if response.success {
+                        self.apiPaymentMethods = response.data.sorted { $0.sortIndex < $1.sortIndex }
+                        self.paymentMethodsError = nil
+                        self.autoSelectFirstPaymentMethod()
+                    } else {
+                        self.paymentMethodsError = response.message
+                    }
+                    
+                case .failure(let error):
+                    self.paymentMethodsError = error.localizedDescription
+                }
+            }
+        }
+    }
+    
+    // MARK: - Pull to Refresh Functions
+    
+    @MainActor
+    private func refreshCategories() async {
+        if useMockData {
+            try? await Task.sleep(nanoseconds: 500_000_000)
+            self.apiCategories = self.getMockCategories()
+            self.categoriesError = nil
+        } else {
+            await withCheckedContinuation { continuation in
+                SHEETS.getCategories { result in
+                    DispatchQueue.main.async {
+                        switch result {
+                        case .success(let response):
+                            if response.success {
+                                self.apiCategories = response.data.sorted { $0.sortIndex < $1.sortIndex }
+                                self.categoriesError = nil
+                            } else {
+                                self.categoriesError = response.message
+                            }
+                            
+                        case .failure(let error):
+                            self.categoriesError = error.localizedDescription
+                        }
+                        
+                        continuation.resume()
+                    }
+                }
+            }
+        }
+    }
+    
+    @MainActor
+    private func refreshPaymentMethods() async {
+        if useMockData {
+            try? await Task.sleep(nanoseconds: 500_000_000)
+            self.apiPaymentMethods = self.getMockPaymentMethods()
+            self.paymentMethodsError = nil
+        } else {
+            await withCheckedContinuation { continuation in
+                SHEETS.getPaymentMethods { result in
+                    DispatchQueue.main.async {
+                        switch result {
+                        case .success(let response):
+                            if response.success {
+                                self.apiPaymentMethods = response.data.sorted { $0.sortIndex < $1.sortIndex }
+                                self.paymentMethodsError = nil
+                            } else {
+                                self.paymentMethodsError = response.message
+                            }
+                            
+                        case .failure(let error):
+                            self.paymentMethodsError = error.localizedDescription
+                        }
+                        
+                        continuation.resume()
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Auto-selection helpers
+    
+    private func autoSelectFirstCategory() {
+        if selectedCategoryID == nil && !apiCategories.isEmpty {
+            selectedCategoryID = apiCategories.first?.remoteID
+        }
+    }
+    
+    private func autoSelectFirstPaymentMethod() {
+        if selectedMethodID == nil && !apiPaymentMethods.isEmpty {
+            selectedMethodID = apiPaymentMethods.first?.remoteID
+        }
+    }
+    
+    // MARK: - Mock Data Functions
+    
+    private func getMockCategories() -> [APICategory] {
+        let mockJSON = """
+        [
+            {
+                "remoteID": "mock-cat-1",
+                "name": "Food",
+                "emoji": "🍽️",
+                "sortIndex": 0,
+                "isIncome": false,
+                "timestamp": "2025-09-17T12:00:00.000Z"
+            },
+            {
+                "remoteID": "mock-cat-2",
+                "name": "Transport",
+                "emoji": "🚕",
+                "sortIndex": 1,
+                "isIncome": false,
+                "timestamp": "2025-09-17T12:00:00.000Z"
+            },
+            {
+                "remoteID": "mock-cat-3",
+                "name": "Shopping",
+                "emoji": "🛍️",
+                "sortIndex": 2,
+                "isIncome": false,
+                "timestamp": "2025-09-17T12:00:00.000Z"
+            },
+            {
+                "remoteID": "mock-cat-4",
+                "name": "Bills",
+                "emoji": "💡",
+                "sortIndex": 3,
+                "isIncome": false,
+                "timestamp": "2025-09-17T12:00:00.000Z"
+            },
+            {
+                "remoteID": "mock-cat-5",
+                "name": "Salary",
+                "emoji": "💼",
+                "sortIndex": 4,
+                "isIncome": true,
+                "timestamp": "2025-09-17T12:00:00.000Z"
+            },
+            {
+                "remoteID": "mock-cat-6",
+                "name": "Freelance",
+                "emoji": "💻",
+                "sortIndex": 5,
+                "isIncome": true,
+                "timestamp": "2025-09-17T12:00:00.000Z"
+            }
+        ]
+        """
+        
+        guard let data = mockJSON.data(using: .utf8),
+              let categories = try? JSONDecoder().decode([APICategory].self, from: data) else {
+            return []
+        }
+        return categories
+    }
+    
+    private func getMockPaymentMethods() -> [APIPaymentMethod] {
+        let mockJSON = """
+        [
+            {
+                "remoteID": "mock-pm-1",
+                "name": "Credit Card",
+                "emoji": "💳",
+                "sortIndex": 0,
+                "timestamp": "2025-09-17T12:00:00.000Z"
+            },
+            {
+                "remoteID": "mock-pm-2",
+                "name": "Debit Card",
+                "emoji": "💳",
+                "sortIndex": 1,
+                "timestamp": "2025-09-17T12:00:00.000Z"
+            },
+            {
+                "remoteID": "mock-pm-3",
+                "name": "Pix",
+                "emoji": "📱",
+                "sortIndex": 2,
+                "timestamp": "2025-09-17T12:00:00.000Z"
+            },
+            {
+                "remoteID": "mock-pm-4",
+                "name": "Cash",
+                "emoji": "💵",
+                "sortIndex": 3,
+                "timestamp": "2025-09-17T12:00:00.000Z"
+            }
+        ]
+        """
+        
+        guard let data = mockJSON.data(using: .utf8),
+              let methods = try? JSONDecoder().decode([APIPaymentMethod].self, from: data) else {
+            return []
+        }
+        return methods
     }
     
     // MARK: - Helper function
@@ -188,24 +524,37 @@ struct InputView: View {
         }
     }
     
-    // MARK: - Rest of the sections
+    // MARK: - Payment Type Section
     @ViewBuilder private var paymentTypeSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Payment Type")
                 .font(.headline)
                 .foregroundColor(.appText)
             
-            if paymentMethods.isEmpty {
-                Button("Add default payment types") {
-                    seedDefaults(paymentsOnly: true)
+            if isLoadingPaymentMethods {
+                paymentMethodsSkeleton
+            } else if let error = paymentMethodsError {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Failed to load payment methods")
+                        .foregroundColor(.red.opacity(0.8))
+                        .font(.caption)
+                    
+                    Button("Retry") {
+                        fetchCategories()
+                        fetchPaymentMethods()
+                    }
+                    .appSmallButtonStyle()
                 }
-                .appButtonStyle()
+            } else if apiPaymentMethods.isEmpty && !isLoadingPaymentMethods {
+                Text("No payment methods available")
+                    .foregroundColor(.appText.opacity(0.6))
+                    .font(.caption)
             } else {
                 Color.clear
                     .frame(height: 50)
                     .singleRowChipScroll {
-                        ForEach(paymentMethods) { pm in
-                            PaymentChipView(
+                        ForEach(apiPaymentMethods, id: \.remoteID) { pm in
+                            APIPaymentChipView(
                                 paymentMethod: pm,
                                 isSelected: selectedMethodID == pm.remoteID,
                                 onTap: {
@@ -222,30 +571,44 @@ struct InputView: View {
         }
     }
     
+    // MARK: - Category Section
     @ViewBuilder private var categorySection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Category")
                 .font(.headline)
                 .foregroundColor(.appText)
             
-            if categories.isEmpty {
-                Button("Add default categories") {
-                    seedDefaults(categoriesOnly: true)
+            if isLoadingCategories {
+                categoriesSkeleton
+            } else if let error = categoriesError {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Failed to load categories")
+                        .foregroundColor(.red.opacity(0.8))
+                        .font(.caption)
+                    
+                    Button("Retry") {
+                        fetchCategories()
+                        fetchPaymentMethods()
+                    }
+                    .appSmallButtonStyle()
                 }
-                .appButtonStyle()
+            } else if apiCategories.isEmpty && !isLoadingCategories {
+                Text("No categories available")
+                    .foregroundColor(.appText.opacity(0.6))
+                    .font(.caption)
             } else {
                 Color.clear
-                    .frame(height: categories.count > 1 ? 100 : 50)
+                    .frame(height: apiCategories.count > 1 ? 100 : 50)
                     .doubleRowChipScroll(
                         firstRowNamespace: categoryChipNamespace,
                         firstRow: {
-                            ForEach(Array(stride(from: 0, to: categories.count, by: 2)), id: \.self) { index in
-                                CategoryChipView(
-                                    category: categories[index],
-                                    isSelected: selectedCategoryID == categories[index].remoteID,
+                            ForEach(Array(stride(from: 0, to: apiCategories.count, by: 2)), id: \.self) { index in
+                                APICategoryChipView(
+                                    category: apiCategories[index],
+                                    isSelected: selectedCategoryID == apiCategories[index].remoteID,
                                     onTap: {
                                         withAnimation(.easeInOut(duration: 0.2)) {
-                                            selectedCategoryID = categories[index].remoteID
+                                            selectedCategoryID = apiCategories[index].remoteID
                                         }
                                         dismissKeyboard()
                                     },
@@ -254,14 +617,14 @@ struct InputView: View {
                             }
                         },
                         secondRow: {
-                            if categories.count > 1 {
-                                ForEach(Array(stride(from: 1, to: categories.count, by: 2)), id: \.self) { index in
-                                    CategoryChipView(
-                                        category: categories[index],
-                                        isSelected: selectedCategoryID == categories[index].remoteID,
+                            if apiCategories.count > 1 {
+                                ForEach(Array(stride(from: 1, to: apiCategories.count, by: 2)), id: \.self) { index in
+                                    APICategoryChipView(
+                                        category: apiCategories[index],
+                                        isSelected: selectedCategoryID == apiCategories[index].remoteID,
                                         onTap: {
                                             withAnimation(.easeInOut(duration: 0.2)) {
-                                                selectedCategoryID = categories[index].remoteID
+                                                selectedCategoryID = apiCategories[index].remoteID
                                             }
                                             dismissKeyboard()
                                         },
@@ -275,6 +638,36 @@ struct InputView: View {
                     )
             }
         }
+    }
+    
+    // MARK: - Skeleton Loading Views
+    
+    @ViewBuilder private var paymentMethodsSkeleton: some View {
+        Color.clear
+            .frame(height: 50)
+            .singleRowChipScroll {
+                ForEach(0..<4, id: \.self) { _ in
+                    SkeletonChip()
+                }
+            }
+    }
+    
+    @ViewBuilder private var categoriesSkeleton: some View {
+        Color.clear
+            .frame(height: 100)
+            .doubleRowChipScroll(
+                firstRowNamespace: categoryChipNamespace,
+                firstRow: {
+                    ForEach(0..<4, id: \.self) { _ in
+                        SkeletonChip()
+                    }
+                },
+                secondRow: {
+                    ForEach(0..<5, id: \.self) { _ in
+                        SkeletonChip()
+                    }
+                }
+            )
     }
     
     @ViewBuilder private var valueSection: some View {
@@ -296,7 +689,7 @@ struct InputView: View {
         }
     }
     
-    // MARK: - UPDATED SAVE SECTION WITH ENHANCED BUTTON
+    // MARK: - Save Section
     @ViewBuilder private var saveSection: some View {
         EnhancedButton(title: "Save Entry", isDisabled: !canSave) {
             return await performSave()
@@ -315,19 +708,20 @@ struct InputView: View {
         )
     }
     
-    // MARK: - NEW ASYNC SAVE FUNCTION
+    // MARK: - Save Function
     @MainActor
     private func performSave() async -> Bool {
         guard let amount = amountDecimal else { return false }
 
         let signedAmount = (selectedCategory?.isIncome ?? false) ? amount : -amount
 
+        // Create local transaction for immediate feedback
         let tx = Transaction(
             amount: signedAmount,
             date: date,
             note: descriptionText.isEmpty ? nil : descriptionText,
-            category: selectedCategory,
-            paymentMethod: selectedMethod
+            category: nil, // We don't link to local categories anymore
+            paymentMethod: nil // We don't link to local payment methods anymore
         )
 
         do {
@@ -336,7 +730,7 @@ struct InputView: View {
                 try ctx.save()
             }
 
-            // Post to sheets in background - fire and forget
+            // Post to sheets with API category and payment method names
             SHEETS.postTransaction(
                 remoteID: tx.remoteID,
                 amount: signedAmount,
@@ -354,13 +748,15 @@ struct InputView: View {
             selectedMethodID = nil
             showDatePicker = false
             
+            // Auto-select first options again
+            autoSelectFirstCategory()
+            autoSelectFirstPaymentMethod()
+            
             dismissKeyboard()
             
-            // Return success
             return true
         } catch {
             alertMessage = "Could not save entry: \(error.localizedDescription)"
-            print("SAVE ERROR (Transaction):", error)
             return false
         }
     }
@@ -406,65 +802,6 @@ struct InputView: View {
         
         return Decimal(string: cleanString)
     }
-
-    private func seedDefaults(categoriesOnly: Bool = false, paymentsOnly: Bool = false) {
-        if !paymentsOnly && categories.isEmpty {
-            let base = (categories.map { $0.sortIndex }.max() ?? -1) + 1
-            let seeds: [(String, String?, Bool)] = [
-                // Expenses (14 categories)
-                ("Food", "🍽️", false),
-                ("Transport", "🚕", false),
-                ("Bills", "💡", false),
-                ("Shopping", "🛍️", false),
-                ("Leisure", "🎬", false),
-                ("Groceries", "🛒", false),
-                ("Healthcare", "🏥", false),
-                ("Education", "📚", false),
-                ("Rent", "🏠", false),
-                ("Insurance", "🛡️", false),
-                ("Pets", "🐾", false),
-                ("Gym", "💪", false),
-                ("Subscriptions", "📱", false),
-                ("Coffee", "☕", false),
-                
-                // Income (6 categories)
-                ("Salary", "💼", true),
-                ("Gifts", "🎁", true),
-                ("Freelance", "💻", true),
-                ("Investments", "📈", true),
-                ("Bonus", "💰", true),
-                ("Refunds", "💵", true)
-            ]
-            for (offset, seed) in seeds.enumerated() {
-                let (name, emoji, isIncome) = seed
-                ctx.insert(Category(name: name, emoji: emoji, sortIndex: base + offset, isIncome: isIncome))
-            }
-        }
-        if !categoriesOnly && paymentMethods.isEmpty {
-            let base = (paymentMethods.map { $0.sortIndex }.max() ?? -1) + 1
-            let seeds: [(String, String?)] = [
-                ("Credit Card", "💳"),
-                ("Debit Card", "💳"),
-                ("Pix", "📱"),
-                ("Cash", "💵")
-            ]
-            for (offset, seed) in seeds.enumerated() {
-                let (name, emoji) = seed
-                ctx.insert(PaymentMethod(name: name, emoji: emoji, sortIndex: base + offset))
-            }
-        }
-        
-        try? ctx.save()
-        
-        // Auto-select first chips after seeding
-        if selectedCategoryID == nil && !categories.isEmpty {
-            selectedCategoryID = categories.first?.remoteID
-        }
-        
-        if selectedMethodID == nil && !paymentMethods.isEmpty {
-            selectedMethodID = paymentMethods.first?.remoteID
-        }
-    }
     
     private func formatFullDate(_ date: Date) -> String {
         let formatter = DateFormatter()
@@ -476,6 +813,118 @@ struct InputView: View {
     private func dismissKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
+}
+
+// MARK: - API Chip Components
+
+/// API-based payment method chip button
+struct APIPaymentChipView: View {
+    let paymentMethod: APIPaymentMethod
+    let isSelected: Bool
+    let onTap: () -> Void
+    let namespace: Namespace.ID
+    
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 6) {
+                if isValidEmoji(paymentMethod.emoji) {
+                    Text(paymentMethod.emoji)
+                } else {
+                    Image(systemName: "creditcard.fill")
+                        .font(.system(size: 14))
+                }
+                
+                Text(paymentMethod.name)
+                    .font(.system(size: 16, weight: isSelected ? .medium : .light))
+                    .foregroundStyle(isSelected ? .white : Color(white: 0.9))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+        }
+        .buttonStyle(.plain)
+        .background {
+            if isSelected {
+                Capsule()
+                    .glassEffect(.regular)
+                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
+            } else {
+                Capsule()
+                    .glassEffect(.clear)
+            }
+        }
+    }
+}
+
+/// API-based category chip button
+struct APICategoryChipView: View {
+    let category: APICategory
+    let isSelected: Bool
+    let onTap: () -> Void
+    let namespace: Namespace.ID
+    
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 6) {
+                if isValidEmoji(category.emoji) {
+                    Text(category.emoji)
+                } else {
+                    Image(systemName: "tag.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(.white.opacity(0.6))
+                }
+                
+                Text(category.name)
+                    .font(.system(size: 16, weight: isSelected ? .medium : .light))
+                    .foregroundStyle(isSelected ? .white : Color(white: 0.9))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+        }
+        .buttonStyle(.plain)
+        .background {
+            if isSelected {
+                Capsule()
+                    .glassEffect(.regular)
+                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
+            } else {
+                Capsule()
+                    .glassEffect(.clear)
+            }
+        }
+    }
+}
+
+// MARK: - Skeleton Chip Component
+
+struct SkeletonChip: View {
+    @State private var chipWidth: CGFloat = 100
+    @State private var opacity: Double = 0.4
+    
+    var body: some View {
+        Capsule()
+            .fill(.tertiary)
+            .frame(width: chipWidth, height: 40)
+            .opacity(opacity)
+            .onAppear {
+                chipWidth = CGFloat.random(in: 80...120)
+                withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
+                    opacity = 0.8
+                }
+            }
+    }
+}
+
+// MARK: - Helper function for emoji validation
+private func isValidEmoji(_ s: String) -> Bool {
+    guard !s.isEmpty else { return false }
+    let chars = Array(s)
+    if chars.count != 1 { return false }
+    if let scalar = s.unicodeScalars.first {
+        if CharacterSet.alphanumerics.contains(scalar) { return false }
+        if CharacterSet.punctuationCharacters.contains(scalar) { return false }
+        if CharacterSet.whitespacesAndNewlines.contains(scalar) { return false }
+    }
+    return true
 }
 
 // MARK: - Custom Calendar View
