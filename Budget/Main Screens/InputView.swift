@@ -93,6 +93,15 @@ struct InputView: View {
         .onAppear {
             print("🎨 InputView: bgStore.backgroundColor = \(bgStore.backgroundColor)")
             print("🎨 InputView: AppAppearance.appBackgroundColor = \(AppAppearance.shared.appBackgroundColor)")
+            
+            // Auto-select first chips when screen appears
+            if selectedCategoryID == nil && !categories.isEmpty {
+                selectedCategoryID = categories.first?.remoteID
+            }
+            
+            if selectedMethodID == nil && !paymentMethods.isEmpty {
+                selectedMethodID = paymentMethods.first?.remoteID
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notification in
             if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
@@ -190,7 +199,7 @@ struct InputView: View {
                 Button("Add default payment types") {
                     seedDefaults(paymentsOnly: true)
                 }
-                .buttonStyle(AppButtonStyle())
+                .appButtonStyle()
             } else {
                 Color.clear
                     .frame(height: 50)
@@ -223,7 +232,7 @@ struct InputView: View {
                 Button("Add default categories") {
                     seedDefaults(categoriesOnly: true)
                 }
-                .buttonStyle(AppButtonStyle())
+                .appButtonStyle()
             } else {
                 Color.clear
                     .frame(height: categories.count > 1 ? 100 : 50)
@@ -289,11 +298,10 @@ struct InputView: View {
     
     // MARK: - UPDATED SAVE SECTION WITH ENHANCED BUTTON
     @ViewBuilder private var saveSection: some View {
-        EnhancedButton(title: "Save Entry") {
+        EnhancedButton(title: "Save Entry", isDisabled: !canSave) {
             return await performSave()
         }
-        .disabled(!canSave)
-        .opacity(canSave ? 1.0 : 0.5)
+        .opacity(canSave ? 1.0 : 0.8)
         .background(
             GeometryReader { geometry in
                 Color.clear
@@ -445,7 +453,17 @@ struct InputView: View {
                 ctx.insert(PaymentMethod(name: name, emoji: emoji, sortIndex: base + offset))
             }
         }
+        
         try? ctx.save()
+        
+        // Auto-select first chips after seeding
+        if selectedCategoryID == nil && !categories.isEmpty {
+            selectedCategoryID = categories.first?.remoteID
+        }
+        
+        if selectedMethodID == nil && !paymentMethods.isEmpty {
+            selectedMethodID = paymentMethods.first?.remoteID
+        }
     }
     
     private func formatFullDate(_ date: Date) -> String {

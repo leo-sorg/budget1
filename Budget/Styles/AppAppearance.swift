@@ -6,7 +6,7 @@ import UIKit
 class AppAppearance: ObservableObject {
     
     // DYNAMIC BACKGROUND COLOR - starts with magenta, can be changed
-    @Published var appBackgroundColor: Color = Color(red: 1.0, green: 0.0, blue: 1.0) // BRIGHT MAGENTA
+    @Published var appBackgroundColor: Color = Color(white: 0.1)
     
     // Shared instance for global access
     static let shared = AppAppearance()

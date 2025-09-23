@@ -98,7 +98,7 @@ struct SummaryView: View {
     // MARK: - Segmented Control Section
     @ViewBuilder private var segmentedControlSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Segmented Control without GlassEffectContainer to avoid double tinting
+            // Segmented Control with inverted glass effect
             HStack(spacing: 0) {
                 // History Segment
                 Button("History") {
@@ -106,30 +106,32 @@ struct SummaryView: View {
                         selectedSegment = 0
                     }
                 }
-                .font(.system(size: 16, weight: .medium))
+                .font(.system(size: 16, weight: selectedSegment == 0 ? .medium : .light))
+                .foregroundStyle(selectedSegment == 0 ? .white : Color(white: 0.9))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
                 .background {
                     if selectedSegment == 0 {
-                        RoundedRectangle(cornerRadius: 18)
-                            .glassEffect(.regular.tint(.accentColor.opacity(0.3)).interactive())
+                        RoundedRectangle(cornerRadius: 22)
+                            .glassEffect(.regular)
                             .matchedGeometryEffect(id: "selectedSegment", in: segmentedControlNamespace)
                     }
                 }
                 
-                // By Category Segment  
+                // By Category Segment
                 Button("By Category") {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                         selectedSegment = 1
                     }
                 }
-                .font(.system(size: 16, weight: .medium))
+                .font(.system(size: 16, weight: selectedSegment == 1 ? .medium : .light))
+                .foregroundStyle(selectedSegment == 1 ? .white : Color(white: 0.9))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
                 .background {
                     if selectedSegment == 1 {
-                        RoundedRectangle(cornerRadius: 18)
-                            .glassEffect(.regular.tint(.accentColor.opacity(0.3)).interactive())
+                        RoundedRectangle(cornerRadius: 22)
+                            .glassEffect(.regular)
                             .matchedGeometryEffect(id: "selectedSegment", in: segmentedControlNamespace)
                     }
                 }
@@ -140,13 +142,14 @@ struct SummaryView: View {
                         selectedSegment = 2
                     }
                 }
-                .font(.system(size: 16, weight: .medium))
+                .font(.system(size: 16, weight: selectedSegment == 2 ? .medium : .light))
+                .foregroundStyle(selectedSegment == 2 ? .white : Color(white: 0.9))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
                 .background {
                     if selectedSegment == 2 {
-                        RoundedRectangle(cornerRadius: 18)
-                            .glassEffect(.regular.tint(.accentColor.opacity(0.3)).interactive())
+                        RoundedRectangle(cornerRadius: 22)
+                            .glassEffect(.regular)
                             .matchedGeometryEffect(id: "selectedSegment", in: segmentedControlNamespace)
                     }
                 }

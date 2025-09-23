@@ -11,7 +11,7 @@ struct PaymentChipView: View {
     
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: 8) {
+            HStack(spacing: 6) {
                 if let emoji = paymentMethod.emoji, !emoji.isEmpty {
                     Text(emoji)
                 } else {
@@ -20,16 +20,23 @@ struct PaymentChipView: View {
                 }
                 
                 Text(paymentMethod.name)
-                    .font(.system(size: 16, weight: .medium))
+                    .font(.system(size: 16, weight: isSelected ? .medium : .light))
+                    .foregroundStyle(isSelected ? .white : Color(white: 0.9))
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
         }
         .buttonStyle(.plain)
-        .glassEffect(
-            isSelected ? .regular.tint(.accentColor.opacity(0.2)).interactive() : .clear.interactive()
-        )
-        .glassEffectID(isSelected ? "selectedChip" : nil, in: namespace)
+        .background {
+            if isSelected {
+                Capsule()
+                    .glassEffect(.regular)
+                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
+            } else {
+                Capsule()
+                    .glassEffect(.clear)
+            }
+        }
     }
 }
 
@@ -48,16 +55,23 @@ struct CategoryChipView: View {
                 }
                 
                 Text(category.name)
-                    .font(.system(size: 16, weight: .medium))
+                    .font(.system(size: 16, weight: isSelected ? .medium : .light))
+                    .foregroundStyle(isSelected ? .white : Color(white: 0.9))
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
         }
         .buttonStyle(.plain)
-        .glassEffect(
-            isSelected ? .regular.tint(.accentColor.opacity(0.2)).interactive() : .clear.interactive()
-        )
-        .glassEffectID(isSelected ? "selectedChip" : nil, in: namespace)
+        .background {
+            if isSelected {
+                Capsule()
+                    .glassEffect(.regular)
+                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
+            } else {
+                Capsule()
+                    .glassEffect(.clear)
+            }
+        }
     }
 }
 
@@ -71,16 +85,25 @@ struct MonthChipView: View {
     
     var body: some View {
         Button(action: onTap) {
-            Text(monthYearString)
-                .font(.system(size: 16, weight: .medium))
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+            HStack(spacing: 6) {
+                Text(monthYearString)
+                    .font(.system(size: 16, weight: isSelected ? .medium : .light))
+                    .foregroundStyle(isSelected ? .white : Color(white: 0.9))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
         }
         .buttonStyle(.plain)
-        .glassEffect(
-            isSelected ? .regular.tint(.accentColor.opacity(0.2)).interactive() : .clear.interactive()
-        )
-        .glassEffectID(isSelected ? "selectedChip" : nil, in: namespace)
+        .background {
+            if isSelected {
+                Capsule()
+                    .glassEffect(.regular)
+                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
+            } else {
+                Capsule()
+                    .glassEffect(.clear)
+            }
+        }
     }
     
     private var monthYearString: String {
@@ -109,16 +132,25 @@ struct ManageSectionChip: View {
     
     var body: some View {
         Button(action: onTap) {
-            Text(section.rawValue)
-                .font(.system(size: 16, weight: .medium))
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+            HStack(spacing: 6) {
+                Text(section.rawValue)
+                    .font(.system(size: 16, weight: isSelected ? .medium : .light))
+                    .foregroundStyle(isSelected ? .white : Color(white: 0.9))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
         }
         .buttonStyle(.plain)
-        .glassEffect(
-            isSelected ? .regular.tint(.accentColor.opacity(0.2)).interactive() : .clear.interactive()
-        )
-        .glassEffectID(isSelected ? "selectedChip" : nil, in: namespace)
+        .background {
+            if isSelected {
+                Capsule()
+                    .glassEffect(.regular)
+                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
+            } else {
+                Capsule()
+                    .glassEffect(.clear)
+            }
+        }
     }
 }
 
@@ -131,16 +163,25 @@ struct LiquidGlassChip: View {
     
     var body: some View {
         Button(action: onTap) {
-            Text(title)
-                .font(.system(size: 16, weight: .medium))
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+            HStack(spacing: 6) {
+                Text(title)
+                    .font(.system(size: 16, weight: isSelected ? .medium : .light))
+                    .foregroundStyle(isSelected ? .white : Color(white: 0.9))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
         }
         .buttonStyle(.plain)
-        .glassEffect(
-            isSelected ? .regular.tint(.accentColor.opacity(0.2)).interactive() : .clear.interactive()
-        )
-        .glassEffectID(isSelected ? "selectedChip" : nil, in: namespace)
+        .background {
+            if isSelected {
+                Capsule()
+                    .glassEffect(.regular)
+                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
+            } else {
+                Capsule()
+                    .glassEffect(.clear)
+            }
+        }
     }
 }
 
@@ -151,9 +192,8 @@ struct ChipGroup<Content: View>: View {
     @ViewBuilder let content: Content
     
     var body: some View {
-        GlassEffectContainer(spacing: 8) {
-            content
-        }
+        content
+            .padding(0)
     }
 }
 
@@ -179,15 +219,15 @@ struct ChipScrollContainer<Content: View>: View {
                     content
                     Spacer(minLength: 0)
                 }
-                .padding(.horizontal, 0)
-                .padding(.vertical, 4) // Add vertical padding to prevent clipping
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
                 .scrollTargetLayout()
             }
         }
         .scrollTargetBehavior(.viewAligned)
-        .scrollClipDisabled() // Allow content to extend beyond scroll bounds
+        .scrollClipDisabled()
         .scrollBounceBehavior(.basedOnSize)
-        .frame(height: 50) // Set explicit height to prevent vertical clipping
+        .frame(height: 50)
     }
 }
 
@@ -208,15 +248,15 @@ struct ChipScrollContainerRTL<Content: View>: View {
                     Spacer(minLength: 0)
                     content
                 }
-                .padding(.horizontal, 0)
-                .padding(.vertical, 4) // Add vertical padding to prevent clipping
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
                 .scrollTargetLayout()
             }
         }
         .scrollTargetBehavior(.viewAligned)
-        .scrollClipDisabled() // Allow content to extend beyond scroll bounds
+        .scrollClipDisabled()
         .scrollBounceBehavior(.basedOnSize)
-        .frame(height: 50) // Set explicit height to prevent vertical clipping
+        .frame(height: 50)
         .environment(\.layoutDirection, .rightToLeft)
     }
 }
@@ -251,6 +291,7 @@ struct DoubleRowChipContainer<FirstRowContent: View, SecondRowContent: View>: Vi
                         firstRowContent
                         Spacer()
                     }
+                    .padding(.horizontal, 8)
                 }
                 
                 if let secondRowContent = secondRowContent {
@@ -259,15 +300,15 @@ struct DoubleRowChipContainer<FirstRowContent: View, SecondRowContent: View>: Vi
                             secondRowContent
                             Spacer()
                         }
+                        .padding(.horizontal, 8)
                     }
                 }
             }
-            .padding(.horizontal, 0)
-            .padding(.vertical, 4) // Add vertical padding to prevent clipping
+            .padding(.vertical, 4)
         }
-        .scrollClipDisabled() // Allow content to extend beyond scroll bounds
+        .scrollClipDisabled()
         .scrollBounceBehavior(.basedOnSize)
-        .frame(height: secondRowContent != nil ? 110 : 50) // Adjust height based on content
+        .frame(height: secondRowContent != nil ? 110 : 50)
     }
 }
 

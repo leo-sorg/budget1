@@ -33,31 +33,61 @@ final class ButtonStateManager: ObservableObject, @MainActor Equatable {
     }
 }
 
-// MARK: - App Button Style (Always uses Apple's .glass)
+// MARK: - App Button Style (Plain with conditional glass effect)
 struct AppButtonStyle: ButtonStyle {
+    let isDisabled: Bool
+    
+    init(isDisabled: Bool = false) {
+        self.isDisabled = isDisabled
+    }
+    
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
+        ZStack {
+            // Background layer
+            if !isDisabled {
+                Capsule()
+                    .glassEffect(.regular)
+            }
+            
+            // Content layer
+            configuration.label
+                .font(.system(size: 16, weight: isDisabled ? .light : .medium))
+                .foregroundStyle(isDisabled ? Color(white: 0.9) : .white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 20)
+        }
     }
 }
 
-// MARK: - Small Button Style (Uses Apple's .glass)
+// MARK: - Small Button Style (Plain with glass effect regular)
 struct AppSmallButtonStyle: ButtonStyle {
+    let isDisabled: Bool
+    
+    init(isDisabled: Bool = false) {
+        self.isDisabled = isDisabled
+    }
+    
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 14, weight: .medium))
-            .padding(.horizontal, 12)
+            .font(.system(size: 14, weight: isDisabled ? .light : .medium))
+            .foregroundStyle(isDisabled ? Color(white: 0.9) : .white)
+            .padding(.horizontal, 12)  // <-- Change this value
             .padding(.vertical, 6)
+            .background {
+                Capsule()
+                    .glassEffect(isDisabled ? .clear : .regular)
+            }
     }
 }
 
 // MARK: - View Extensions for Button Styles
 extension View {
-    func appButtonStyle() -> some View {
-        self.buttonStyle(.glass)
+    func appButtonStyle(isDisabled: Bool = false) -> some View {
+        self.buttonStyle(AppButtonStyle(isDisabled: isDisabled))
     }
     
     func appSmallButtonStyle() -> some View {
-        self.buttonStyle(.glass)
+        self.buttonStyle(AppSmallButtonStyle())
     }
 }
 
@@ -65,7 +95,14 @@ extension View {
 struct EnhancedButton: View {
     let title: String
     let action: () async -> Bool
+    let isDisabled: Bool
     @StateObject private var stateManager = ButtonStateManager()
+    
+    init(title: String, isDisabled: Bool = false, action: @escaping () async -> Bool) {
+        self.title = title
+        self.isDisabled = isDisabled
+        self.action = action
+    }
     
     var body: some View {
         Button {
@@ -93,6 +130,8 @@ struct EnhancedButton: View {
         } label: {
             ZStack {
                 Text(title)
+                    .font(.system(size: 16, weight: isDisabled ? .light : .medium))
+                    .foregroundStyle(isDisabled ? Color(white: 0.9) : .white)
                     .opacity(stateManager.isLoading || stateManager.showSuccess ? 0 : 1)
                 
                 if stateManager.isLoading {
@@ -104,13 +143,18 @@ struct EnhancedButton: View {
                 if stateManager.showSuccess {
                     Image(systemName: "checkmark")
                         .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(.white)
                 }
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
+            .padding(.vertical, 20)
         }
-        .buttonStyle(.glass)
-        .disabled(stateManager.isLoading)
+        .buttonStyle(.plain)
+        .background {
+            Capsule()
+                .glassEffect((isDisabled && !stateManager.isLoading && !stateManager.showSuccess) ? .clear : .regular)
+        }
+        .disabled(isDisabled)
         .animation(.easeInOut(duration: 0.2), value: stateManager.isLoading)
         .animation(.easeInOut(duration: 0.2), value: stateManager.showSuccess)
     }
