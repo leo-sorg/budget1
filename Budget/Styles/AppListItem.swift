@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - Unified List Item Component (Used Everywhere)
+// MARK: - Unified List Item Component (Used Everywhere) - UPDATED with Glass Effects
 struct AppListItem<Content: View, TrailingContent: View>: View {
     let content: Content
     let trailingContent: TrailingContent
@@ -36,8 +36,8 @@ struct AppListItem<Content: View, TrailingContent: View>: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
-        .background(Color(.systemGray6))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .background(Color.clear)  // Ensure no background color interferes
+        .glassEffect(.regular, in: .rect(cornerRadius: 10))
     }
 }
 
@@ -80,7 +80,7 @@ struct APICategoryListItem: View {
                     // Category name
                     Text(category.name)
                         .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.primary)
+                        .foregroundColor(.white)  // UPDATED: Changed to .white for better contrast on glass
                 }
             },
             trailing: {
@@ -112,13 +112,13 @@ struct APIPaymentMethodListItem: View {
                     } else {
                         Image(systemName: "creditcard.fill")
                             .font(.system(size: 18))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.white.opacity(0.7))  // UPDATED: Changed to .white with opacity for glass
                     }
                     
                     // Payment method name
                     Text(paymentMethod.name)
                         .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.primary)
+                        .foregroundColor(.white)  // UPDATED: Changed to .white for better contrast on glass
                 }
             },
             trailing: {
@@ -149,17 +149,17 @@ struct APITransactionListItem: View {
                         
                         Text(transaction.categoryName.isEmpty ? "Uncategorized" : transaction.categoryName)
                             .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.primary)
+                            .foregroundColor(.white)  // UPDATED: Changed to .white for better contrast on glass
                     }
                     
                     HStack(spacing: 8) {
                         Text(formatDisplayDate(transaction.dateISO))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.white.opacity(0.6))  // UPDATED: Changed to .white with opacity for glass
                             .font(.caption)
                         
                         if !transaction.paymentMethod.isEmpty {
                             Text("• \(transaction.paymentMethod)")
-                                .foregroundColor(.secondary)
+                                .foregroundColor(.white.opacity(0.6))  // UPDATED: Changed to .white with opacity for glass
                                 .font(.caption)
                         }
                     }
@@ -168,7 +168,7 @@ struct APITransactionListItem: View {
             trailing: {
                 Text(formatCurrency(Decimal(transaction.amount)))
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(transaction.amount >= 0 ? .green : .primary)
+                    .foregroundColor(transaction.amount >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : .white)  // UPDATED: Better colors for glass background
             },
             onDelete: onDelete
         )
@@ -183,15 +183,15 @@ struct APITransactionListItem: View {
         } else {
             // Fallback for uncategorized/empty emoji: colored icons
             if transaction.amount >= 0 {
-                // Income: green plus
+                // Income: light green plus
                 Image(systemName: "plus.circle.fill")
                     .font(.system(size: 20))
-                    .foregroundColor(.green)
+                    .foregroundColor(Color(red: 0.5, green: 1.0, blue: 0.5))  // Light green for glass background
             } else {
-                // Expense: red minus
+                // Expense: light red minus
                 Image(systemName: "minus.circle.fill")
                     .font(.system(size: 20))
-                    .foregroundColor(.red)
+                    .foregroundColor(Color(red: 1.0, green: 0.5, blue: 0.5))  // Light red for glass background
             }
         }
     }
@@ -214,12 +214,12 @@ struct SummaryCategoryItem: View {
             content: {
                 Text(name)
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.primary)
+                    .foregroundColor(.white)  // UPDATED: Changed to .white for better contrast on glass
             },
             trailing: {
                 Text(formatCurrency(amount))
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(amount >= 0 ? .green : .primary)
+                    .foregroundColor(amount >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : .white)  // UPDATED: Better colors for glass background
             },
             onDelete: onDelete
         )
@@ -243,23 +243,23 @@ struct SummaryPaymentItem: View {
                 HStack(spacing: 8) {
                     Image(systemName: "creditcard.fill")
                         .font(.system(size: 16))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.white.opacity(0.7))  // UPDATED: Changed to .white with opacity for glass
                     Text(name)
                         .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.primary)
+                        .foregroundColor(.white)  // UPDATED: Changed to .white for better contrast on glass
                 }
             },
             trailing: {
                 Text(formatCurrency(amount))
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(amount >= 0 ? .green : .primary)
+                    .foregroundColor(amount >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : .white)  // UPDATED: Better colors for glass background
             },
             onDelete: onDelete
         )
     }
 }
 
-// MARK: - Glass Card Components (for Summary View totals)
+// MARK: - Glass Card Components (for Summary View totals) - UPDATED with Glass Effects
 struct GlassCard<Content: View>: View {
     let content: Content
     
@@ -270,8 +270,7 @@ struct GlassCard<Content: View>: View {
     var body: some View {
         content
             .padding(20)
-            .background(Color(.systemGray6))
-            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))  // UPDATED: Applied glass effect instead of background color
     }
 }
 
@@ -281,7 +280,7 @@ struct GlassCardRow: View {
     let valueColor: Color
     var isEmphasized: Bool = false
     
-    init(label: String, value: String, valueColor: Color = .primary, isEmphasized: Bool = false) {
+    init(label: String, value: String, valueColor: Color = .white, isEmphasized: Bool = false) {  // UPDATED: Default to .white
         self.label = label
         self.value = value
         self.valueColor = valueColor
@@ -292,7 +291,7 @@ struct GlassCardRow: View {
         HStack {
             Text(label)
                 .font(.system(size: 16, weight: isEmphasized ? .semibold : .regular))
-                .foregroundColor(isEmphasized ? .primary : .secondary)
+                .foregroundColor(isEmphasized ? .white : .white.opacity(0.8))  // UPDATED: Better colors for glass background
             
             Spacer()
             
@@ -310,12 +309,12 @@ struct CategoryTypeTag: View {
     var body: some View {
         Text(isIncome ? "Income" : "Expense")
             .font(.caption.weight(.medium))
-            .foregroundColor(isIncome ? .green : .red)
+            .foregroundColor(isIncome ? Color(red: 0.5, green: 1.0, blue: 0.5) : Color(red: 1.0, green: 0.5, blue: 0.5))  // UPDATED: Better colors for glass background
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(
                 Capsule()
-                    .fill(isIncome ? Color.green.opacity(0.15) : Color.red.opacity(0.15))
+                    .fill(isIncome ? Color(red: 0.5, green: 1.0, blue: 0.5).opacity(0.15) : Color(red: 1.0, green: 0.5, blue: 0.5).opacity(0.15))
             )
     }
 }
