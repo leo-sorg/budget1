@@ -21,12 +21,17 @@ struct SummaryView: View {
     // Namespace for month chip morphing
     @Namespace private var monthChipNamespace
     
+    // NEW: Transaction delete state management (consistent with ManageView)
+    @State private var showDeleteTransactionConfirmation = false
+    @State private var transactionToDelete: APITransaction?
+    @State private var deletingTransactionID: String?
+    
     // Set this to false to use real API, true to use mock data
     private let useMockData = false
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header using reusable component - UPDATED: Changed title from "RADIO" to "SUMMARY"
+            // Header using reusable component
             AppHeader(title: "SUMMARY")
             
             // Month navigation chips (right-aligned, newest first)
@@ -93,6 +98,67 @@ struct SummaryView: View {
             // Fetch transactions for current month when screen appears
             fetchTransactionsForSelectedMonth()
         }
+        // NEW: Transaction delete confirmation dialog (consistent with ManageView)
+        .confirmationDialog(
+            "Delete Transaction",
+            isPresented: $showDeleteTransactionConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                if let transaction = transactionToDelete {
+                    deleteTransaction(transaction)
+                }
+            }
+            Button("Cancel", role: .cancel) {
+                transactionToDelete = nil
+            }
+        } message: {
+            if let transaction = transactionToDelete {
+                Text("Are you sure you want to delete this transaction? This action cannot be undone.")
+            }
+        }
+    }
+    
+    // MARK: - Transaction Delete Function (consistent with ManageView)
+    
+    private func deleteTransaction(_ transaction: APITransaction) {
+        deletingTransactionID = transaction.remoteID
+        
+        if useMockData {
+            // Simulate API delay for mock
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                // Remove from local array
+                if let index = self.apiTransactions.firstIndex(where: { $0.remoteID == transaction.remoteID }) {
+                    withAnimation {
+                        self.apiTransactions.remove(at: index)
+                    }
+                }
+                self.deletingTransactionID = nil
+                self.transactionToDelete = nil
+            }
+        } else {
+            SHEETS.deleteTransaction(remoteID: transaction.remoteID) { response in
+                DispatchQueue.main.async {
+                    self.deletingTransactionID = nil
+                    self.transactionToDelete = nil
+                    
+                    if response.status == 200 {
+                        // Remove from local array immediately for fast UI update
+                        if let index = self.apiTransactions.firstIndex(where: { $0.remoteID == transaction.remoteID }) {
+                            withAnimation {
+                                self.apiTransactions.remove(at: index)
+                            }
+                        }
+                        
+                        // Optional: Refresh from API to ensure consistency
+                        // self.fetchTransactionsForSelectedMonth()
+                    } else {
+                        // Show error
+                        self.errorMessage = "Failed to delete transaction: \(response.body)"
+                    }
+                }
+            }
+        }
     }
     
     // MARK: - Segmented Control Section
@@ -106,14 +172,14 @@ struct SummaryView: View {
                         selectedSegment = 0
                     }
                 }
-                .font(.system(size: 16, weight: selectedSegment == 0 ? .semibold : .medium))
+                .font(.system(size: 16, weight: selectedSegment == 0 ? .medium : .light))
                 .foregroundStyle(selectedSegment == 0 ? .white : Color(white: 0.9))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
                 .background {
                     if selectedSegment == 0 {
                         RoundedRectangle(cornerRadius: 22)
-                            .glassEffect(.regular.tint(Color.white.opacity(0.3)).interactive())
+                            .glassEffect(.regular)
                             .matchedGeometryEffect(id: "selectedSegment", in: segmentedControlNamespace)
                     }
                 }
@@ -124,14 +190,14 @@ struct SummaryView: View {
                         selectedSegment = 1
                     }
                 }
-                .font(.system(size: 16, weight: selectedSegment == 1 ? .semibold : .medium))
+                .font(.system(size: 16, weight: selectedSegment == 1 ? .medium : .light))
                 .foregroundStyle(selectedSegment == 1 ? .white : Color(white: 0.9))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
                 .background {
                     if selectedSegment == 1 {
                         RoundedRectangle(cornerRadius: 22)
-                            .glassEffect(.regular.tint(Color.white.opacity(0.3)).interactive())
+                            .glassEffect(.regular)
                             .matchedGeometryEffect(id: "selectedSegment", in: segmentedControlNamespace)
                     }
                 }
@@ -142,14 +208,14 @@ struct SummaryView: View {
                         selectedSegment = 2
                     }
                 }
-                .font(.system(size: 16, weight: selectedSegment == 2 ? .semibold : .medium))
+                .font(.system(size: 16, weight: selectedSegment == 2 ? .medium : .light))
                 .foregroundStyle(selectedSegment == 2 ? .white : Color(white: 0.9))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
                 .background {
                     if selectedSegment == 2 {
                         RoundedRectangle(cornerRadius: 22)
-                            .glassEffect(.regular.tint(Color.white.opacity(0.3)).interactive())
+                            .glassEffect(.regular)
                             .matchedGeometryEffect(id: "selectedSegment", in: segmentedControlNamespace)
                     }
                 }
@@ -157,7 +223,7 @@ struct SummaryView: View {
             .padding(4)
             .background {
                 RoundedRectangle(cornerRadius: 22)
-                    .glassEffect(.regular, in: .rect(cornerRadius: 22))
+                    .glassEffect(.clear, in: .rect(cornerRadius: 22))
             }
         }
     }
@@ -546,7 +612,7 @@ struct SummaryView: View {
                     GlassCardRow(
                         label: "Income",
                         value: formatCurrency(totalIncome),
-                        valueColor: Color.white
+                        valueColor: Color(red: 0.5, green: 1.0, blue: 0.5)  // Light green
                     )
                     
                     Divider()
@@ -555,7 +621,7 @@ struct SummaryView: View {
                     GlassCardRow(
                         label: "Expenses",
                         value: formatCurrency(totalExpenses),
-                        valueColor: Color.white
+                        valueColor: Color(red: 1.0, green: 0.5, blue: 0.5)  // Light red
                     )
                     
                     Divider()
@@ -612,7 +678,7 @@ struct SummaryView: View {
         }
     }
     
-    // UPDATED: Using unified AppListItem components
+    // UPDATED: Transaction list with delete functionality
     @ViewBuilder private var allTransactionsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             if apiTransactions.isEmpty {
@@ -621,9 +687,16 @@ struct SummaryView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else {
                 VStack(spacing: 8) {
-                    // Use array index as id instead of remoteID to handle duplicates
+                    // UPDATED: Use enhanced transaction list item with delete state tracking
                     ForEach(Array(apiTransactions.enumerated()), id: \.offset) { index, transaction in
-                        APITransactionListItem(transaction: transaction)
+                        EnhancedAPITransactionListItem(
+                            transaction: transaction,
+                            isDeleting: deletingTransactionID == transaction.remoteID,
+                            onDelete: {
+                                transactionToDelete = transaction
+                                showDeleteTransactionConfirmation = true
+                            }
+                        )
                     }
                 }
             }
@@ -640,8 +713,134 @@ struct SummaryView: View {
     }
 }
 
-// REMOVED: All duplicate components are now in AppListItem.swift
-// - APITransactionListItem
-// - SummaryCategoryItem
-// - SummaryPaymentItem
-// - isValidEmoji function
+// MARK: - Enhanced Transaction List Item (consistent with ManageView)
+
+struct EnhancedAPITransactionListItem: View {
+    let transaction: APITransaction
+    let isDeleting: Bool
+    let onDelete: () -> Void
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    // Category icon with emoji support and fallback icons
+                    categoryIconView
+                    
+                    Text(transaction.categoryName.isEmpty ? "Uncategorized" : transaction.categoryName)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.white)
+                }
+                
+                HStack(spacing: 8) {
+                    Text(formatDisplayDate(transaction.dateISO))
+                        .foregroundColor(.white.opacity(0.6))
+                        .font(.caption)
+                    
+                    if !transaction.paymentMethod.isEmpty {
+                        Text("• \(transaction.paymentMethod)")
+                            .foregroundColor(.white.opacity(0.6))
+                            .font(.caption)
+                    }
+                }
+            }
+            
+            Spacer()
+            
+            // Amount
+            Text(formatCurrency(Decimal(transaction.amount)))
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(transaction.amount >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : .white)
+            
+            // Delete button with loading state
+            if isDeleting {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    .scaleEffect(0.6)
+            } else {
+                Button(action: onDelete) {
+                    Image(systemName: "minus.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(.red.opacity(0.7))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background(Color.clear)
+        .glassEffect(.regular, in: .rect(cornerRadius: 10))
+        .opacity(isDeleting ? 0.6 : 1.0)
+        .animation(.easeInOut(duration: 0.2), value: isDeleting)
+    }
+    
+    // Category icon view with emoji support and fallback icons
+    @ViewBuilder private var categoryIconView: some View {
+        if !transaction.categoryEmoji.isEmpty && isValidEmoji(transaction.categoryEmoji) {
+            // Use the category emoji from the API
+            Text(transaction.categoryEmoji)
+                .font(.system(size: 20))
+        } else {
+            // Fallback for uncategorized/empty emoji: colored icons
+            if transaction.amount >= 0 {
+                // Income: light green plus
+                Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 20))
+                    .foregroundColor(Color(red: 0.5, green: 1.0, blue: 0.5))
+            } else {
+                // Expense: light red minus
+                Image(systemName: "minus.circle.fill")
+                    .font(.system(size: 20))
+                    .foregroundColor(Color(red: 1.0, green: 0.5, blue: 0.5))
+            }
+        }
+    }
+}
+
+// MARK: - Helper Functions
+
+private func formatCurrency(_ value: Decimal) -> String {
+    let formatter = NumberFormatter()
+    formatter.numberStyle = .currency
+    formatter.locale = Locale(identifier: "pt_BR")
+    return formatter.string(for: NSDecimalNumber(decimal: value)) ?? "R$ 0,00"
+}
+
+private func formatDisplayDate(_ dateString: String) -> String {
+    let outputFormatter = DateFormatter()
+    outputFormatter.dateFormat = "dd/MM"
+    
+    let isoFormatter = ISO8601DateFormatter()
+    isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    
+    if let date = isoFormatter.date(from: dateString) {
+        return outputFormatter.string(from: date)
+    }
+    
+    isoFormatter.formatOptions = [.withInternetDateTime]
+    if let date = isoFormatter.date(from: dateString) {
+        return outputFormatter.string(from: date)
+    }
+    
+    let simpleFormatter = DateFormatter()
+    simpleFormatter.dateFormat = "yyyy-MM-dd"
+    if let date = simpleFormatter.date(from: dateString) {
+        return outputFormatter.string(from: date)
+    }
+    
+    if dateString.count >= 10 {
+        let datePart = String(dateString.prefix(10))
+        if let date = simpleFormatter.date(from: datePart) {
+            return outputFormatter.string(from: date)
+        }
+    }
+    
+    return dateString
+}
+
+private func isValidEmoji(_ string: String) -> Bool {
+    guard !string.isEmpty else { return false }
+    return string.unicodeScalars.allSatisfy { scalar in
+        scalar.properties.isEmoji
+    }
+}

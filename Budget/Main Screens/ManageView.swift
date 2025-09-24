@@ -198,85 +198,85 @@ struct ManageView: View {
     // MARK: - Delete Functions
 
     private func deleteCategory(_ category: APICategory) {
-        deletingCategoryID = category.remoteID
-        
-        if useMockData {
-            // Simulate API delay for mock
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                // Remove from local array
-                if let index = self.categories.firstIndex(where: { $0.remoteID == category.remoteID }) {
-                    withAnimation {
-                        self.categories.remove(at: index)
+            deletingCategoryID = category.remoteID
+            
+            if useMockData {
+                // Simulate API delay for mock
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    // Remove from local array
+                    if let index = self.categories.firstIndex(where: { $0.remoteID == category.remoteID }) {
+                        withAnimation {
+                            self.categories.remove(at: index)
+                        }
                     }
-                }
-                self.deletingCategoryID = nil
-                self.categoryToDelete = nil
-            }
-        } else {
-            SHEETS.deleteCategory(remoteID: category.remoteID) { response in
-                DispatchQueue.main.async {
                     self.deletingCategoryID = nil
                     self.categoryToDelete = nil
-                    
-                    if response.status == 200 {
-                        // Remove from local array immediately for fast UI update
-                        if let index = self.categories.firstIndex(where: { $0.remoteID == category.remoteID }) {
-                            withAnimation {
-                                self.categories.remove(at: index)
-                            }
-                        }
+                }
+            } else {
+                SHEETS.deleteCategory(remoteID: category.remoteID) { response in
+                    DispatchQueue.main.async {
+                        self.deletingCategoryID = nil
+                        self.categoryToDelete = nil
                         
-                        // Optional: Refresh from API to ensure consistency
-                        self.fetchCategories()
-                    } else {
-                        // Show error
-                        self.alertMessage = "Failed to delete category: \(response.body)"
+                        if response.status == 200 {
+                            // Remove from local array immediately for fast UI update (no full reload)
+                            if let index = self.categories.firstIndex(where: { $0.remoteID == category.remoteID }) {
+                                withAnimation {
+                                    self.categories.remove(at: index)
+                                }
+                            }
+                            
+                            // NO FULL RELOAD: Removed self.fetchCategories() call
+                            // The item is already removed from the UI for fast feedback
+                        } else {
+                            // Show error
+                            self.alertMessage = "Failed to delete category: \(response.body)"
+                        }
                     }
                 }
             }
         }
-    }
-    
-    private func deletePaymentMethod(_ method: APIPaymentMethod) {
-        deletingPaymentID = method.remoteID
         
-        if useMockData {
-            // Simulate API delay for mock
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                // Remove from local array
-                if let index = self.methods.firstIndex(where: { $0.remoteID == method.remoteID }) {
-                    withAnimation {
-                        self.methods.remove(at: index)
+        private func deletePaymentMethod(_ method: APIPaymentMethod) {
+            deletingPaymentID = method.remoteID
+            
+            if useMockData {
+                // Simulate API delay for mock
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    // Remove from local array
+                    if let index = self.methods.firstIndex(where: { $0.remoteID == method.remoteID }) {
+                        withAnimation {
+                            self.methods.remove(at: index)
+                        }
                     }
-                }
-                self.deletingPaymentID = nil
-                self.paymentMethodToDelete = nil
-            }
-        } else {
-            SHEETS.deletePaymentMethod(remoteID: method.remoteID) { response in
-                DispatchQueue.main.async {
                     self.deletingPaymentID = nil
                     self.paymentMethodToDelete = nil
-                    
-                    if response.status == 200 {
-                        // Remove from local array immediately for fast UI update
-                        if let index = self.methods.firstIndex(where: { $0.remoteID == method.remoteID }) {
-                            withAnimation {
-                                self.methods.remove(at: index)
-                            }
-                        }
+                }
+            } else {
+                SHEETS.deletePaymentMethod(remoteID: method.remoteID) { response in
+                    DispatchQueue.main.async {
+                        self.deletingPaymentID = nil
+                        self.paymentMethodToDelete = nil
                         
-                        // Optional: Refresh from API to ensure consistency
-                        self.fetchPaymentMethods()
-                    } else {
-                        // Show error
-                        self.alertMessage = "Failed to delete payment method: \(response.body)"
+                        if response.status == 200 {
+                            // Remove from local array immediately for fast UI update (no full reload)
+                            if let index = self.methods.firstIndex(where: { $0.remoteID == method.remoteID }) {
+                                withAnimation {
+                                    self.methods.remove(at: index)
+                                }
+                            }
+                            
+                            // NO FULL RELOAD: Removed self.fetchPaymentMethods() call
+                            // The item is already removed from the UI for fast feedback
+                        } else {
+                            // Show error
+                            self.alertMessage = "Failed to delete payment method: \(response.body)"
+                        }
                     }
                 }
             }
         }
-    }
-
+    
     // MARK: - Data Loading Functions (unchanged)
     
     private func loadDataForCurrentSection() {
