@@ -845,11 +845,10 @@ struct APIPaymentChipView: View {
         .background {
             if isSelected {
                 Capsule()
-                    .glassEffect(.regular)
-                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
+                    .glassEffect(.regular.tint(Color.white.opacity(0.3)).interactive())                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
             } else {
                 Capsule()
-                    .glassEffect(.clear)
+                .glassEffect(.regular.interactive())
             }
         }
     }
@@ -884,11 +883,10 @@ struct APICategoryChipView: View {
         .background {
             if isSelected {
                 Capsule()
-                    .glassEffect(.regular)
-                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
+                    .glassEffect(.regular.tint(Color.white.opacity(0.3)).interactive())                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
             } else {
                 Capsule()
-                    .glassEffect(.clear)
+                .glassEffect(.regular.interactive())
             }
         }
     }

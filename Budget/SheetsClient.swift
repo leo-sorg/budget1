@@ -55,6 +55,35 @@ struct SheetsClient {
         postJSON(payload, completion: completion)
     }
 
+    // MARK: - DELETE Methods
+    
+    /// Delete a transaction by remoteID
+    func deleteTransaction(remoteID: String, completion: @escaping (Response) -> Void = { _ in }) {
+        let payload: [String: Any] = [
+            "type": "deleteTransaction",
+            "remoteID": remoteID
+        ]
+        postJSON(payload, completion: completion)
+    }
+    
+    /// Delete a category by remoteID
+    func deleteCategory(remoteID: String, completion: @escaping (Response) -> Void = { _ in }) {
+        let payload: [String: Any] = [
+            "type": "deleteCategory",
+            "remoteID": remoteID
+        ]
+        postJSON(payload, completion: completion)
+    }
+    
+    /// Delete a payment method by remoteID
+    func deletePaymentMethod(remoteID: String, completion: @escaping (Response) -> Void = { _ in }) {
+        let payload: [String: Any] = [
+            "type": "deletePaymentMethod",
+            "remoteID": remoteID
+        ]
+        postJSON(payload, completion: completion)
+    }
+
     // MARK: - GET Methods
     
     func getTransactions(startDate: Date, endDate: Date, limit: Int = 300,

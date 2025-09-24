@@ -75,7 +75,7 @@ struct AppSmallButtonStyle: ButtonStyle {
             .padding(.vertical, 6)
             .background {
                 Capsule()
-                    .glassEffect(isDisabled ? .clear : .regular)
+                    .glassEffect(isDisabled ? .regular.interactive() : .regular.interactive())
             }
     }
 }
@@ -152,7 +152,7 @@ struct EnhancedButton: View {
         .buttonStyle(.plain)
         .background {
             Capsule()
-                .glassEffect((isDisabled && !stateManager.isLoading && !stateManager.showSuccess) ? .clear : .regular)
+                .glassEffect((isDisabled && !stateManager.isLoading && !stateManager.showSuccess) ? .regular : .regular.tint(Color.white.opacity(0.3)).interactive())
         }
         .disabled(isDisabled)
         .animation(.easeInOut(duration: 0.2), value: stateManager.isLoading)

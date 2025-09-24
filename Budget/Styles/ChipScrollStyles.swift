@@ -30,11 +30,10 @@ struct PaymentChipView: View {
         .background {
             if isSelected {
                 Capsule()
-                    .glassEffect(.regular)
-                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
+                    .glassEffect(.regular.tint(Color.white.opacity(0.3)).interactive())                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
             } else {
                 Capsule()
-                    .glassEffect(.clear)
+                .glassEffect(.regular.interactive())
             }
         }
     }
@@ -65,11 +64,10 @@ struct CategoryChipView: View {
         .background {
             if isSelected {
                 Capsule()
-                    .glassEffect(.regular)
-                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
+                    .glassEffect(.regular.tint(Color.white.opacity(0.3)).interactive())                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
             } else {
                 Capsule()
-                    .glassEffect(.clear)
+                .glassEffect(.regular.interactive())
             }
         }
     }
@@ -97,11 +95,10 @@ struct MonthChipView: View {
         .background {
             if isSelected {
                 Capsule()
-                    .glassEffect(.regular)
-                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
+                    .glassEffect(.regular.tint(Color.white.opacity(0.3)).interactive())                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
             } else {
                 Capsule()
-                    .glassEffect(.clear)
+                .glassEffect(.regular.interactive())
             }
         }
     }
@@ -144,11 +141,10 @@ struct ManageSectionChip: View {
         .background {
             if isSelected {
                 Capsule()
-                    .glassEffect(.regular)
-                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
+                    .glassEffect(.regular.tint(Color.white.opacity(0.3)).interactive())                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
             } else {
                 Capsule()
-                    .glassEffect(.clear)
+                .glassEffect(.regular.interactive())
             }
         }
     }
@@ -163,11 +159,10 @@ struct LiquidGlassChip: View {
     
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: 6) {
                 Text(title)
                     .font(.system(size: 16, weight: isSelected ? .semibold : .medium))
                     .foregroundStyle(isSelected ? .white : Color(white: 0.9))
-            }
+            
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
         }
@@ -175,11 +170,11 @@ struct LiquidGlassChip: View {
         .background {
             if isSelected {
                 Capsule()
-                    .glassEffect(.regular)
+                    .glassEffect(.regular.tint(Color.white.opacity(0.3)).interactive())
                     .matchedGeometryEffect(id: "selectedChip", in: namespace)
             } else {
                 Capsule()
-                    .glassEffect(.clear)
+                    .glassEffect(.regular.interactive())  // ✅ Add .interactive() here too
             }
         }
     }

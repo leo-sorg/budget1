@@ -106,14 +106,14 @@ struct SummaryView: View {
                         selectedSegment = 0
                     }
                 }
-                .font(.system(size: 16, weight: selectedSegment == 0 ? .medium : .light))
+                .font(.system(size: 16, weight: selectedSegment == 0 ? .semibold : .medium))
                 .foregroundStyle(selectedSegment == 0 ? .white : Color(white: 0.9))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
                 .background {
                     if selectedSegment == 0 {
                         RoundedRectangle(cornerRadius: 22)
-                            .glassEffect(.regular)
+                            .glassEffect(.regular.tint(Color.white.opacity(0.3)).interactive())
                             .matchedGeometryEffect(id: "selectedSegment", in: segmentedControlNamespace)
                     }
                 }
@@ -124,14 +124,14 @@ struct SummaryView: View {
                         selectedSegment = 1
                     }
                 }
-                .font(.system(size: 16, weight: selectedSegment == 1 ? .medium : .light))
+                .font(.system(size: 16, weight: selectedSegment == 1 ? .semibold : .medium))
                 .foregroundStyle(selectedSegment == 1 ? .white : Color(white: 0.9))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
                 .background {
                     if selectedSegment == 1 {
                         RoundedRectangle(cornerRadius: 22)
-                            .glassEffect(.regular)
+                            .glassEffect(.regular.tint(Color.white.opacity(0.3)).interactive())
                             .matchedGeometryEffect(id: "selectedSegment", in: segmentedControlNamespace)
                     }
                 }
@@ -142,14 +142,14 @@ struct SummaryView: View {
                         selectedSegment = 2
                     }
                 }
-                .font(.system(size: 16, weight: selectedSegment == 2 ? .medium : .light))
+                .font(.system(size: 16, weight: selectedSegment == 2 ? .semibold : .medium))
                 .foregroundStyle(selectedSegment == 2 ? .white : Color(white: 0.9))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
                 .background {
                     if selectedSegment == 2 {
                         RoundedRectangle(cornerRadius: 22)
-                            .glassEffect(.regular)
+                            .glassEffect(.regular.tint(Color.white.opacity(0.3)).interactive())
                             .matchedGeometryEffect(id: "selectedSegment", in: segmentedControlNamespace)
                     }
                 }
@@ -157,7 +157,7 @@ struct SummaryView: View {
             .padding(4)
             .background {
                 RoundedRectangle(cornerRadius: 22)
-                    .glassEffect(.clear, in: .rect(cornerRadius: 22))
+                    .glassEffect(.regular, in: .rect(cornerRadius: 22))
             }
         }
     }
