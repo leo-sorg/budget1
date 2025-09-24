@@ -1,95 +1,87 @@
 import SwiftUI
 
-// MARK: - Uncategorized Transaction Card Stack
+// MARK: - Uncategorized Transaction Card Stack (Clean Version)
 struct UncategorizedTransactionStack: View {
     let transactions: [APITransaction]
     let categories: [APICategory]
     let onCategorizeTransaction: (APITransaction, APICategory) -> Void
     let onDismissStack: () -> Void
     
-    @State private var currentIndex = 0
+    @State private var cardStack: [APITransaction] = []
     @State private var dragOffset: CGSize = .zero
     @State private var showCategoryPicker = false
     @State private var selectedTransaction: APITransaction?
+    @State private var hasSwipedSignificantly = false
     
     private let cardHeight: CGFloat = 140
     private let maxVisibleCards = 3
     
     var body: some View {
-        VStack(spacing: 16) {
-            // Header
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Uncategorized Transactions")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(.white)
+        // ONLY the card stack - no background, no titles, no dismiss button
+        ZStack {
+            if !cardStack.isEmpty {
+                ForEach(Array(visibleTransactions.enumerated()), id: \.element.remoteID) { stackIndex, transaction in
+                    let isTopCard = stackIndex == 0
                     
-                    Text("\(transactions.count) transaction\(transactions.count == 1 ? "" : "s") need categorization")
-                        .font(.system(size: 14))
-                        .foregroundColor(.white.opacity(0.7))
-                }
-                
-                Spacer()
-                
-                Button("Dismiss") {
-                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                        onDismissStack()
-                    }
-                }
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.white.opacity(0.8))
-            }
-            
-            // Card Stack
-            if !transactions.isEmpty && currentIndex < transactions.count {
-                ZStack {
-                    ForEach(Array(visibleTransactions.enumerated()), id: \.element.remoteID) { stackIndex, transaction in
-                        let actualIndex = currentIndex + stackIndex
-                        let isTopCard = stackIndex == 0
-                        
-                        TransactionCard(
-                            transaction: transaction,
-                            isTopCard: isTopCard,
-                            stackIndex: stackIndex,
-                            dragOffset: isTopCard ? dragOffset : .zero
-                        ) {
-                            // Tap action - show category picker
+                    TransactionCard(
+                        transaction: transaction,
+                        isTopCard: isTopCard,
+                        stackIndex: stackIndex,
+                        dragOffset: isTopCard ? dragOffset : .zero,
+                        hasSwipedSignificantly: $hasSwipedSignificantly
+                    ) {
+                        // Only show category picker if we haven't swiped significantly
+                        if !hasSwipedSignificantly {
                             selectedTransaction = transaction
                             showCategoryPicker = true
                         }
-                        .scaleEffect(cardScale(for: stackIndex))
-                        .offset(y: cardYOffset(for: stackIndex))
-                        .zIndex(Double(maxVisibleCards - stackIndex))
-                        .opacity(cardOpacity(for: stackIndex))
-                        .gesture(
-                            isTopCard ? cardDragGesture : nil
-                        )
                     }
-                }
-                .frame(height: cardHeight + 60) // Extra space for card offsets
-                .animation(.spring(response: 0.4, dampingFraction: 0.8), value: currentIndex)
-                .animation(.spring(response: 0.3, dampingFraction: 0.9), value: dragOffset)
-                
-                // Progress indicator
-                if transactions.count > 1 {
-                    HStack(spacing: 6) {
-                        ForEach(0..<min(transactions.count, 5), id: \.self) { index in
-                            Circle()
-                                .fill(index == min(currentIndex, 4) ? Color.white : Color.white.opacity(0.3))
-                                .frame(width: 6, height: 6)
-                        }
-                        
-                        if transactions.count > 5 {
-                            Text("+\(transactions.count - 5)")
-                                .font(.caption2)
-                                .foregroundColor(.white.opacity(0.6))
-                        }
-                    }
+                    .scaleEffect(cardScale(for: stackIndex))
+                    .offset(y: cardYOffset(for: stackIndex))
+                    .zIndex(Double(maxVisibleCards - stackIndex))
+                    .opacity(cardOpacity(for: stackIndex))
+                    .gesture(
+                        isTopCard ?
+                        DragGesture(minimumDistance: 10)
+                            .onChanged { value in
+                                dragOffset = value.translation
+                                
+                                // Mark as significantly swiped if moved more than 30 points
+                                if abs(value.translation.width) > 30 {
+                                    hasSwipedSignificantly = true
+                                }
+                            }
+                            .onEnded { value in
+                                let threshold: CGFloat = 80
+                                if abs(value.translation.width) > threshold {
+                                    // Mark as swiped to prevent tap action
+                                    hasSwipedSignificantly = true
+                                    
+                                    // Move top card to back of stack
+                                    moveTopCardToBack()
+                                } else {
+                                    // Snap back
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.9)) {
+                                        dragOffset = .zero
+                                    }
+                                    
+                                    // Reset swipe flag after a short delay if it was a small movement
+                                    if abs(value.translation.width) < 30 {
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                            hasSwipedSignificantly = false
+                                        }
+                                    }
+                                }
+                            } : nil
+                    )
                 }
             }
         }
-        .padding(20)
-        .glassEffect(.regular.tint(Color.orange.opacity(0.1)), in: .rect(cornerRadius: 16))
+        .frame(height: cardHeight + 60)
+        .onAppear {
+            // Initialize the card stack
+            cardStack = transactions
+        }
         .sheet(isPresented: $showCategoryPicker) {
             if let transaction = selectedTransaction {
                 CategoryPickerSheet(
@@ -97,9 +89,9 @@ struct UncategorizedTransactionStack: View {
                     categories: categories,
                     onCategorize: { category in
                         onCategorizeTransaction(transaction, category)
-                        moveToNextCard()
+                        moveTopCardToBack()
                     },
-                    onCancel: {
+                    onDismiss: {
                         showCategoryPicker = false
                         selectedTransaction = nil
                     }
@@ -110,24 +102,12 @@ struct UncategorizedTransactionStack: View {
         }
     }
     
-    // MARK: - Computed Properties
+    // MARK: - Helper Functions
     
     private var visibleTransactions: [APITransaction] {
-        let endIndex = min(currentIndex + maxVisibleCards, transactions.count)
-        return Array(transactions[currentIndex..<endIndex])
+        let endIndex = min(maxVisibleCards, cardStack.count)
+        return Array(cardStack[0..<endIndex])
     }
-    
-    private var cardDragGesture: some Gesture {
-        DragGesture()
-            .onChanged { value in
-                dragOffset = value.translation
-            }
-            .onEnded { value in
-                handleDragEnd(translation: value.translation)
-            }
-    }
-    
-    // MARK: - Helper Functions
     
     private func cardScale(for stackIndex: Int) -> CGFloat {
         return 1.0 - (CGFloat(stackIndex) * 0.05)
@@ -141,134 +121,126 @@ struct UncategorizedTransactionStack: View {
         return stackIndex == 0 ? 1.0 : 0.8 - (Double(stackIndex) * 0.1)
     }
     
-    private func handleDragEnd(translation: CGSize) {
-        let threshold: CGFloat = 80
+    private func moveTopCardToBack() {
+        guard !cardStack.isEmpty else { return }
         
-        if translation.x > threshold {
-            // Swipe right - send to back of stack
-            sendCurrentCardToBack()
-        } else if translation.x < -threshold {
-            // Swipe left - maybe implement "skip" functionality later
-            sendCurrentCardToBack()
-        } else {
-            // Snap back
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.9)) {
-                dragOffset = .zero
-            }
-        }
-    }
-    
-    private func sendCurrentCardToBack() {
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-            dragOffset = CGSize(width: 400, height: 0) // Animate off screen
-        }
-        
-        // Move the current transaction to the back and reset
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            moveToNextCard()
-        }
-    }
-    
-    private func moveToNextCard() {
         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
             dragOffset = .zero
-            if currentIndex < transactions.count - 1 {
-                currentIndex += 1
-            } else {
-                // Reached the end, cycle back to beginning
-                currentIndex = 0
-            }
+            
+            // Move the first card to the end
+            let topCard = cardStack.removeFirst()
+            cardStack.append(topCard)
+        }
+        
+        // Reset swipe flag for next card
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            hasSwipedSignificantly = false
         }
     }
 }
 
-// MARK: - Transaction Card Component
+// MARK: - Transaction Card Component (No Background)
 struct TransactionCard: View {
     let transaction: APITransaction
     let isTopCard: Bool
     let stackIndex: Int
     let dragOffset: CGSize
+    @Binding var hasSwipedSignificantly: Bool
     let onTap: () -> Void
     
     var body: some View {
-        Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 12) {
-                // Header row
-                HStack {
-                    // Amount (prominent)
-                    Text(formatCurrency(Decimal(transaction.amount)))
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundColor(transaction.amount >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : Color(red: 1.0, green: 0.6, blue: 0.6))
-                    
-                    Spacer()
-                    
-                    // Date
-                    Text(formatDisplayDate(transaction.dateISO))
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.white.opacity(0.7))
-                }
+        VStack(alignment: .leading, spacing: 12) {
+            // Header row
+            HStack {
+                // Amount (prominent)
+                Text(formatCurrency(Decimal(transaction.amount)))
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(transaction.amount >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : Color(red: 1.0, green: 0.6, blue: 0.6))
                 
-                // Transaction details
-                HStack(spacing: 8) {
-                    // Payment method icon
-                    Image(systemName: "creditcard.fill")
-                        .font(.system(size: 14))
-                        .foregroundColor(.white.opacity(0.6))
+                Spacer()
+                
+                // Date
+                Text(formatDisplayDate(transaction.dateISO))
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.white.opacity(0.7))
+            }
+            
+            // Transaction details
+            HStack(spacing: 8) {
+                // Payment method icon
+                Image(systemName: "creditcard.fill")
+                    .font(.system(size: 14))
+                    .foregroundColor(.white.opacity(0.6))
+                
+                Text(transaction.paymentMethod.isEmpty ? "Unknown" : transaction.paymentMethod)
+                    .font(.system(size: 14))
+                    .foregroundColor(.white.opacity(0.8))
+                
+                if !transaction.merchantName.isEmpty {
+                    Text("•")
+                        .foregroundColor(.white.opacity(0.4))
                     
-                    Text(transaction.paymentMethod.isEmpty ? "Unknown" : transaction.paymentMethod)
+                    Text(transaction.merchantName)
                         .font(.system(size: 14))
                         .foregroundColor(.white.opacity(0.8))
-                    
-                    if !transaction.merchantName.isEmpty {
-                        Text("•")
-                            .foregroundColor(.white.opacity(0.4))
-                        
-                        Text(transaction.merchantName)
-                            .font(.system(size: 14))
-                            .foregroundColor(.white.opacity(0.8))
-                            .lineLimit(1)
-                    }
-                }
-                
-                // Note if available
-                if !transaction.note.isEmpty {
-                    Text(transaction.note)
-                        .font(.system(size: 13))
-                        .foregroundColor(.white.opacity(0.6))
-                        .lineLimit(2)
-                }
-                
-                // Call to action
-                HStack {
-                    Image(systemName: "hand.tap.fill")
-                        .font(.system(size: 12))
-                        .foregroundColor(.white.opacity(0.5))
-                    
-                    Text("Tap to categorize")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.white.opacity(0.5))
-                    
-                    Spacer()
-                    
-                    if isTopCard {
-                        Image(systemName: "arrow.left.arrow.right")
-                            .font(.system(size: 12))
-                            .foregroundColor(.white.opacity(0.3))
-                        Text("Swipe to skip")
-                            .font(.system(size: 10))
-                            .foregroundColor(.white.opacity(0.3))
-                    }
+                        .lineLimit(1)
                 }
             }
-            .padding(16)
+            
+            // Note if available
+            if !transaction.note.isEmpty {
+                Text(transaction.note)
+                    .font(.system(size: 13))
+                    .foregroundColor(.white.opacity(0.6))
+                    .lineLimit(2)
+            }
+            
+            // Call to action
+            HStack {
+                Image(systemName: "hand.tap.fill")
+                    .font(.system(size: 12))
+                    .foregroundColor(.white.opacity(0.5))
+                
+                Text("Tap to categorize")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.white.opacity(0.5))
+                
+                Spacer()
+                
+                if isTopCard {
+                    Image(systemName: "arrow.left.arrow.right")
+                        .font(.system(size: 12))
+                        .foregroundColor(.white.opacity(0.3))
+                    Text("Swipe to skip")
+                        .font(.system(size: 10))
+                        .foregroundColor(.white.opacity(0.3))
+                }
+            }
         }
-        .buttonStyle(.plain)
+        .padding(16)
         .frame(height: 140)
         .frame(maxWidth: .infinity)
-        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
+        .background(Color.clear) // Ensure background is clear for gesture detection
+        .glassEffect(
+            isTopCard ?
+            .regular.tint(Color.black.opacity(0.6)).interactive() :
+            .regular.interactive(),
+            in: .rect(cornerRadius: 12)
+        )
+        .contentShape(Rectangle()) // Make entire card area tappable/swipable
         .offset(dragOffset)
-        .scaleEffect(isTopCard && abs(dragOffset.x) > 50 ? 0.95 : 1.0)
-        .rotationEffect(.degrees(Double(dragOffset.x / 20)))
+        .onTapGesture {
+            // Only trigger tap if we haven't swiped significantly
+            if !hasSwipedSignificantly {
+                onTap()
+            }
+        }
+        .onChange(of: dragOffset) { _, newValue in
+            // Reset the swipe flag when drag offset returns to zero
+            if newValue == .zero {
+                hasSwipedSignificantly = false
+            }
+        }
     }
 }
 
@@ -277,7 +249,7 @@ struct CategoryPickerSheet: View {
     let transaction: APITransaction
     let categories: [APICategory]
     let onCategorize: (APICategory) -> Void
-    let onCancel: () -> Void
+    let onDismiss: () -> Void
     
     @Namespace private var categoryNamespace
     @State private var selectedCategoryID: String?
@@ -363,7 +335,7 @@ struct CategoryPickerSheet: View {
                 .disabled(selectedCategoryID == nil)
                 
                 Button("Cancel") {
-                    onCancel()
+                    onDismiss()
                 }
                 .font(.system(size: 16))
                 .foregroundColor(.blue)

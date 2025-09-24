@@ -62,7 +62,7 @@ struct InputView: View {
                 VStack(spacing: 0) {
                     // UPDATED: Replaced banner with card stack
                     if showUncategorizedStack && !uncategorizedTransactions.isEmpty {
-                        UncategorizedTransactionCardStack(
+                        UncategorizedTransactionStack(
                             transactions: uncategorizedTransactions,
                             categories: apiCategories,
                             onCategorizeTransaction: { transaction, category in
@@ -74,11 +74,6 @@ struct InputView: View {
                                 }
                             }
                         )
-                        .padding(.bottom, 30)
-                        .transition(.asymmetric(
-                            insertion: .move(edge: .top).combined(with: .opacity),
-                            removal: .move(edge: .top).combined(with: .opacity)
-                        ))
                     }
                     
                     // Content sections with custom spacing
@@ -720,7 +715,7 @@ struct InputView: View {
                 
                 // Calendar appears directly here when showDatePicker is true
                 if showDatePicker {
-                    CalendarView(selectedDate: $date)
+                    InputViewCalendarView(selectedDate: $date)
                         .transition(.asymmetric(
                             insertion: .opacity.combined(with: .scale(scale: 0.9)),
                             removal: .opacity.combined(with: .scale(scale: 0.9))
