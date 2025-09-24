@@ -546,7 +546,7 @@ struct SummaryView: View {
                     GlassCardRow(
                         label: "Income",
                         value: formatCurrency(totalIncome),
-                        valueColor: Color(red: 0.5, green: 1.0, blue: 0.5)  // Light green
+                        valueColor: Color.white
                     )
                     
                     Divider()
@@ -555,7 +555,7 @@ struct SummaryView: View {
                     GlassCardRow(
                         label: "Expenses",
                         value: formatCurrency(totalExpenses),
-                        valueColor: Color(red: 1.0, green: 0.5, blue: 0.5)  // Light red
+                        valueColor: Color.white
                     )
                     
                     Divider()
