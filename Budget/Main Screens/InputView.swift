@@ -835,11 +835,11 @@ struct APIPaymentChipView: View {
                 }
                 
                 Text(paymentMethod.name)
-                    .font(.system(size: 16, weight: isSelected ? .medium : .light))
+                    .font(.system(size: 16, weight: isSelected ? .semibold : .medium))
                     .foregroundStyle(isSelected ? .white : Color(white: 0.9))
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.vertical, 10)
         }
         .buttonStyle(.plain)
         .background {
@@ -874,11 +874,11 @@ struct APICategoryChipView: View {
                 }
                 
                 Text(category.name)
-                    .font(.system(size: 16, weight: isSelected ? .medium : .light))
+                    .font(.system(size: 16, weight: isSelected ? .semibold : .medium))
                     .foregroundStyle(isSelected ? .white : Color(white: 0.9))
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.vertical, 10)
         }
         .buttonStyle(.plain)
         .background {

@@ -295,14 +295,21 @@ struct SummaryView: View {
         }
     }
     
-    // MARK: - Mock Data Generator
+    // MARK: - Mock Data Generator (UPDATED with categoryEmoji)
     private func getMockTransactionsForMonth() -> [APITransaction] {
         let (startDate, _) = selectedDateRange
         let calendar = Calendar.current
         
-        // Categories for expenses and income
-        let expenseCategories = ["Food", "Transport", "Shopping", "Bills", "Leisure", "Healthcare", "Groceries", "Coffee", "Rent", "Gym"]
-        let incomeCategories = ["Salary", "Freelance", "Bonus", "Gifts", "Investments"]
+        // Categories for expenses and income with emojis
+        let expenseCategories = [
+            ("Food", "🍽️"), ("Transport", "🚕"), ("Shopping", "🛍️"),
+            ("Bills", "💡"), ("Leisure", "🎬"), ("Healthcare", "🏥"),
+            ("Groceries", "🛒"), ("Coffee", "☕"), ("Rent", "🏠"), ("Gym", "💪")
+        ]
+        let incomeCategories = [
+            ("Salary", "💼"), ("Freelance", "💻"), ("Bonus", "🎁"),
+            ("Gifts", "🎊"), ("Investments", "📈")
+        ]
         
         // Payment methods
         let paymentMethods = ["Credit Card", "Debit Card", "Pix", "Cash", "Bank Transfer"]
@@ -321,22 +328,22 @@ struct SummaryView: View {
         for i in 0..<transactionCount {
             let isIncome = Double.random(in: 0...1) < 0.15 // 15% chance of income
             
-            let category: String
+            let categoryData: (String, String)
             let merchantName: String
             let amount: Double
             let transactionType: String
             let note: String
             
             if isIncome {
-                category = incomeCategories.randomElement()!
+                categoryData = incomeCategories.randomElement()!
                 merchantName = ["Company ABC", "Freelance Client", "Investment Return", "Gift from Family", "Bonus Payment"].randomElement()!
                 amount = Double.random(in: 500...5000)
                 transactionType = "income"
                 note = ["Monthly salary", "Project payment", "Bonus", "Gift", "Investment return", ""].randomElement()!
             } else {
-                category = expenseCategories.randomElement()!
+                categoryData = expenseCategories.randomElement()!
                 
-                switch category {
+                switch categoryData.0 {
                 case "Food", "Coffee":
                     merchantName = foodMerchants.randomElement()!
                     amount = -Double.random(in: 8...80)
@@ -378,11 +385,12 @@ struct SummaryView: View {
             dateComponents.day = randomDay
             let transactionDate = calendar.date(from: dateComponents) ?? startDate
             
-            // Create transaction using struct literal
+            // Create transaction with categoryEmoji
             let transaction = APITransaction(
                 remoteID: "mock-\(selectedMonth)-\(selectedYear)-\(i)",
                 amount: amount,
-                categoryName: category,
+                categoryName: categoryData.0,
+                categoryEmoji: categoryData.1, // NEW: Include emoji in mock data
                 paymentMethod: paymentMethods.randomElement()!,
                 merchantName: merchantName,
                 note: note,
@@ -393,8 +401,30 @@ struct SummaryView: View {
             transactions.append(transaction)
         }
         
-        // Return transactions in the order they were created (no sorting)
-        // This preserves the natural order like the API would
+        // Add a few uncategorized transactions to test fallback icons
+        for i in transactionCount..<(transactionCount + 2) {
+            let dayRange = calendar.range(of: .day, in: .month, for: startDate)!
+            let randomDay = Int.random(in: 1...dayRange.count)
+            
+            var dateComponents = calendar.dateComponents([.year, .month], from: startDate)
+            dateComponents.day = randomDay
+            let transactionDate = calendar.date(from: dateComponents) ?? startDate
+            
+            let uncategorizedTransaction = APITransaction(
+                remoteID: "mock-uncategorized-\(i)",
+                amount: -Double.random(in: 10...50),
+                categoryName: "", // Empty category name
+                categoryEmoji: "", // Empty category emoji
+                paymentMethod: paymentMethods.randomElement()!,
+                merchantName: "Unknown Store",
+                note: "Uncategorized expense",
+                dateISO: formatDateForAPI(transactionDate),
+                transactionType: "expense"
+            )
+            
+            transactions.append(uncategorizedTransaction)
+        }
+        
         return transactions
     }
     
@@ -607,7 +637,7 @@ struct SummaryView: View {
     }
 }
 
-// MARK: - API Transaction List Item (UPDATED - removed merchant and note)
+// MARK: - UPDATED API Transaction List Item with categoryEmoji support
 
 struct APITransactionListItem: View {
     let transaction: APITransaction
@@ -617,9 +647,9 @@ struct APITransactionListItem: View {
             content: {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 8) {
-                        // Use amount to determine transaction type: positive = income, negative = expense
-                        Text(transaction.amount >= 0 ? "💰" : "💸")
-                            .font(.system(size: 20))
+                        // UPDATED: Use categoryEmoji if available, fallback to colored minus icons
+                        categoryIconView
+                        
                         Text(transaction.categoryName.isEmpty ? "Uncategorized" : transaction.categoryName)
                             .font(.system(size: 16, weight: .medium))
                             .foregroundColor(.white)
@@ -644,6 +674,28 @@ struct APITransactionListItem: View {
                     .foregroundColor(transaction.amount >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : .white)  // Light green for income, white for expenses
             }
         )
+    }
+    
+    // UPDATED: Category icon view with emoji support and fallback icons
+    @ViewBuilder private var categoryIconView: some View {
+        if !transaction.categoryEmoji.isEmpty && isValidEmoji(transaction.categoryEmoji) {
+            // Use the category emoji from the API
+            Text(transaction.categoryEmoji)
+                .font(.system(size: 20))
+        } else {
+            // Fallback for uncategorized/empty emoji: colored minus icon
+            if transaction.amount >= 0 {
+                // Income: light green plus or up arrow
+                Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 20))
+                    .foregroundColor(Color(red: 0.5, green: 1.0, blue: 0.5)) // Light green
+            } else {
+                // Expense: light red minus
+                Image(systemName: "minus.circle.fill")
+                    .font(.system(size: 20))
+                    .foregroundColor(Color(red: 1.0, green: 0.5, blue: 0.5)) // Light red
+            }
+        }
     }
     
     private func formatDisplayDate(_ dateString: String) -> String {
@@ -691,6 +743,19 @@ struct APITransactionListItem: View {
         f.locale = Locale(identifier: "pt_BR")
         return f.string(for: NSDecimalNumber(decimal: value)) ?? "R$ 0,00"
     }
+}
+
+// MARK: - Helper function for emoji validation
+private func isValidEmoji(_ s: String) -> Bool {
+    guard !s.isEmpty else { return false }
+    let chars = Array(s)
+    if chars.count != 1 { return false }
+    if let scalar = s.unicodeScalars.first {
+        if CharacterSet.alphanumerics.contains(scalar) { return false }
+        if CharacterSet.punctuationCharacters.contains(scalar) { return false }
+        if CharacterSet.whitespacesAndNewlines.contains(scalar) { return false }
+    }
+    return true
 }
 
 // MARK: - Summary List Item Components

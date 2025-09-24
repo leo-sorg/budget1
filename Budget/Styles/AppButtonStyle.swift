@@ -51,7 +51,7 @@ struct AppButtonStyle: ButtonStyle {
             
             // Content layer
             configuration.label
-                .font(.system(size: 16, weight: isDisabled ? .light : .medium))
+                .font(.system(size: 16, weight: isDisabled ? .medium : .semibold))
                 .foregroundStyle(isDisabled ? Color(white: 0.9) : .white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 20)
@@ -69,7 +69,7 @@ struct AppSmallButtonStyle: ButtonStyle {
     
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 14, weight: isDisabled ? .light : .medium))
+            .font(.system(size: 14, weight: isDisabled ? .medium : .semibold))
             .foregroundStyle(isDisabled ? Color(white: 0.9) : .white)
             .padding(.horizontal, 12)  // <-- Change this value
             .padding(.vertical, 6)
@@ -130,7 +130,7 @@ struct EnhancedButton: View {
         } label: {
             ZStack {
                 Text(title)
-                    .font(.system(size: 16, weight: isDisabled ? .light : .medium))
+                    .font(.system(size: 16, weight: isDisabled ? .medium : .semibold))
                     .foregroundStyle(isDisabled ? Color(white: 0.9) : .white)
                     .opacity(stateManager.isLoading || stateManager.showSuccess ? 0 : 1)
                 

@@ -20,11 +20,11 @@ struct PaymentChipView: View {
                 }
                 
                 Text(paymentMethod.name)
-                    .font(.system(size: 16, weight: isSelected ? .medium : .light))
+                    .font(.system(size: 16, weight: isSelected ? .semibold : .medium))
                     .foregroundStyle(isSelected ? .white : Color(white: 0.9))
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.vertical, 10)
         }
         .buttonStyle(.plain)
         .background {
@@ -55,11 +55,11 @@ struct CategoryChipView: View {
                 }
                 
                 Text(category.name)
-                    .font(.system(size: 16, weight: isSelected ? .medium : .light))
+                    .font(.system(size: 16, weight: isSelected ? .semibold : .medium))
                     .foregroundStyle(isSelected ? .white : Color(white: 0.9))
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.vertical, 10)
         }
         .buttonStyle(.plain)
         .background {
@@ -87,11 +87,11 @@ struct MonthChipView: View {
         Button(action: onTap) {
             HStack(spacing: 6) {
                 Text(monthYearString)
-                    .font(.system(size: 16, weight: isSelected ? .medium : .light))
+                    .font(.system(size: 16, weight: isSelected ? .semibold : .medium))
                     .foregroundStyle(isSelected ? .white : Color(white: 0.9))
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.vertical, 10)
         }
         .buttonStyle(.plain)
         .background {
@@ -134,11 +134,11 @@ struct ManageSectionChip: View {
         Button(action: onTap) {
             HStack(spacing: 6) {
                 Text(section.rawValue)
-                    .font(.system(size: 16, weight: isSelected ? .medium : .light))
+                    .font(.system(size: 16, weight: isSelected ? .semibold : .medium))
                     .foregroundStyle(isSelected ? .white : Color(white: 0.9))
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.vertical, 10)
         }
         .buttonStyle(.plain)
         .background {
@@ -165,11 +165,11 @@ struct LiquidGlassChip: View {
         Button(action: onTap) {
             HStack(spacing: 6) {
                 Text(title)
-                    .font(.system(size: 16, weight: isSelected ? .medium : .light))
+                    .font(.system(size: 16, weight: isSelected ? .semibold : .medium))
                     .foregroundStyle(isSelected ? .white : Color(white: 0.9))
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.vertical, 10)
         }
         .buttonStyle(.plain)
         .background {

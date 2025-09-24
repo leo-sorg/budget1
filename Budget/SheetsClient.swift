@@ -236,15 +236,51 @@ struct APIResponse: Codable {
     let data: [APITransaction]
 }
 
+// UPDATED: Added categoryEmoji field
 struct APITransaction: Codable {
     let remoteID: String
     let amount: Double
     let categoryName: String
+    let categoryEmoji: String // NEW: Category emoji field
     let paymentMethod: String
     let merchantName: String
     let note: String
     let dateISO: String
     let transactionType: String
+    
+    // Custom decoder to handle potential missing categoryEmoji field
+    enum CodingKeys: String, CodingKey {
+        case remoteID, amount, categoryName, categoryEmoji, paymentMethod, merchantName, note, dateISO, transactionType
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        remoteID = try container.decode(String.self, forKey: .remoteID)
+        amount = try container.decode(Double.self, forKey: .amount)
+        categoryName = try container.decode(String.self, forKey: .categoryName)
+        paymentMethod = try container.decode(String.self, forKey: .paymentMethod)
+        merchantName = try container.decode(String.self, forKey: .merchantName)
+        note = try container.decode(String.self, forKey: .note)
+        dateISO = try container.decode(String.self, forKey: .dateISO)
+        transactionType = try container.decode(String.self, forKey: .transactionType)
+        
+        // Handle categoryEmoji with fallback to empty string if missing
+        categoryEmoji = (try? container.decode(String.self, forKey: .categoryEmoji)) ?? ""
+    }
+    
+    // Manual init for mock data
+    init(remoteID: String, amount: Double, categoryName: String, categoryEmoji: String = "", paymentMethod: String, merchantName: String, note: String, dateISO: String, transactionType: String) {
+        self.remoteID = remoteID
+        self.amount = amount
+        self.categoryName = categoryName
+        self.categoryEmoji = categoryEmoji
+        self.paymentMethod = paymentMethod
+        self.merchantName = merchantName
+        self.note = note
+        self.dateISO = dateISO
+        self.transactionType = transactionType
+    }
 }
 
 // MARK: - FIXED API Models - Simple camelCase structure
