@@ -117,6 +117,35 @@ struct SheetsClient {
         }
     }
 
+    // NEW: Get uncategorized transactions
+    func getUncategorizedTransactions(completion: @escaping (Result<APIResponse, Error>) -> Void) {
+        var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)!
+        components.queryItems = [
+            URLQueryItem(name: "secret", value: secret),
+            URLQueryItem(name: "action", value: "getTransactions"),
+            URLQueryItem(name: "isUncategorized", value: "true")
+        ]
+        
+        guard let url = components.url else {
+            completion(.failure(SheetsError.invalidURL))
+            return
+        }
+        
+        performGETRequest(url: url) { result in
+            switch result {
+            case .success(let data):
+                do {
+                    let apiResponse = try JSONDecoder().decode(APIResponse.self, from: data)
+                    completion(.success(apiResponse))
+                } catch {
+                    completion(.failure(error))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+
     func getCategories(completion: @escaping (Result<APICategoriesResponse, Error>) -> Void) {
         var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)!
         components.queryItems = [

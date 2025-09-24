@@ -11,6 +11,10 @@ struct InputView: View {
     @State private var apiCategories: [APICategory] = []
     @State private var apiPaymentMethods: [APIPaymentMethod] = []
     
+    // NEW: Uncategorized transactions state
+    @State private var uncategorizedCount: Int = 0
+    @State private var showUncategorizedBanner = false
+    
     // API loading states
     @State private var isLoadingCategories = false
     @State private var isLoadingPaymentMethods = false
@@ -55,9 +59,21 @@ struct InputView: View {
             topDateSection
             
             ScrollView {
-                VStack(spacing: 24) {
-                    // 1. Payment Type section
-                    paymentTypeSection
+                VStack(spacing: 0) {
+                    // NEW: Uncategorized transactions banner (conditionally shown)
+                    if showUncategorizedBanner {
+                        UncategorizedTransactionsComponent(count: uncategorizedCount)
+                            .padding(.bottom, 30) // 24pt spacing only from payment section below
+                            .transition(.asymmetric(
+                                insertion: .move(edge: .top).combined(with: .opacity),
+                                removal: .move(edge: .top).combined(with: .opacity)
+                            ))
+                    }
+                    
+                    // Content sections with custom spacing
+                    VStack(spacing: 24) {
+                        // 1. Payment Type section
+                        paymentTypeSection
                     
                     // 2. Category section
                     categorySection
@@ -86,9 +102,10 @@ struct InputView: View {
                     // Save button
                     saveSection
                     
-                    // Extra padding at bottom
-                    Spacer()
-                        .frame(height: 300)
+                        // Extra padding at bottom
+                        Spacer()
+                            .frame(height: 300)
+                    }
                 }
                 .padding()
                 .offset(y: keyboardScroll.scrollOffset)
@@ -101,6 +118,7 @@ struct InputView: View {
         }
         .overlay(alignment: .top) { toastOverlay }
         .animation(.default, value: showSavedToast)
+        .animation(.easeInOut(duration: 0.4), value: showUncategorizedBanner) // NEW: Animation for banner
         .refreshable {
             await refreshAPIData()
         }
@@ -134,18 +152,20 @@ struct InputView: View {
         }
     }
     
-    // MARK: - API Data Loading Functions
+    // MARK: - API Data Loading Functions (UPDATED to include uncategorized check)
     
     private func loadAPIData() {
         if isFirstLoad {
             // First time loading - use skeleton loading
             fetchCategories()
             fetchPaymentMethods()
+            fetchUncategorizedTransactions() // NEW: Also fetch uncategorized
             isFirstLoad = false
         } else {
             // Subsequent loads - no loading feedback
             fetchCategoriesQuietly()
             fetchPaymentMethodsQuietly()
+            fetchUncategorizedTransactionsQuietly() // NEW: Also fetch uncategorized quietly
         }
     }
     
@@ -158,6 +178,102 @@ struct InputView: View {
             group.addTask {
                 await refreshPaymentMethods()
             }
+            group.addTask {
+                await refreshUncategorizedTransactions() // NEW: Also refresh uncategorized
+            }
+        }
+    }
+    
+    // NEW: Fetch uncategorized transactions functions
+    
+    private func fetchUncategorizedTransactions() {
+        if useMockData {
+            // Mock data - simulate some uncategorized transactions
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                let mockCount = Int.random(in: 0...5) // Random count for demo
+                self.updateUncategorizedCount(mockCount)
+            }
+        } else {
+            fetchRealAPIUncategorizedTransactions()
+        }
+    }
+    
+    private func fetchUncategorizedTransactionsQuietly() {
+        if useMockData {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                let mockCount = Int.random(in: 0...5) // Random count for demo
+                self.updateUncategorizedCount(mockCount)
+            }
+        } else {
+            SHEETS.getUncategorizedTransactions { result in
+                DispatchQueue.main.async {
+                    switch result {
+                    case .success(let response):
+                        if response.success {
+                            self.updateUncategorizedCount(response.data.count)
+                        } else {
+                            self.updateUncategorizedCount(0)
+                        }
+                    case .failure(_):
+                        self.updateUncategorizedCount(0)
+                    }
+                }
+            }
+        }
+    }
+    
+    private func fetchRealAPIUncategorizedTransactions() {
+        SHEETS.getUncategorizedTransactions { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let response):
+                    if response.success {
+                        self.updateUncategorizedCount(response.data.count)
+                    } else {
+                        self.updateUncategorizedCount(0)
+                    }
+                case .failure(_):
+                    // Silently fail - just don't show the banner
+                    self.updateUncategorizedCount(0)
+                }
+            }
+        }
+    }
+    
+    @MainActor
+    private func refreshUncategorizedTransactions() async {
+        if useMockData {
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            let mockCount = Int.random(in: 0...5)
+            self.updateUncategorizedCount(mockCount)
+        } else {
+            await withCheckedContinuation { continuation in
+                SHEETS.getUncategorizedTransactions { result in
+                    DispatchQueue.main.async {
+                        switch result {
+                        case .success(let response):
+                            if response.success {
+                                self.updateUncategorizedCount(response.data.count)
+                            } else {
+                                self.updateUncategorizedCount(0)
+                            }
+                        case .failure(_):
+                            self.updateUncategorizedCount(0)
+                        }
+                        continuation.resume()
+                    }
+                }
+            }
+        }
+    }
+    
+    // NEW: Helper function to update uncategorized count with animation
+    private func updateUncategorizedCount(_ count: Int) {
+        let shouldShow = count > 0
+        
+        withAnimation(.easeInOut(duration: 0.4)) {
+            self.uncategorizedCount = count
+            self.showUncategorizedBanner = shouldShow
         }
     }
     
@@ -293,7 +409,7 @@ struct InputView: View {
         }
     }
     
-    // MARK: - Pull to Refresh Functions
+    // MARK: - Pull to Refresh Functions (UPDATED to include uncategorized)
     
     @MainActor
     private func refreshCategories() async {
@@ -520,7 +636,7 @@ struct InputView: View {
             
             // Bottom spacing
             Spacer()
-                .frame(height: 40)
+                .frame(height: 20)
         }
     }
     
@@ -708,7 +824,7 @@ struct InputView: View {
         )
     }
     
-    // MARK: - Save Function
+    // MARK: - Save Function (UPDATED to refresh uncategorized count after save)
     @MainActor
     private func performSave() async -> Bool {
         guard let amount = amountDecimal else { return false }
@@ -753,6 +869,11 @@ struct InputView: View {
             autoSelectFirstPaymentMethod()
             
             dismissKeyboard()
+            
+            // NEW: Refresh uncategorized count after saving
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                self.fetchUncategorizedTransactionsQuietly()
+            }
             
             return true
         } catch {
