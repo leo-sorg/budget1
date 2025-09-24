@@ -21,9 +21,7 @@ struct SummaryView: View {
     // Namespace for month chip morphing
     @Namespace private var monthChipNamespace
     
-    // NEW: Transaction delete state management (consistent with ManageView)
-    @State private var showDeleteTransactionConfirmation = false
-    @State private var transactionToDelete: APITransaction?
+    // UPDATED: Transaction delete state management - direct delete without confirmation
     @State private var deletingTransactionID: String?
     
     // Set this to false to use real API, true to use mock data
@@ -98,28 +96,9 @@ struct SummaryView: View {
             // Fetch transactions for current month when screen appears
             fetchTransactionsForSelectedMonth()
         }
-        // NEW: Transaction delete confirmation dialog (consistent with ManageView)
-        .confirmationDialog(
-            "Delete Transaction",
-            isPresented: $showDeleteTransactionConfirmation,
-            titleVisibility: .visible
-        ) {
-            Button("Delete", role: .destructive) {
-                if let transaction = transactionToDelete {
-                    deleteTransaction(transaction)
-                }
-            }
-            Button("Cancel", role: .cancel) {
-                transactionToDelete = nil
-            }
-        } message: {
-            if let transaction = transactionToDelete {
-                Text("Are you sure you want to delete this transaction? This action cannot be undone.")
-            }
-        }
     }
     
-    // MARK: - Transaction Delete Function (consistent with ManageView)
+    // MARK: - UPDATED Transaction Delete Function - Direct delete without confirmation
     
     private func deleteTransaction(_ transaction: APITransaction) {
         deletingTransactionID = transaction.remoteID
@@ -134,13 +113,11 @@ struct SummaryView: View {
                     }
                 }
                 self.deletingTransactionID = nil
-                self.transactionToDelete = nil
             }
         } else {
             SHEETS.deleteTransaction(remoteID: transaction.remoteID) { response in
                 DispatchQueue.main.async {
                     self.deletingTransactionID = nil
-                    self.transactionToDelete = nil
                     
                     if response.status == 200 {
                         // Remove from local array immediately for fast UI update
@@ -149,9 +126,6 @@ struct SummaryView: View {
                                 self.apiTransactions.remove(at: index)
                             }
                         }
-                        
-                        // Optional: Refresh from API to ensure consistency
-                        // self.fetchTransactionsForSelectedMonth()
                     } else {
                         // Show error
                         self.errorMessage = "Failed to delete transaction: \(response.body)"
@@ -678,7 +652,7 @@ struct SummaryView: View {
         }
     }
     
-    // UPDATED: Transaction list with delete functionality
+    // UPDATED: Transaction list with direct delete (no confirmation) and swipe-to-delete
     @ViewBuilder private var allTransactionsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             if apiTransactions.isEmpty {
@@ -697,8 +671,7 @@ struct SummaryView: View {
                     .onDelete { indexSet in
                         for index in indexSet {
                             let transaction = apiTransactions[index]
-                            transactionToDelete = transaction
-                            showDeleteTransactionConfirmation = true
+                            deleteTransaction(transaction) // Direct delete on swipe
                         }
                     }
                 }
@@ -716,90 +689,6 @@ struct SummaryView: View {
         f.numberStyle = .currency
         f.locale = Locale(identifier: "pt_BR")
         return f.string(for: NSDecimalNumber(decimal: value)) ?? "R$ 0,00"
-    }
-}
-
-// MARK: - Enhanced Transaction List Item (consistent with ManageView)
-
-struct EnhancedAPITransactionListItem: View {
-    let transaction: APITransaction
-    let isDeleting: Bool
-    let onDelete: () -> Void
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 8) {
-                    // Category icon with emoji support and fallback icons
-                    categoryIconView
-                    
-                    Text(transaction.categoryName.isEmpty ? "Uncategorized" : transaction.categoryName)
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.white)
-                }
-                
-                HStack(spacing: 8) {
-                    Text(formatDisplayDate(transaction.dateISO))
-                        .foregroundColor(.white.opacity(0.6))
-                        .font(.caption)
-                    
-                    if !transaction.paymentMethod.isEmpty {
-                        Text("• \(transaction.paymentMethod)")
-                            .foregroundColor(.white.opacity(0.6))
-                            .font(.caption)
-                    }
-                }
-            }
-            
-            Spacer()
-            
-            // Amount
-            Text(formatCurrency(Decimal(transaction.amount)))
-                .font(.system(size: 16, weight: .medium))
-                .foregroundColor(transaction.amount >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : .white)
-            
-            // Delete button with loading state
-            if isDeleting {
-                ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                    .scaleEffect(0.6)
-            } else {
-                Button(action: onDelete) {
-                    Image(systemName: "minus.circle.fill")
-                        .font(.system(size: 20))
-                        .foregroundColor(.red.opacity(0.7))
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .background(Color.clear)
-        .glassEffect(.regular, in: .rect(cornerRadius: 10))
-        .opacity(isDeleting ? 0.6 : 1.0)
-        .animation(.easeInOut(duration: 0.2), value: isDeleting)
-    }
-    
-    // Category icon view with emoji support and fallback icons
-    @ViewBuilder private var categoryIconView: some View {
-        if !transaction.categoryEmoji.isEmpty && isValidEmoji(transaction.categoryEmoji) {
-            // Use the category emoji from the API
-            Text(transaction.categoryEmoji)
-                .font(.system(size: 20))
-        } else {
-            // Fallback for uncategorized/empty emoji: colored icons
-            if transaction.amount >= 0 {
-                // Income: light green plus
-                Image(systemName: "plus.circle.fill")
-                    .font(.system(size: 20))
-                    .foregroundColor(Color(red: 0.5, green: 1.0, blue: 0.5))
-            } else {
-                // Expense: light red minus
-                Image(systemName: "minus.circle.fill")
-                    .font(.system(size: 20))
-                    .foregroundColor(Color(red: 1.0, green: 0.5, blue: 0.5))
-            }
-        }
     }
 }
 
