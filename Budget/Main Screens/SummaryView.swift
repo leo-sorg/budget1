@@ -652,7 +652,7 @@ struct SummaryView: View {
         }
     }
     
-    // UPDATED: Transaction list with direct delete (no confirmation) and swipe-to-delete
+    // UPDATED: Transaction list with loading indicator and custom swipe delete
     @ViewBuilder private var allTransactionsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             if apiTransactions.isEmpty {
@@ -662,16 +662,21 @@ struct SummaryView: View {
             } else {
                 List {
                     ForEach(Array(apiTransactions.enumerated()), id: \.offset) { index, transaction in
-                        APITransactionListItem(transaction: transaction)
-                            .opacity(deletingTransactionID == transaction.remoteID ? 0.6 : 1.0)
-                            .listRowBackground(Color.clear)
-                            .listRowSeparator(.hidden)
-                            .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
-                    }
-                    .onDelete { indexSet in
-                        for index in indexSet {
-                            let transaction = apiTransactions[index]
-                            deleteTransaction(transaction) // Direct delete on swipe
+                        // UPDATED: Use custom list item with loading indicator
+                        DeletableAPITransactionListItem(
+                            transaction: transaction,
+                            isDeleting: deletingTransactionID == transaction.remoteID
+                        )
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button {
+                                deleteTransaction(transaction)
+                            } label: {
+                                Image(systemName: "trash")
+                            }
+                            .tint(.clear) // Remove red background
                         }
                     }
                 }
@@ -689,6 +694,82 @@ struct SummaryView: View {
         f.numberStyle = .currency
         f.locale = Locale(identifier: "pt_BR")
         return f.string(for: NSDecimalNumber(decimal: value)) ?? "R$ 0,00"
+    }
+}
+
+// MARK: - UPDATED Transaction List Item Component with Loading Indicator
+
+/// Transaction list item with loading indicator and custom delete styling
+struct DeletableAPITransactionListItem: View {
+    let transaction: APITransaction
+    let isDeleting: Bool
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    // Category icon with emoji support and fallback icons
+                    categoryIconView
+                    
+                    Text(transaction.categoryName.isEmpty ? "Uncategorized" : transaction.categoryName)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.white)
+                }
+                
+                HStack(spacing: 8) {
+                    Text(formatDisplayDate(transaction.dateISO))
+                        .foregroundColor(.white.opacity(0.6))
+                        .font(.caption)
+                    
+                    if !transaction.paymentMethod.isEmpty {
+                        Text("• \(transaction.paymentMethod)")
+                            .foregroundColor(.white.opacity(0.6))
+                            .font(.caption)
+                    }
+                }
+            }
+            
+            Spacer()
+            
+            // Show loading indicator when deleting, otherwise show amount
+            if isDeleting {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    .scaleEffect(0.8)
+            } else {
+                Text(formatCurrency(Decimal(transaction.amount)))
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(transaction.amount >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : .white)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background(Color.clear)
+        .glassEffect(.regular, in: .rect(cornerRadius: 10))
+        .opacity(isDeleting ? 0.6 : 1.0)
+        .animation(.easeInOut(duration: 0.2), value: isDeleting)
+    }
+    
+    // Category icon view with emoji support and fallback icons
+    @ViewBuilder private var categoryIconView: some View {
+        if !transaction.categoryEmoji.isEmpty && isValidEmoji(transaction.categoryEmoji) {
+            // Use the category emoji from the API
+            Text(transaction.categoryEmoji)
+                .font(.system(size: 20))
+        } else {
+            // Fallback for uncategorized/empty emoji: colored icons
+            if transaction.amount >= 0 {
+                // Income: light green plus
+                Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 20))
+                    .foregroundColor(Color(red: 0.5, green: 1.0, blue: 0.5))
+            } else {
+                // Expense: light red minus
+                Image(systemName: "minus.circle.fill")
+                    .font(.system(size: 20))
+                    .foregroundColor(Color(red: 1.0, green: 0.5, blue: 0.5))
+            }
+        }
     }
 }
 

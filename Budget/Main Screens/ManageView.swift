@@ -398,7 +398,7 @@ struct ManageView: View {
         }
     }
 
-    // MARK: - Category Section with swipe-to-delete only
+    // MARK: - Category Section with swipe-to-delete and loading indicator
     @ViewBuilder private var categorySection: some View {
         VStack(spacing: 24) {
             // Add/Edit form
@@ -495,7 +495,7 @@ struct ManageView: View {
                 }
             }
             
-            // Category list with swipe-to-delete only (no delete buttons)
+            // Category list with swipe-to-delete and loading indicator
             if isLoadingCategories {
                 loadingView
             } else if let error = categoriesError {
@@ -513,16 +513,21 @@ struct ManageView: View {
                     } else {
                         List {
                             ForEach(categories, id: \.remoteID) { category in
-                                APICategoryListItem(category: category)
-                                    .opacity(deletingCategoryID == category.remoteID ? 0.6 : 1.0)
-                                    .listRowBackground(Color.clear)
-                                    .listRowSeparator(.hidden)
-                                    .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
-                            }
-                            .onDelete { indexSet in
-                                for index in indexSet {
-                                    let category = categories[index]
-                                    deleteCategory(category) // Direct delete on swipe
+                                // UPDATED: Use custom list item with loading indicator
+                                DeletableAPICategoryListItem(
+                                    category: category,
+                                    isDeleting: deletingCategoryID == category.remoteID
+                                )
+                                .listRowBackground(Color.clear)
+                                .listRowSeparator(.hidden)
+                                .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    Button {
+                                        deleteCategory(category)
+                                    } label: {
+                                        Image(systemName: "trash")
+                                    }
+                                    .tint(.clear) // Remove red background
                                 }
                             }
                         }
@@ -535,7 +540,7 @@ struct ManageView: View {
         }
     }
 
-    // MARK: - Payment Section with swipe-to-delete only
+    // MARK: - Payment Section with swipe-to-delete and loading indicator
     @ViewBuilder private var paymentSection: some View {
         VStack(spacing: 24) {
             // Add/Edit form
@@ -597,7 +602,7 @@ struct ManageView: View {
                 }
             }
             
-            // Payment method list with swipe-to-delete only (no delete buttons)
+            // Payment method list with swipe-to-delete and loading indicator
             if isLoadingPaymentMethods {
                 loadingView
             } else if let error = paymentMethodsError {
@@ -615,16 +620,21 @@ struct ManageView: View {
                     } else {
                         List {
                             ForEach(methods, id: \.remoteID) { method in
-                                APIPaymentMethodListItem(paymentMethod: method)
-                                    .opacity(deletingPaymentID == method.remoteID ? 0.6 : 1.0)
-                                    .listRowBackground(Color.clear)
-                                    .listRowSeparator(.hidden)
-                                    .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
-                            }
-                            .onDelete { indexSet in
-                                for index in indexSet {
-                                    let method = methods[index]
-                                    deletePaymentMethod(method) // Direct delete on swipe
+                                // UPDATED: Use custom list item with loading indicator
+                                DeletableAPIPaymentMethodListItem(
+                                    paymentMethod: method,
+                                    isDeleting: deletingPaymentID == method.remoteID
+                                )
+                                .listRowBackground(Color.clear)
+                                .listRowSeparator(.hidden)
+                                .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    Button {
+                                        deletePaymentMethod(method)
+                                    } label: {
+                                        Image(systemName: "trash")
+                                    }
+                                    .tint(.clear) // Remove red background
                                 }
                             }
                         }
@@ -1043,7 +1053,92 @@ struct ManageView: View {
     }
 }
 
-// MARK: - Helper Components
+// MARK: - UPDATED List Item Components with Loading Indicators
+
+/// Category list item with loading indicator and custom delete styling
+struct DeletableAPICategoryListItem: View {
+    let category: APICategory
+    let isDeleting: Bool
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            // Category emoji or fallback icon
+            if isValidEmoji(category.emoji) {
+                Text(category.emoji)
+                    .font(.system(size: 20))
+            } else {
+                Image(systemName: "tag.fill")
+                    .font(.system(size: 18))
+                    .foregroundColor(.secondary)
+            }
+            
+            // Category name
+            Text(category.name)
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(.white)
+            
+            Spacer()
+            
+            // Show loading indicator when deleting
+            if isDeleting {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    .scaleEffect(0.8)
+            } else {
+                // Category type tag
+                CategoryTypeTag(isIncome: category.isIncome)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background(Color.clear)
+        .glassEffect(.regular, in: .rect(cornerRadius: 10))
+        .opacity(isDeleting ? 0.6 : 1.0)
+        .animation(.easeInOut(duration: 0.2), value: isDeleting)
+    }
+}
+
+/// Payment method list item with loading indicator and custom delete styling
+struct DeletableAPIPaymentMethodListItem: View {
+    let paymentMethod: APIPaymentMethod
+    let isDeleting: Bool
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            // Payment method emoji or fallback icon
+            if isValidEmoji(paymentMethod.emoji) {
+                Text(paymentMethod.emoji)
+                    .font(.system(size: 20))
+            } else {
+                Image(systemName: "creditcard.fill")
+                    .font(.system(size: 18))
+                    .foregroundColor(.white.opacity(0.7))
+            }
+            
+            // Payment method name
+            Text(paymentMethod.name)
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(.white)
+            
+            Spacer()
+            
+            // Show loading indicator when deleting
+            if isDeleting {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    .scaleEffect(0.8)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background(Color.clear)
+        .glassEffect(.regular, in: .rect(cornerRadius: 10))
+        .opacity(isDeleting ? 0.6 : 1.0)
+        .animation(.easeInOut(duration: 0.2), value: isDeleting)
+    }
+}
+
+// MARK: - Helper Components (unchanged)
 struct ColorSquare: View {
     let color: Color
     let isSelected: Bool
