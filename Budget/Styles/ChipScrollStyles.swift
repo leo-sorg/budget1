@@ -30,7 +30,8 @@ struct PaymentChipView: View {
         .background {
             if isSelected {
                 Capsule()
-                    .glassEffect(.regular.tint(Color.white.opacity(0.3)).interactive())                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
+                    .glassEffect(.regular.tint(Color.white.opacity(0.3)).interactive())
+                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
             } else {
                 Capsule()
                 .glassEffect(.regular.interactive())
@@ -64,7 +65,85 @@ struct CategoryChipView: View {
         .background {
             if isSelected {
                 Capsule()
-                    .glassEffect(.regular.tint(Color.white.opacity(0.3)).interactive())                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
+                    .glassEffect(.regular.tint(Color.white.opacity(0.3)).interactive())
+                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
+            } else {
+                Capsule()
+                .glassEffect(.regular.interactive())
+            }
+        }
+    }
+}
+
+/// API-based payment method chip button (for InputView)
+struct APIPaymentChipView: View {
+    let paymentMethod: APIPaymentMethod
+    let isSelected: Bool
+    let onTap: () -> Void
+    let namespace: Namespace.ID
+    
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 6) {
+                if isValidEmoji(paymentMethod.emoji) {
+                    Text(paymentMethod.emoji)
+                } else {
+                    Image(systemName: "creditcard.fill")
+                        .font(.system(size: 14))
+                }
+                
+                Text(paymentMethod.name)
+                    .font(.system(size: 16, weight: isSelected ? .semibold : .medium))
+                    .foregroundStyle(isSelected ? .white : Color(white: 0.9))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+        }
+        .buttonStyle(.plain)
+        .background {
+            if isSelected {
+                Capsule()
+                    .glassEffect(.regular.tint(Color.white.opacity(0.3)).interactive())
+                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
+            } else {
+                Capsule()
+                .glassEffect(.regular.interactive())
+            }
+        }
+    }
+}
+
+/// API-based category chip button (for InputView)
+struct APICategoryChipView: View {
+    let category: APICategory
+    let isSelected: Bool
+    let onTap: () -> Void
+    let namespace: Namespace.ID
+    
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 6) {
+                if isValidEmoji(category.emoji) {
+                    Text(category.emoji)
+                } else {
+                    Image(systemName: "tag.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(.white.opacity(0.6))
+                }
+                
+                Text(category.name)
+                    .font(.system(size: 16, weight: isSelected ? .semibold : .medium))
+                    .foregroundStyle(isSelected ? .white : Color(white: 0.9))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+        }
+        .buttonStyle(.plain)
+        .background {
+            if isSelected {
+                Capsule()
+                    .glassEffect(.regular.tint(Color.white.opacity(0.3)).interactive())
+                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
             } else {
                 Capsule()
                 .glassEffect(.regular.interactive())
@@ -95,7 +174,8 @@ struct MonthChipView: View {
         .background {
             if isSelected {
                 Capsule()
-                    .glassEffect(.regular.tint(Color.white.opacity(0.3)).interactive())                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
+                    .glassEffect(.regular.tint(Color.white.opacity(0.3)).interactive())
+                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
             } else {
                 Capsule()
                 .glassEffect(.regular.interactive())
@@ -141,7 +221,8 @@ struct ManageSectionChip: View {
         .background {
             if isSelected {
                 Capsule()
-                    .glassEffect(.regular.tint(Color.white.opacity(0.3)).interactive())                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
+                    .glassEffect(.regular.tint(Color.white.opacity(0.3)).interactive())
+                    .matchedGeometryEffect(id: "selectedChip", in: namespace)
             } else {
                 Capsule()
                 .glassEffect(.regular.interactive())
@@ -177,6 +258,25 @@ struct LiquidGlassChip: View {
                     .glassEffect(.regular.interactive())  // ✅ Add .interactive() here too
             }
         }
+    }
+}
+
+/// Skeleton chip for loading states
+struct SkeletonChip: View {
+    @State private var chipWidth: CGFloat = 100
+    @State private var opacity: Double = 0.4
+    
+    var body: some View {
+        Capsule()
+            .fill(.tertiary)
+            .frame(width: chipWidth, height: 40)
+            .opacity(opacity)
+            .onAppear {
+                chipWidth = CGFloat.random(in: 80...120)
+                withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
+                    opacity = 0.8
+                }
+            }
     }
 }
 
@@ -370,4 +470,17 @@ extension View {
             secondRowNamespace: secondRowNamespace
         ))
     }
+}
+
+// MARK: - Helper function for emoji validation
+private func isValidEmoji(_ s: String) -> Bool {
+    guard !s.isEmpty else { return false }
+    let chars = Array(s)
+    if chars.count != 1 { return false }
+    if let scalar = s.unicodeScalars.first {
+        if CharacterSet.alphanumerics.contains(scalar) { return false }
+        if CharacterSet.punctuationCharacters.contains(scalar) { return false }
+        if CharacterSet.whitespacesAndNewlines.contains(scalar) { return false }
+    }
+    return true
 }
