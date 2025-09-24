@@ -153,7 +153,7 @@ struct SummaryView: View {
                 .background {
                     if selectedSegment == 0 {
                         RoundedRectangle(cornerRadius: 22)
-                            .glassEffect(.regular.tint(Color.white.opacity(0.3)).interactive())
+                            .glassEffect(.regular.tint(Color.black.opacity(0.5)).interactive())
                             .matchedGeometryEffect(id: "selectedSegment", in: segmentedControlNamespace)
                     }
                 }
@@ -171,7 +171,7 @@ struct SummaryView: View {
                 .background {
                     if selectedSegment == 1 {
                         RoundedRectangle(cornerRadius: 22)
-                            .glassEffect(.regular.tint(Color.white.opacity(0.3)).interactive())
+                            .glassEffect(.regular.tint(Color.black.opacity(0.5)).interactive())
                             .matchedGeometryEffect(id: "selectedSegment", in: segmentedControlNamespace)
                     }
                 }
@@ -189,7 +189,7 @@ struct SummaryView: View {
                 .background {
                     if selectedSegment == 2 {
                         RoundedRectangle(cornerRadius: 22)
-                            .glassEffect(.regular.tint(Color.white.opacity(0.3)).interactive())
+                            .glassEffect(.regular.tint(Color.black.opacity(0.5)).interactive())
                             .matchedGeometryEffect(id: "selectedSegment", in: segmentedControlNamespace)
                     }
                 }

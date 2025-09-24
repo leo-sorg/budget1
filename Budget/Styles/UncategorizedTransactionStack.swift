@@ -139,7 +139,7 @@ struct UncategorizedTransactionStack: View {
     }
 }
 
-// MARK: - Transaction Card Component (No Background)
+// MARK: - Transaction Card Component (Updated - Harmonious Layout)
 struct TransactionCard: View {
     let transaction: APITransaction
     let isTopCard: Bool
@@ -149,94 +149,94 @@ struct TransactionCard: View {
     let onTap: () -> Void
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Header row
-            HStack {
+        VStack(alignment: .leading, spacing: 16) {
+            // Header row - Amount and Date/Time
+            HStack(alignment: .top) {
                 // Amount (prominent)
                 Text(formatCurrency(Decimal(transaction.amount)))
-                    .font(.system(size: 20, weight: .bold))
+                    .font(.system(size: 22, weight: .bold))
                     .foregroundColor(transaction.amount >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : Color(red: 1.0, green: 0.6, blue: 0.6))
                 
                 Spacer()
                 
-                // Date
-                Text(formatDisplayDate(transaction.dateISO))
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.white.opacity(0.7))
-            }
-            
-            // Transaction details
-            HStack(spacing: 8) {
-                // Payment method icon
-                Image(systemName: "creditcard.fill")
-                    .font(.system(size: 14))
-                    .foregroundColor(.white.opacity(0.6))
-                
-                Text(transaction.paymentMethod.isEmpty ? "Unknown" : transaction.paymentMethod)
-                    .font(.system(size: 14))
-                    .foregroundColor(.white.opacity(0.8))
-                
-                if !transaction.merchantName.isEmpty {
-                    Text("•")
-                        .foregroundColor(.white.opacity(0.4))
-                    
-                    Text(transaction.merchantName)
-                        .font(.system(size: 14))
+                // Date and Time
+                VStack(alignment: .trailing, spacing: 1) {
+                    Text(formatDisplayDate(transaction.dateISO))
+                        .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.white.opacity(0.8))
-                        .lineLimit(1)
+                    
+                    Text(formatDisplayTime(transaction.dateISO))
+                        .font(.system(size: 12, weight: .regular))
+                        .foregroundColor(.white.opacity(0.5))
                 }
             }
             
-            // Note if available
-            if !transaction.note.isEmpty {
-                Text(transaction.note)
-                    .font(.system(size: 13))
-                    .foregroundColor(.white.opacity(0.6))
-                    .lineLimit(2)
+            // Transaction details section
+            VStack(alignment: .leading, spacing: 8) {
+                // Payment method
+                HStack(spacing: 8) {
+                    Image(systemName: "creditcard.fill")
+                        .font(.system(size: 13))
+                        .foregroundColor(.white.opacity(0.5))
+                        .frame(width: 16) // Fixed width for alignment
+                    
+                    Text(transaction.paymentMethod.isEmpty ? "Unknown Payment" : transaction.paymentMethod)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.white.opacity(0.9))
+                }
+                
+                // Merchant name (if available)
+                if !transaction.merchantName.isEmpty {
+                    HStack(spacing: 8) {
+                        Image(systemName: "storefront.fill")
+                            .font(.system(size: 13))
+                            .foregroundColor(.white.opacity(0.4))
+                            .frame(width: 16) // Same fixed width for alignment
+                        
+                        Text(transaction.merchantName)
+                            .font(.system(size: 14, weight: .regular))
+                            .foregroundColor(.white.opacity(0.7))
+                            .lineLimit(1)
+                    }
+                }
             }
             
-            // Call to action
-            HStack {
-                Image(systemName: "hand.tap.fill")
-                    .font(.system(size: 12))
-                    .foregroundColor(.white.opacity(0.5))
-                
-                Text("Tap to categorize")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.white.opacity(0.5))
-                
-                Spacer()
-                
-                if isTopCard {
-                    Image(systemName: "arrow.left.arrow.right")
-                        .font(.system(size: 12))
-                        .foregroundColor(.white.opacity(0.3))
-                    Text("Swipe to skip")
-                        .font(.system(size: 10))
-                        .foregroundColor(.white.opacity(0.3))
+            // Note section (if available)
+            if !transaction.note.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "note.text")
+                            .font(.system(size: 13))
+                            .foregroundColor(.white.opacity(0.4))
+                            .frame(width: 16) // Same fixed width for alignment
+                        
+                        Text(transaction.note)
+                            .font(.system(size: 13, weight: .regular))
+                            .foregroundColor(.white.opacity(0.6))
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+                    }
                 }
             }
         }
-        .padding(16)
+        .padding(18)
         .frame(height: 140)
-        .frame(maxWidth: .infinity)
-        .background(Color.clear) // Ensure background is clear for gesture detection
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.clear)
         .glassEffect(
             isTopCard ?
             .regular.tint(Color.black.opacity(0.6)).interactive() :
             .regular.interactive(),
-            in: .rect(cornerRadius: 12)
+            in: .rect(cornerRadius: 14)
         )
-        .contentShape(Rectangle()) // Make entire card area tappable/swipable
+        .contentShape(Rectangle())
         .offset(dragOffset)
         .onTapGesture {
-            // Only trigger tap if we haven't swiped significantly
             if !hasSwipedSignificantly {
                 onTap()
             }
         }
         .onChange(of: dragOffset) { _, newValue in
-            // Reset the swipe flag when drag offset returns to zero
             if newValue == .zero {
                 hasSwipedSignificantly = false
             }
@@ -286,9 +286,15 @@ struct CategoryPickerSheet: View {
                         
                         Spacer()
                         
-                        Text(formatDisplayDate(transaction.dateISO))
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Text(formatDisplayDate(transaction.dateISO))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            
+                            Text(formatDisplayTime(transaction.dateISO))
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
                     }
                     .padding(.horizontal, 20)
                     .padding(.vertical, 12)
@@ -439,6 +445,42 @@ private func formatDisplayDate(_ dateString: String) -> String {
     }
     
     return dateString
+}
+
+// NEW: Function to extract and format time from dateISO string
+private func formatDisplayTime(_ dateString: String) -> String {
+    let timeFormatter = DateFormatter()
+    timeFormatter.dateFormat = "HH:mm"
+    
+    // Try parsing with fractional seconds
+    let isoFormatter = ISO8601DateFormatter()
+    isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    
+    if let date = isoFormatter.date(from: dateString) {
+        return timeFormatter.string(from: date)
+    }
+    
+    // Try parsing without fractional seconds
+    isoFormatter.formatOptions = [.withInternetDateTime]
+    if let date = isoFormatter.date(from: dateString) {
+        return timeFormatter.string(from: date)
+    }
+    
+    // Try to extract time from ISO string manually if it contains 'T'
+    if let tRange = dateString.range(of: "T") {
+        let timePart = String(dateString[tRange.upperBound...])
+        if let colonRange = timePart.range(of: ":") {
+            let hour = String(timePart[..<colonRange.lowerBound])
+            let afterColon = String(timePart[colonRange.upperBound...])
+            if let secondColonRange = afterColon.range(of: ":") {
+                let minute = String(afterColon[..<secondColonRange.lowerBound])
+                return "\(hour):\(minute)"
+            }
+        }
+    }
+    
+    // Fallback to a default time if we can't parse
+    return "00:00"
 }
 
 private func isValidEmoji(_ string: String) -> Bool {

@@ -74,6 +74,9 @@ struct InputView: View {
                                 }
                             }
                         )
+                        .padding(.top, -30)
+                        .padding(.bottom, 8) // Compensate if needed
+                        // Reduce space between date header and cards
                     }
                     
                     // Content sections with custom spacing
