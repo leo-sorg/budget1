@@ -55,6 +55,71 @@ struct SheetsClient {
         postJSON(payload, completion: completion)
     }
 
+    // MARK: - UPDATE Methods
+    
+    /// Update transaction category by remoteID
+    func updateTransactionCategory(remoteID: String, categoryName: String, completion: @escaping (Response) -> Void = { _ in }) {
+        let payload: [String: Any] = [
+            "type": "updateTransactionCategory",
+            "remoteID": remoteID,
+            "categoryName": categoryName
+        ]
+        postJSON(payload, completion: completion)
+    }
+    
+    /// Update transaction payment method by remoteID
+    func updateTransactionPaymentMethod(remoteID: String, paymentMethod: String, completion: @escaping (Response) -> Void = { _ in }) {
+        let payload: [String: Any] = [
+            "type": "updateTransactionPaymentMethod",
+            "remoteID": remoteID,
+            "paymentMethod": paymentMethod
+        ]
+        postJSON(payload, completion: completion)
+    }
+    
+    /// Update transaction note by remoteID
+    func updateTransactionNote(remoteID: String, note: String, completion: @escaping (Response) -> Void = { _ in }) {
+        let payload: [String: Any] = [
+            "type": "updateTransactionNote",
+            "remoteID": remoteID,
+            "note": note
+        ]
+        postJSON(payload, completion: completion)
+    }
+    
+    /// Update transaction amount by remoteID
+    func updateTransactionAmount(remoteID: String, amount: Decimal, completion: @escaping (Response) -> Void = { _ in }) {
+        let payload: [String: Any] = [
+            "type": "updateTransactionAmount",
+            "remoteID": remoteID,
+            "amount": (amount as NSDecimalNumber).doubleValue
+        ]
+        postJSON(payload, completion: completion)
+    }
+    
+    /// Update multiple transaction fields at once
+    func updateTransaction(remoteID: String, categoryName: String? = nil, paymentMethod: String? = nil, note: String? = nil, amount: Decimal? = nil, completion: @escaping (Response) -> Void = { _ in }) {
+        var payload: [String: Any] = [
+            "type": "updateTransaction",
+            "remoteID": remoteID
+        ]
+        
+        if let categoryName = categoryName {
+            payload["categoryName"] = categoryName
+        }
+        if let paymentMethod = paymentMethod {
+            payload["paymentMethod"] = paymentMethod
+        }
+        if let note = note {
+            payload["note"] = note
+        }
+        if let amount = amount {
+            payload["amount"] = (amount as NSDecimalNumber).doubleValue
+        }
+        
+        postJSON(payload, completion: completion)
+    }
+
     // MARK: - DELETE Methods
     
     /// Delete a transaction by remoteID
@@ -117,13 +182,104 @@ struct SheetsClient {
         }
     }
 
-    // NEW: Get uncategorized transactions
+    /// Get uncategorized transactions (transactions with empty categoryName)
     func getUncategorizedTransactions(completion: @escaping (Result<APIResponse, Error>) -> Void) {
         var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)!
         components.queryItems = [
             URLQueryItem(name: "secret", value: secret),
             URLQueryItem(name: "action", value: "getTransactions"),
-            URLQueryItem(name: "isUncategorized", value: "true")
+            URLQueryItem(name: "categoryName", value: ""), // Filter for empty category
+            URLQueryItem(name: "limit", value: "100") // Reasonable limit for uncategorized
+        ]
+        
+        guard let url = components.url else {
+            completion(.failure(SheetsError.invalidURL))
+            return
+        }
+        
+        performGETRequest(url: url) { result in
+            switch result {
+            case .success(let data):
+                do {
+                    let apiResponse = try JSONDecoder().decode(APIResponse.self, from: data)
+                    completion(.success(apiResponse))
+                } catch {
+                    completion(.failure(error))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    /// Get transactions by category name
+    func getTransactionsByCategory(categoryName: String, limit: Int = 300, completion: @escaping (Result<APIResponse, Error>) -> Void) {
+        var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)!
+        components.queryItems = [
+            URLQueryItem(name: "secret", value: secret),
+            URLQueryItem(name: "action", value: "getTransactions"),
+            URLQueryItem(name: "categoryName", value: categoryName),
+            URLQueryItem(name: "limit", value: String(limit))
+        ]
+        
+        guard let url = components.url else {
+            completion(.failure(SheetsError.invalidURL))
+            return
+        }
+        
+        performGETRequest(url: url) { result in
+            switch result {
+            case .success(let data):
+                do {
+                    let apiResponse = try JSONDecoder().decode(APIResponse.self, from: data)
+                    completion(.success(apiResponse))
+                } catch {
+                    completion(.failure(error))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    /// Get transactions by payment method
+    func getTransactionsByPaymentMethod(paymentMethod: String, limit: Int = 300, completion: @escaping (Result<APIResponse, Error>) -> Void) {
+        var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)!
+        components.queryItems = [
+            URLQueryItem(name: "secret", value: secret),
+            URLQueryItem(name: "action", value: "getTransactions"),
+            URLQueryItem(name: "paymentMethod", value: paymentMethod),
+            URLQueryItem(name: "limit", value: String(limit))
+        ]
+        
+        guard let url = components.url else {
+            completion(.failure(SheetsError.invalidURL))
+            return
+        }
+        
+        performGETRequest(url: url) { result in
+            switch result {
+            case .success(let data):
+                do {
+                    let apiResponse = try JSONDecoder().decode(APIResponse.self, from: data)
+                    completion(.success(apiResponse))
+                } catch {
+                    completion(.failure(error))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    /// Get transactions by transaction type (income/expense)
+    func getTransactionsByType(transactionType: String, limit: Int = 300, completion: @escaping (Result<APIResponse, Error>) -> Void) {
+        var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)!
+        components.queryItems = [
+            URLQueryItem(name: "secret", value: secret),
+            URLQueryItem(name: "action", value: "getTransactions"),
+            URLQueryItem(name: "transactionType", value: transactionType),
+            URLQueryItem(name: "limit", value: String(limit))
         ]
         
         guard let url = components.url else {
@@ -166,6 +322,7 @@ struct SheetsClient {
                     completion(.success(apiResponse))
                 } catch {
                     if let responseString = String(data: data, encoding: .utf8) {
+                        print("Categories decode error. Response: \(responseString)")
                     }
                     completion(.failure(error))
                 }
@@ -195,7 +352,103 @@ struct SheetsClient {
                     completion(.success(apiResponse))
                 } catch {
                     if let responseString = String(data: data, encoding: .utf8) {
+                        print("Payment methods decode error. Response: \(responseString)")
                     }
+                    completion(.failure(error))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    // MARK: - SEARCH/FILTER Methods
+    
+    /// Search transactions by text in note or merchantName
+    func searchTransactions(query: String, limit: Int = 100, completion: @escaping (Result<APIResponse, Error>) -> Void) {
+        var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)!
+        components.queryItems = [
+            URLQueryItem(name: "secret", value: secret),
+            URLQueryItem(name: "action", value: "searchTransactions"),
+            URLQueryItem(name: "query", value: query),
+            URLQueryItem(name: "limit", value: String(limit))
+        ]
+        
+        guard let url = components.url else {
+            completion(.failure(SheetsError.invalidURL))
+            return
+        }
+        
+        performGETRequest(url: url) { result in
+            switch result {
+            case .success(let data):
+                do {
+                    let apiResponse = try JSONDecoder().decode(APIResponse.self, from: data)
+                    completion(.success(apiResponse))
+                } catch {
+                    completion(.failure(error))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    /// Get transactions within an amount range
+    func getTransactionsByAmountRange(minAmount: Decimal, maxAmount: Decimal, limit: Int = 300, completion: @escaping (Result<APIResponse, Error>) -> Void) {
+        var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)!
+        components.queryItems = [
+            URLQueryItem(name: "secret", value: secret),
+            URLQueryItem(name: "action", value: "getTransactions"),
+            URLQueryItem(name: "minAmount", value: String(describing: minAmount)),
+            URLQueryItem(name: "maxAmount", value: String(describing: maxAmount)),
+            URLQueryItem(name: "limit", value: String(limit))
+        ]
+        
+        guard let url = components.url else {
+            completion(.failure(SheetsError.invalidURL))
+            return
+        }
+        
+        performGETRequest(url: url) { result in
+            switch result {
+            case .success(let data):
+                do {
+                    let apiResponse = try JSONDecoder().decode(APIResponse.self, from: data)
+                    completion(.success(apiResponse))
+                } catch {
+                    completion(.failure(error))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+
+    // MARK: - STATISTICS Methods
+    
+    /// Get summary statistics for a date range
+    func getSummaryStatistics(startDate: Date, endDate: Date, completion: @escaping (Result<APISummaryResponse, Error>) -> Void) {
+        var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)!
+        components.queryItems = [
+            URLQueryItem(name: "secret", value: secret),
+            URLQueryItem(name: "action", value: "getSummary"),
+            URLQueryItem(name: "startDate", value: DateFormatter.iso8601.string(from: startDate)),
+            URLQueryItem(name: "endDate", value: DateFormatter.iso8601.string(from: endDate))
+        ]
+        
+        guard let url = components.url else {
+            completion(.failure(SheetsError.invalidURL))
+            return
+        }
+        
+        performGETRequest(url: url) { result in
+            switch result {
+            case .success(let data):
+                do {
+                    let apiResponse = try JSONDecoder().decode(APISummaryResponse.self, from: data)
+                    completion(.success(apiResponse))
+                } catch {
                     completion(.failure(error))
                 }
             case .failure(let error):
@@ -299,7 +552,7 @@ struct APITransaction: Codable {
     let remoteID: String
     let amount: Double
     let categoryName: String
-    let categoryEmoji: String // NEW: Category emoji field
+    let categoryEmoji: String // Category emoji field
     let paymentMethod: String
     let merchantName: String
     let note: String
@@ -341,7 +594,7 @@ struct APITransaction: Codable {
     }
 }
 
-// MARK: - FIXED API Models - Simple camelCase structure
+// MARK: - API Models - Simple camelCase structure
 
 struct APICategoriesResponse: Codable {
     let success: Bool
@@ -455,6 +708,37 @@ struct APIPaymentMethod: Codable {
         // timestamp as optional string; ignore non-strings
         self.timestamp = (try? c.decode(String.self, forKey: .timestamp))
     }
+}
+
+// MARK: - Summary Statistics Response
+
+struct APISummaryResponse: Codable {
+    let success: Bool
+    let message: String
+    let data: APISummaryData
+}
+
+struct APISummaryData: Codable {
+    let totalIncome: Double
+    let totalExpenses: Double
+    let netAmount: Double
+    let transactionCount: Int
+    let categoryBreakdown: [APICategorySummary]
+    let paymentMethodBreakdown: [APIPaymentMethodSummary]
+}
+
+struct APICategorySummary: Codable {
+    let categoryName: String
+    let categoryEmoji: String
+    let totalAmount: Double
+    let transactionCount: Int
+    let isIncome: Bool
+}
+
+struct APIPaymentMethodSummary: Codable {
+    let paymentMethod: String
+    let totalAmount: Double
+    let transactionCount: Int
 }
 
 // MARK: - Date Formatter

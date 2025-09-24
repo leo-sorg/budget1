@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 
-// MARK: - Main InputView
+// MARK: - Main InputView with Card Stack
 @MainActor
 struct InputView: View {
     @Environment(\.modelContext) private var ctx
@@ -11,9 +11,9 @@ struct InputView: View {
     @State private var apiCategories: [APICategory] = []
     @State private var apiPaymentMethods: [APIPaymentMethod] = []
     
-    // NEW: Uncategorized transactions state
-    @State private var uncategorizedCount: Int = 0
-    @State private var showUncategorizedBanner = false
+    // UPDATED: Changed from banner to full card stack implementation
+    @State private var uncategorizedTransactions: [APITransaction] = []
+    @State private var showUncategorizedStack = false
     
     // API loading states
     @State private var isLoadingCategories = false
@@ -60,14 +60,25 @@ struct InputView: View {
             
             ScrollView {
                 VStack(spacing: 0) {
-                    // NEW: Uncategorized transactions banner (conditionally shown)
-                    if showUncategorizedBanner {
-                        UncategorizedTransactionsComponent(count: uncategorizedCount)
-                            .padding(.bottom, 30) // 24pt spacing only from payment section below
-                            .transition(.asymmetric(
-                                insertion: .move(edge: .top).combined(with: .opacity),
-                                removal: .move(edge: .top).combined(with: .opacity)
-                            ))
+                    // UPDATED: Replaced banner with card stack
+                    if showUncategorizedStack && !uncategorizedTransactions.isEmpty {
+                        UncategorizedTransactionCardStack(
+                            transactions: uncategorizedTransactions,
+                            categories: apiCategories,
+                            onCategorizeTransaction: { transaction, category in
+                                categorizeTransaction(transaction, category: category)
+                            },
+                            onDismissStack: {
+                                withAnimation(.easeInOut(duration: 0.4)) {
+                                    showUncategorizedStack = false
+                                }
+                            }
+                        )
+                        .padding(.bottom, 30)
+                        .transition(.asymmetric(
+                            insertion: .move(edge: .top).combined(with: .opacity),
+                            removal: .move(edge: .top).combined(with: .opacity)
+                        ))
                     }
                     
                     // Content sections with custom spacing
@@ -75,32 +86,32 @@ struct InputView: View {
                         // 1. Payment Type section
                         paymentTypeSection
                     
-                    // 2. Category section
-                    categorySection
+                        // 2. Category section
+                        categorySection
                     
-                    // 3. Value section
-                    valueSection
+                        // 3. Value section
+                        valueSection
                     
-                    // 4. Description section
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Description")
-                            .font(.headline)
-                            .foregroundColor(.appText)
-                        
-                        AppTextField(
-                            text: $descriptionText,
-                            placeholder: "Optional description"
-                        ) { isFocused in
-                            keyboardScroll.focusChanged(
-                                field: "input_description",
-                                isFocused: isFocused,
-                                accessoryHeight: KeyboardScrollCoordinator.standardAccessoryHeight
-                            )
+                        // 4. Description section
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Description")
+                                .font(.headline)
+                                .foregroundColor(.appText)
+                            
+                            AppTextField(
+                                text: $descriptionText,
+                                placeholder: "Optional description"
+                            ) { isFocused in
+                                keyboardScroll.focusChanged(
+                                    field: "input_description",
+                                    isFocused: isFocused,
+                                    accessoryHeight: KeyboardScrollCoordinator.standardAccessoryHeight
+                                )
+                            }
                         }
-                    }
                     
-                    // Save button
-                    saveSection
+                        // Save button
+                        saveSection
                     
                         // Extra padding at bottom
                         Spacer()
@@ -118,7 +129,7 @@ struct InputView: View {
         }
         .overlay(alignment: .top) { toastOverlay }
         .animation(.default, value: showSavedToast)
-        .animation(.easeInOut(duration: 0.4), value: showUncategorizedBanner) // NEW: Animation for banner
+        .animation(.easeInOut(duration: 0.4), value: showUncategorizedStack)
         .refreshable {
             await refreshAPIData()
         }
@@ -152,6 +163,183 @@ struct InputView: View {
         }
     }
     
+    // MARK: - UPDATED: Uncategorized Transactions Functions (now with full transaction data)
+    
+    private func fetchUncategorizedTransactions() {
+        if useMockData {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                let mockTransactions = self.getMockUncategorizedTransactions()
+                self.updateUncategorizedTransactions(mockTransactions)
+            }
+        } else {
+            fetchRealAPIUncategorizedTransactions()
+        }
+    }
+    
+    private func fetchUncategorizedTransactionsQuietly() {
+        if useMockData {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                let mockTransactions = self.getMockUncategorizedTransactions()
+                self.updateUncategorizedTransactions(mockTransactions)
+            }
+        } else {
+            SHEETS.getUncategorizedTransactions { result in
+                DispatchQueue.main.async {
+                    switch result {
+                    case .success(let response):
+                        if response.success {
+                            self.updateUncategorizedTransactions(response.data)
+                        } else {
+                            self.updateUncategorizedTransactions([])
+                        }
+                    case .failure(_):
+                        self.updateUncategorizedTransactions([])
+                    }
+                }
+            }
+        }
+    }
+    
+    private func fetchRealAPIUncategorizedTransactions() {
+        SHEETS.getUncategorizedTransactions { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let response):
+                    if response.success {
+                        self.updateUncategorizedTransactions(response.data)
+                    } else {
+                        self.updateUncategorizedTransactions([])
+                    }
+                case .failure(_):
+                    self.updateUncategorizedTransactions([])
+                }
+            }
+        }
+    }
+    
+    @MainActor
+    private func refreshUncategorizedTransactions() async {
+        if useMockData {
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            let mockTransactions = getMockUncategorizedTransactions()
+            self.updateUncategorizedTransactions(mockTransactions)
+        } else {
+            await withCheckedContinuation { continuation in
+                SHEETS.getUncategorizedTransactions { result in
+                    DispatchQueue.main.async {
+                        switch result {
+                        case .success(let response):
+                            if response.success {
+                                self.updateUncategorizedTransactions(response.data)
+                            } else {
+                                self.updateUncategorizedTransactions([])
+                            }
+                        case .failure(_):
+                            self.updateUncategorizedTransactions([])
+                        }
+                        continuation.resume()
+                    }
+                }
+            }
+        }
+    }
+    
+    // UPDATED: Now works with full transaction array instead of count
+    private func updateUncategorizedTransactions(_ transactions: [APITransaction]) {
+        let shouldShow = !transactions.isEmpty
+        
+        withAnimation(.easeInOut(duration: 0.4)) {
+            self.uncategorizedTransactions = transactions
+            self.showUncategorizedStack = shouldShow
+        }
+    }
+    
+    // NEW: Function to handle categorizing a transaction
+    private func categorizeTransaction(_ transaction: APITransaction, category: APICategory) {
+        if !useMockData {
+            // Call API to update the transaction category
+            SHEETS.updateTransactionCategory(
+                remoteID: transaction.remoteID,
+                categoryName: category.name
+            ) { response in
+                DispatchQueue.main.async {
+                    if response.status == 200 {
+                        // Remove from uncategorized list
+                        self.uncategorizedTransactions.removeAll { $0.remoteID == transaction.remoteID }
+                        if self.uncategorizedTransactions.isEmpty {
+                            withAnimation(.easeInOut(duration: 0.4)) {
+                                self.showUncategorizedStack = false
+                            }
+                        }
+                    } else {
+                        // Handle error
+                        self.alertMessage = "Failed to categorize transaction: \(response.body)"
+                    }
+                }
+            }
+        } else {
+            // Mock mode - just remove from list after delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.uncategorizedTransactions.removeAll { $0.remoteID == transaction.remoteID }
+                if self.uncategorizedTransactions.isEmpty {
+                    withAnimation(.easeInOut(duration: 0.4)) {
+                        self.showUncategorizedStack = false
+                    }
+                }
+            }
+        }
+    }
+    
+    // NEW: Mock data for testing card stack
+    private func getMockUncategorizedTransactions() -> [APITransaction] {
+        return [
+            APITransaction(
+                remoteID: "uncat-1",
+                amount: -45.50,
+                categoryName: "",
+                categoryEmoji: "",
+                paymentMethod: "Credit Card",
+                merchantName: "Supermarket ABC",
+                note: "Weekly groceries",
+                dateISO: "2025-01-15",
+                transactionType: "expense"
+            ),
+            APITransaction(
+                remoteID: "uncat-2",
+                amount: -12.90,
+                categoryName: "",
+                categoryEmoji: "",
+                paymentMethod: "Pix",
+                merchantName: "Coffee Shop",
+                note: "",
+                dateISO: "2025-01-14",
+                transactionType: "expense"
+            ),
+            APITransaction(
+                remoteID: "uncat-3",
+                amount: -89.00,
+                categoryName: "",
+                categoryEmoji: "",
+                paymentMethod: "Debit Card",
+                merchantName: "Gas Station",
+                note: "Fuel",
+                dateISO: "2025-01-13",
+                transactionType: "expense"
+            ),
+            APITransaction(
+                remoteID: "uncat-4",
+                amount: 250.00,
+                categoryName: "",
+                categoryEmoji: "",
+                paymentMethod: "Bank Transfer",
+                merchantName: "Freelance Client",
+                note: "Project payment",
+                dateISO: "2025-01-12",
+                transactionType: "income"
+            )
+        ]
+    }
+    
     // MARK: - API Data Loading Functions (UPDATED to include uncategorized check)
     
     private func loadAPIData() {
@@ -159,13 +347,13 @@ struct InputView: View {
             // First time loading - use skeleton loading
             fetchCategories()
             fetchPaymentMethods()
-            fetchUncategorizedTransactions() // NEW: Also fetch uncategorized
+            fetchUncategorizedTransactions()
             isFirstLoad = false
         } else {
             // Subsequent loads - no loading feedback
             fetchCategoriesQuietly()
             fetchPaymentMethodsQuietly()
-            fetchUncategorizedTransactionsQuietly() // NEW: Also fetch uncategorized quietly
+            fetchUncategorizedTransactionsQuietly()
         }
     }
     
@@ -179,101 +367,8 @@ struct InputView: View {
                 await refreshPaymentMethods()
             }
             group.addTask {
-                await refreshUncategorizedTransactions() // NEW: Also refresh uncategorized
+                await refreshUncategorizedTransactions()
             }
-        }
-    }
-    
-    // NEW: Fetch uncategorized transactions functions
-    
-    private func fetchUncategorizedTransactions() {
-        if useMockData {
-            // Mock data - simulate some uncategorized transactions
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                let mockCount = Int.random(in: 0...5) // Random count for demo
-                self.updateUncategorizedCount(mockCount)
-            }
-        } else {
-            fetchRealAPIUncategorizedTransactions()
-        }
-    }
-    
-    private func fetchUncategorizedTransactionsQuietly() {
-        if useMockData {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                let mockCount = Int.random(in: 0...5) // Random count for demo
-                self.updateUncategorizedCount(mockCount)
-            }
-        } else {
-            SHEETS.getUncategorizedTransactions { result in
-                DispatchQueue.main.async {
-                    switch result {
-                    case .success(let response):
-                        if response.success {
-                            self.updateUncategorizedCount(response.data.count)
-                        } else {
-                            self.updateUncategorizedCount(0)
-                        }
-                    case .failure(_):
-                        self.updateUncategorizedCount(0)
-                    }
-                }
-            }
-        }
-    }
-    
-    private func fetchRealAPIUncategorizedTransactions() {
-        SHEETS.getUncategorizedTransactions { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let response):
-                    if response.success {
-                        self.updateUncategorizedCount(response.data.count)
-                    } else {
-                        self.updateUncategorizedCount(0)
-                    }
-                case .failure(_):
-                    // Silently fail - just don't show the banner
-                    self.updateUncategorizedCount(0)
-                }
-            }
-        }
-    }
-    
-    @MainActor
-    private func refreshUncategorizedTransactions() async {
-        if useMockData {
-            try? await Task.sleep(nanoseconds: 300_000_000)
-            let mockCount = Int.random(in: 0...5)
-            self.updateUncategorizedCount(mockCount)
-        } else {
-            await withCheckedContinuation { continuation in
-                SHEETS.getUncategorizedTransactions { result in
-                    DispatchQueue.main.async {
-                        switch result {
-                        case .success(let response):
-                            if response.success {
-                                self.updateUncategorizedCount(response.data.count)
-                            } else {
-                                self.updateUncategorizedCount(0)
-                            }
-                        case .failure(_):
-                            self.updateUncategorizedCount(0)
-                        }
-                        continuation.resume()
-                    }
-                }
-            }
-        }
-    }
-    
-    // NEW: Helper function to update uncategorized count with animation
-    private func updateUncategorizedCount(_ count: Int) {
-        let shouldShow = count > 0
-        
-        withAnimation(.easeInOut(duration: 0.4)) {
-            self.uncategorizedCount = count
-            self.showUncategorizedBanner = shouldShow
         }
     }
     
@@ -824,7 +919,7 @@ struct InputView: View {
         )
     }
     
-    // MARK: - Save Function (UPDATED to refresh uncategorized count after save)
+    // MARK: - Save Function (UPDATED to refresh uncategorized transactions after save)
     @MainActor
     private func performSave() async -> Bool {
         guard let amount = amountDecimal else { return false }
@@ -870,7 +965,7 @@ struct InputView: View {
             
             dismissKeyboard()
             
-            // NEW: Refresh uncategorized count after saving
+            // UPDATED: Refresh uncategorized transactions after saving
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 self.fetchUncategorizedTransactionsQuietly()
             }
@@ -936,8 +1031,8 @@ struct InputView: View {
     }
 }
 
-// MARK: - Custom Calendar View
-struct CalendarView: View {
+// MARK: - Custom Calendar View (Kept to avoid redeclaration)
+struct InputViewCalendarView: View {
     @Binding var selectedDate: Date
     @State private var currentMonth = Date()
     
@@ -1048,4 +1143,467 @@ struct CalendarView: View {
         
         return days
     }
+}
+
+// Use the InputViewCalendarView instead of CalendarView
+extension InputView {
+    var CalendarView: (Binding<Date>) -> InputViewCalendarView {
+        return InputViewCalendarView.init
+    }
+}
+
+// MARK: - Uncategorized Transaction Card Stack (Unique naming to avoid conflicts)
+struct UncategorizedTransactionCardStack: View {
+    let transactions: [APITransaction]
+    let categories: [APICategory]
+    let onCategorizeTransaction: (APITransaction, APICategory) -> Void
+    let onDismissStack: () -> Void
+    
+    @State private var currentIndex = 0
+    @State private var dragOffset: CGSize = .zero
+    @State private var showCategoryPicker = false
+    @State private var selectedTransaction: APITransaction?
+    
+    private let cardHeight: CGFloat = 140
+    private let maxVisibleCards = 3
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            // Header
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Uncategorized Transactions")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.white)
+                    
+                    Text("\(transactions.count) transaction\(transactions.count == 1 ? "" : "s") need categorization")
+                        .font(.system(size: 14))
+                        .foregroundColor(.white.opacity(0.7))
+                }
+                
+                Spacer()
+                
+                Button("Dismiss") {
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                        onDismissStack()
+                    }
+                }
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.white.opacity(0.8))
+            }
+            
+            // Card Stack
+            if !transactions.isEmpty && currentIndex < transactions.count {
+                ZStack {
+                    ForEach(Array(visibleTransactions.enumerated()), id: \.element.remoteID) { stackIndex, transaction in
+                        let isTopCard = stackIndex == 0
+                        
+                        UncategorizedTransactionCard(
+                            transaction: transaction,
+                            isTopCard: isTopCard,
+                            stackIndex: stackIndex,
+                            dragOffset: isTopCard ? dragOffset : .zero
+                        ) {
+                            // Tap action - show category picker
+                            selectedTransaction = transaction
+                            showCategoryPicker = true
+                        }
+                        .scaleEffect(cardScale(for: stackIndex))
+                        .offset(y: cardYOffset(for: stackIndex))
+                        .zIndex(Double(maxVisibleCards - stackIndex))
+                        .opacity(cardOpacity(for: stackIndex))
+                        .gesture(
+                            isTopCard ? cardDragGesture : nil
+                        )
+                    }
+                }
+                .frame(height: cardHeight + 60)
+                .animation(.spring(response: 0.4, dampingFraction: 0.8), value: currentIndex)
+                .animation(.spring(response: 0.3, dampingFraction: 0.9), value: dragOffset)
+                
+                // Progress indicator
+                if transactions.count > 1 {
+                    HStack(spacing: 6) {
+                        ForEach(0..<min(transactions.count, 5), id: \.self) { index in
+                            Circle()
+                                .fill(index == min(currentIndex, 4) ? Color.white : Color.white.opacity(0.3))
+                                .frame(width: 6, height: 6)
+                        }
+                        
+                        if transactions.count > 5 {
+                            Text("+\(transactions.count - 5)")
+                                .font(.caption2)
+                                .foregroundColor(.white.opacity(0.6))
+                        }
+                    }
+                }
+            }
+        }
+        .padding(20)
+        .glassEffect(.regular.tint(Color.orange.opacity(0.1)), in: .rect(cornerRadius: 16))
+        .sheet(isPresented: $showCategoryPicker) {
+            if let transaction = selectedTransaction {
+                TransactionCategoryPickerSheet(
+                    transaction: transaction,
+                    categories: categories,
+                    onCategorize: { category in
+                        onCategorizeTransaction(transaction, category)
+                        moveToNextCard()
+                    },
+                    onCancel: {
+                        showCategoryPicker = false
+                        selectedTransaction = nil
+                    }
+                )
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
+            }
+        }
+    }
+    
+    // MARK: - Computed Properties
+    
+    private var visibleTransactions: [APITransaction] {
+        let endIndex = min(currentIndex + maxVisibleCards, transactions.count)
+        return Array(transactions[currentIndex..<endIndex])
+    }
+    
+    private var cardDragGesture: some Gesture {
+        DragGesture()
+            .onChanged { value in
+                dragOffset = value.translation
+            }
+            .onEnded { value in
+                handleDragEnd(translation: value.translation)
+            }
+    }
+    
+    // MARK: - Helper Functions
+    
+    private func cardScale(for stackIndex: Int) -> CGFloat {
+        return 1.0 - (CGFloat(stackIndex) * 0.05)
+    }
+    
+    private func cardYOffset(for stackIndex: Int) -> CGFloat {
+        return CGFloat(stackIndex) * 8
+    }
+    
+    private func cardOpacity(for stackIndex: Int) -> Double {
+        return stackIndex == 0 ? 1.0 : 0.8 - (Double(stackIndex) * 0.1)
+    }
+    
+    private func handleDragEnd(translation: CGSize) {
+        let threshold: CGFloat = 80
+        
+        if translation.width > threshold {
+            sendCurrentCardToBack()
+        } else if translation.width < -threshold {
+            sendCurrentCardToBack()
+        } else {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.9)) {
+                dragOffset = .zero
+            }
+        }
+    }
+    
+    private func sendCurrentCardToBack() {
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+            dragOffset = CGSize(width: 400, height: 0)
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            moveToNextCard()
+        }
+    }
+    
+    private func moveToNextCard() {
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+            dragOffset = .zero
+            if currentIndex < transactions.count - 1 {
+                currentIndex += 1
+            } else {
+                currentIndex = 0
+            }
+        }
+    }
+}
+
+// MARK: - Transaction Card (Unique naming)
+struct UncategorizedTransactionCard: View {
+    let transaction: APITransaction
+    let isTopCard: Bool
+    let stackIndex: Int
+    let dragOffset: CGSize
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: onTap) {
+            VStack(alignment: .leading, spacing: 12) {
+                // Header row
+                HStack {
+                    Text(formatCardCurrency(Decimal(transaction.amount)))
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(transaction.amount >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : Color(red: 1.0, green: 0.6, blue: 0.6))
+                    
+                    Spacer()
+                    
+                    Text(formatCardDisplayDate(transaction.dateISO))
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.white.opacity(0.7))
+                }
+                
+                // Transaction details
+                HStack(spacing: 8) {
+                    Image(systemName: "creditcard.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(.white.opacity(0.6))
+                    
+                    Text(transaction.paymentMethod.isEmpty ? "Unknown" : transaction.paymentMethod)
+                        .font(.system(size: 14))
+                        .foregroundColor(.white.opacity(0.8))
+                    
+                    if !transaction.merchantName.isEmpty {
+                        Text("•")
+                            .foregroundColor(.white.opacity(0.4))
+                        
+                        Text(transaction.merchantName)
+                            .font(.system(size: 14))
+                            .foregroundColor(.white.opacity(0.8))
+                            .lineLimit(1)
+                    }
+                }
+                
+                // Note if available
+                if !transaction.note.isEmpty {
+                    Text(transaction.note)
+                        .font(.system(size: 13))
+                        .foregroundColor(.white.opacity(0.6))
+                        .lineLimit(2)
+                }
+                
+                // Call to action
+                HStack {
+                    Image(systemName: "hand.tap.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(.white.opacity(0.5))
+                    
+                    Text("Tap to categorize")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.white.opacity(0.5))
+                    
+                    Spacer()
+                    
+                    if isTopCard {
+                        Image(systemName: "arrow.left.arrow.right")
+                            .font(.system(size: 12))
+                            .foregroundColor(.white.opacity(0.3))
+                        Text("Swipe to skip")
+                            .font(.system(size: 10))
+                            .foregroundColor(.white.opacity(0.3))
+                    }
+                }
+            }
+            .padding(16)
+        }
+        .buttonStyle(.plain)
+        .frame(height: 140)
+        .frame(maxWidth: .infinity)
+        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
+        .offset(dragOffset)
+        .scaleEffect(isTopCard && abs(dragOffset.width) > 50 ? 0.95 : 1.0)
+        .rotationEffect(.degrees(Double(dragOffset.width / 20)))
+    }
+}
+
+// MARK: - Category Picker Sheet (Unique naming)
+struct TransactionCategoryPickerSheet: View {
+    let transaction: APITransaction
+    let categories: [APICategory]
+    let onCategorize: (APICategory) -> Void
+    let onCancel: () -> Void
+    
+    @Namespace private var categoryNamespace
+    @State private var selectedCategoryID: String?
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            VStack(spacing: 16) {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(Color(.systemGray3))
+                    .frame(width: 36, height: 4)
+                    .padding(.top, 8)
+                
+                VStack(spacing: 12) {
+                    Text("Categorize Transaction")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(formatCardCurrency(Decimal(transaction.amount)))
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(transaction.amount >= 0 ? .green : .primary)
+                            
+                            if !transaction.merchantName.isEmpty {
+                                Text(transaction.merchantName)
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        
+                        Spacer()
+                        
+                        Text(formatCardDisplayDate(transaction.dateISO))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(8)
+                }
+                .padding(.horizontal, 20)
+            }
+            
+            Divider()
+                .padding(.vertical, 8)
+            
+            ScrollView(.vertical, showsIndicators: false) {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 2), spacing: 12) {
+                    ForEach(categories, id: \.remoteID) { category in
+                        TransactionCategoryPickerCard(
+                            category: category,
+                            isSelected: selectedCategoryID == category.remoteID,
+                            onTap: {
+                                selectedCategoryID = category.remoteID
+                            },
+                            namespace: categoryNamespace
+                        )
+                    }
+                }
+                .padding(.horizontal, 20)
+            }
+            
+            VStack(spacing: 12) {
+                Button("Categorize") {
+                    if let categoryID = selectedCategoryID,
+                       let category = categories.first(where: { $0.remoteID == categoryID }) {
+                        onCategorize(category)
+                    }
+                }
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(selectedCategoryID != nil ? Color.blue : Color.gray)
+                .cornerRadius(12)
+                .disabled(selectedCategoryID == nil)
+                
+                Button("Cancel") {
+                    onCancel()
+                }
+                .font(.system(size: 16))
+                .foregroundColor(.blue)
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 20)
+        }
+        .background(Color(.systemBackground))
+    }
+}
+
+// MARK: - Category Picker Card (Unique naming)
+struct TransactionCategoryPickerCard: View {
+    let category: APICategory
+    let isSelected: Bool
+    let onTap: () -> Void
+    let namespace: Namespace.ID
+    
+    var body: some View {
+        Button(action: onTap) {
+            VStack(spacing: 8) {
+                if isValidInputEmoji(category.emoji) {
+                    Text(category.emoji)
+                        .font(.system(size: 24))
+                } else {
+                    Image(systemName: "tag.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(.blue)
+                }
+                
+                Text(category.name)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.primary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                
+                Text(category.isIncome ? "Income" : "Expense")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+            .frame(height: 80)
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 8)
+            .background {
+                if isSelected {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.blue.opacity(0.1))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.blue, lineWidth: 2)
+                        )
+                        .matchedGeometryEffect(id: "selectedCategory", in: namespace)
+                } else {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(.systemGray6))
+                }
+            }
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Helper Functions (with unique names)
+private func formatCardCurrency(_ value: Decimal) -> String {
+    let formatter = NumberFormatter()
+    formatter.numberStyle = .currency
+    formatter.locale = Locale(identifier: "pt_BR")
+    return formatter.string(for: NSDecimalNumber(decimal: value)) ?? "R$ 0,00"
+}
+
+private func formatCardDisplayDate(_ dateString: String) -> String {
+    let outputFormatter = DateFormatter()
+    outputFormatter.dateFormat = "MMM dd"
+    
+    let isoFormatter = ISO8601DateFormatter()
+    isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    
+    if let date = isoFormatter.date(from: dateString) {
+        return outputFormatter.string(from: date)
+    }
+    
+    isoFormatter.formatOptions = [.withInternetDateTime]
+    if let date = isoFormatter.date(from: dateString) {
+        return outputFormatter.string(from: date)
+    }
+    
+    let simpleFormatter = DateFormatter()
+    simpleFormatter.dateFormat = "yyyy-MM-dd"
+    if let date = simpleFormatter.date(from: dateString) {
+        return outputFormatter.string(from: date)
+    }
+    
+    if dateString.count >= 10 {
+        let datePart = String(dateString.prefix(10))
+        if let date = simpleFormatter.date(from: datePart) {
+            return outputFormatter.string(from: date)
+        }
+    }
+    
+    return dateString
+}
+
+private func isValidInputEmoji(_ s: String) -> Bool {
+    return !s.isEmpty
 }
