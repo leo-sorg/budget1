@@ -183,16 +183,26 @@ struct SheetsClient {
     }
 
     /// Get uncategorized transactions (transactions with empty categoryName)
+    /// Get uncategorized transactions (transactions with empty categoryName)
     func getUncategorizedTransactions(completion: @escaping (Result<APIResponse, Error>) -> Void) {
+        print("🔗 SheetsClient.getUncategorizedTransactions called")
+        
         var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)!
         components.queryItems = [
             URLQueryItem(name: "secret", value: secret),
             URLQueryItem(name: "action", value: "getTransactions"),
-            URLQueryItem(name: "categoryName", value: ""), // Filter for empty category
+            URLQueryItem(name: "categoryName", value: ""), // ✅ Empty string to filter for uncategorized
             URLQueryItem(name: "limit", value: "100") // Reasonable limit for uncategorized
         ]
         
+        print("🌐 Uncategorized API URL: \(components.url?.absoluteString ?? "invalid")")
+        print("🔍 Query parameters:")
+        components.queryItems?.forEach { item in
+            print("   - \(item.name): '\(item.value ?? "nil")'")
+        }
+        
         guard let url = components.url else {
+            print("❌ Invalid URL for uncategorized transactions")
             completion(.failure(SheetsError.invalidURL))
             return
         }
@@ -202,16 +212,30 @@ struct SheetsClient {
             case .success(let data):
                 do {
                     let apiResponse = try JSONDecoder().decode(APIResponse.self, from: data)
+                    print("✅ Successfully decoded uncategorized API response")
+                    print("📊 Response success: \(apiResponse.success)")
+                    print("📋 Response message: \(apiResponse.message)")
+                    print("🔢 Uncategorized transactions count: \(apiResponse.data.count)")
+                    
+                    // Additional debug: Check first few transactions
+                    for (index, transaction) in apiResponse.data.prefix(3).enumerated() {
+                        print("🔍 Transaction \(index): categoryName='\(transaction.categoryName)', merchantName='\(transaction.merchantName)', amount=\(transaction.amount)")
+                    }
+                    
                     completion(.success(apiResponse))
                 } catch {
+                    print("🚨 Failed to decode uncategorized API response: \(error)")
+                    if let responseString = String(data: data, encoding: .utf8) {
+                        print("📄 Raw response: \(responseString.prefix(500))")
+                    }
                     completion(.failure(error))
                 }
             case .failure(let error):
+                print("🚨 Uncategorized API request failed: \(error)")
                 completion(.failure(error))
             }
         }
     }
-    
     /// Get transactions by category name
     func getTransactionsByCategory(categoryName: String, limit: Int = 300, completion: @escaping (Result<APIResponse, Error>) -> Void) {
         var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)!
