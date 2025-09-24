@@ -548,39 +548,45 @@ struct ManageView: View {
                                     }
                                     
                                     // UPDATED: Category list with DELETE functionality
-                                    if isLoadingCategories {
-                                        loadingView
-                                    } else if let error = categoriesError {
-                                        errorView(message: error, retryAction: fetchCategories)
-                                    } else {
-                                        VStack(alignment: .leading, spacing: 16) {
-                                            Text("Category List")
-                                                .font(.headline)
-                                                .foregroundColor(.appText)
-                                            
-                                            if categories.isEmpty {
-                                                Text("No categories found. Add one above or pull to refresh.")
-                                                    .foregroundColor(.appText.opacity(0.6))
-                                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                            } else {
-                                                VStack(spacing: 8) {
-                                                    ForEach(categories, id: \.remoteID) { category in
-                                                        // NEW: Enhanced category list item with delete functionality
-                                                        EnhancedAPICategoryListItem(
-                                                            category: category,
-                                                            isDeleting: deletingCategoryID == category.remoteID,
-                                                            onDelete: {
-                                                                categoryToDelete = category
-                                                                showDeleteCategoryConfirmation = true
-                                                            }
-                                                        )
-                                                    }
-                                                }
-                                            }
+            if isLoadingCategories {
+                        loadingView
+                    } else if let error = categoriesError {
+                        errorView(message: error, retryAction: fetchCategories)
+                    } else {
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Category List")
+                                .font(.headline)
+                                .foregroundColor(.appText)
+                            
+                            if categories.isEmpty {
+                                Text("No categories found. Add one above or pull to refresh.")
+                                    .foregroundColor(.appText.opacity(0.6))
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            } else {
+                                List {
+                                    ForEach(categories, id: \.remoteID) { category in
+                                        APICategoryListItem(category: category)
+                                            .opacity(deletingCategoryID == category.remoteID ? 0.6 : 1.0)
+                                            .listRowBackground(Color.clear)
+                                            .listRowSeparator(.hidden)
+                                            .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+                                    }
+                                    .onDelete { indexSet in
+                                        for index in indexSet {
+                                            let category = categories[index]
+                                            categoryToDelete = category
+                                            showDeleteCategoryConfirmation = true
                                         }
                                     }
                                 }
+                                .listStyle(.plain)
+                                .scrollContentBackground(.hidden)
+                                .frame(height: CGFloat(categories.count * 80))
                             }
+                        }
+                    }
+                }
+            }
 
                             // MARK: - Payment Section with DELETE functionality
                             @ViewBuilder private var paymentSection: some View {

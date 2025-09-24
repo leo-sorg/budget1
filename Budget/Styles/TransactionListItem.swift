@@ -4,7 +4,6 @@ import SwiftData
 // MARK: - Reusable Transaction List Item Component (UPDATED)
 struct TransactionListItem: View {
     let transaction: Transaction
-    let onDelete: () -> Void
     
     var body: some View {
         AppListItem(
@@ -44,8 +43,7 @@ struct TransactionListItem: View {
                 Text(transaction.amount as NSNumber, formatter: currencyFormatter)
                     .font(.system(size: 16, weight: .regular))
                     .foregroundColor(transaction.amount >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : .white)  // Light green for income, white for expenses
-            },
-            onDelete: onDelete
+            }
         )
     }
     

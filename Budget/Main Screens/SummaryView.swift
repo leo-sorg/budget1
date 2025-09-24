@@ -686,19 +686,25 @@ struct SummaryView: View {
                     .foregroundColor(.appText.opacity(0.6))
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else {
-                VStack(spacing: 8) {
-                    // UPDATED: Use enhanced transaction list item with delete state tracking
+                List {
                     ForEach(Array(apiTransactions.enumerated()), id: \.offset) { index, transaction in
-                        EnhancedAPITransactionListItem(
-                            transaction: transaction,
-                            isDeleting: deletingTransactionID == transaction.remoteID,
-                            onDelete: {
-                                transactionToDelete = transaction
-                                showDeleteTransactionConfirmation = true
-                            }
-                        )
+                        APITransactionListItem(transaction: transaction)
+                            .opacity(deletingTransactionID == transaction.remoteID ? 0.6 : 1.0)
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                            .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+                    }
+                    .onDelete { indexSet in
+                        for index in indexSet {
+                            let transaction = apiTransactions[index]
+                            transactionToDelete = transaction
+                            showDeleteTransactionConfirmation = true
+                        }
                     }
                 }
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .frame(height: CGFloat(apiTransactions.count * 80))
             }
         }
     }

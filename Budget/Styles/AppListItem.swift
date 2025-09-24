@@ -1,19 +1,16 @@
 import SwiftUI
 
-// MARK: - Unified List Item Component (Used Everywhere) - UPDATED with Glass Effects
+// MARK: - Unified List Item Component (Updated - No Delete Button)
 struct AppListItem<Content: View, TrailingContent: View>: View {
     let content: Content
     let trailingContent: TrailingContent
-    let onDelete: (() -> Void)?
     
     init(
         @ViewBuilder content: () -> Content,
-        @ViewBuilder trailing: () -> TrailingContent,
-        onDelete: (() -> Void)? = nil
+        @ViewBuilder trailing: () -> TrailingContent
     ) {
         self.content = content()
         self.trailingContent = trailing()
-        self.onDelete = onDelete
     }
     
     var body: some View {
@@ -23,16 +20,6 @@ struct AppListItem<Content: View, TrailingContent: View>: View {
             Spacer()
             
             trailingContent
-            
-            // Simple delete button (only visible if onDelete is provided)
-            if let onDelete = onDelete {
-                Button(action: onDelete) {
-                    Image(systemName: "minus.circle.fill")
-                        .font(.system(size: 20))
-                        .foregroundColor(.red.opacity(0.7))
-                }
-                .buttonStyle(.plain)
-            }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
@@ -43,25 +30,15 @@ struct AppListItem<Content: View, TrailingContent: View>: View {
 
 // MARK: - Convenience initializer for simple cases
 extension AppListItem where TrailingContent == EmptyView {
-    init(
-        @ViewBuilder content: () -> Content,
-        onDelete: (() -> Void)? = nil
-    ) {
+    init(@ViewBuilder content: () -> Content) {
         self.content = content()
         self.trailingContent = EmptyView()
-        self.onDelete = onDelete
     }
 }
 
 // MARK: - Category List Items (Used in Both ManageView and SummaryView)
 struct APICategoryListItem: View {
     let category: APICategory
-    let onDelete: (() -> Void)?
-    
-    init(category: APICategory, onDelete: (() -> Void)? = nil) {
-        self.category = category
-        self.onDelete = onDelete
-    }
     
     var body: some View {
         AppListItem(
@@ -85,8 +62,7 @@ struct APICategoryListItem: View {
             },
             trailing: {
                 CategoryTypeTag(isIncome: category.isIncome)
-            },
-            onDelete: onDelete
+            }
         )
     }
 }
@@ -94,12 +70,6 @@ struct APICategoryListItem: View {
 // MARK: - Payment Method List Items (Used in Both ManageView and SummaryView)
 struct APIPaymentMethodListItem: View {
     let paymentMethod: APIPaymentMethod
-    let onDelete: (() -> Void)?
-    
-    init(paymentMethod: APIPaymentMethod, onDelete: (() -> Void)? = nil) {
-        self.paymentMethod = paymentMethod
-        self.onDelete = onDelete
-    }
     
     var body: some View {
         AppListItem(
@@ -123,8 +93,7 @@ struct APIPaymentMethodListItem: View {
             },
             trailing: {
                 EmptyView()
-            },
-            onDelete: onDelete
+            }
         )
     }
 }
@@ -132,12 +101,6 @@ struct APIPaymentMethodListItem: View {
 // MARK: - Transaction List Item (Used in SummaryView)
 struct APITransactionListItem: View {
     let transaction: APITransaction
-    let onDelete: (() -> Void)?
-    
-    init(transaction: APITransaction, onDelete: (() -> Void)? = nil) {
-        self.transaction = transaction
-        self.onDelete = onDelete
-    }
     
     var body: some View {
         AppListItem(
@@ -169,8 +132,7 @@ struct APITransactionListItem: View {
                 Text(formatCurrency(Decimal(transaction.amount)))
                     .font(.system(size: 16, weight: .medium))
                     .foregroundColor(transaction.amount >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : .white)  // UPDATED: Better colors for glass background
-            },
-            onDelete: onDelete
+            }
         )
     }
     
@@ -201,13 +163,6 @@ struct APITransactionListItem: View {
 struct SummaryCategoryItem: View {
     let name: String
     let amount: Decimal
-    let onDelete: (() -> Void)?
-    
-    init(name: String, amount: Decimal, onDelete: (() -> Void)? = nil) {
-        self.name = name
-        self.amount = amount
-        self.onDelete = onDelete
-    }
     
     var body: some View {
         AppListItem(
@@ -220,8 +175,7 @@ struct SummaryCategoryItem: View {
                 Text(formatCurrency(amount))
                     .font(.system(size: 16, weight: .medium))
                     .foregroundColor(amount >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : .white)  // UPDATED: Better colors for glass background
-            },
-            onDelete: onDelete
+            }
         )
     }
 }
@@ -229,13 +183,6 @@ struct SummaryCategoryItem: View {
 struct SummaryPaymentItem: View {
     let name: String
     let amount: Decimal
-    let onDelete: (() -> Void)?
-    
-    init(name: String, amount: Decimal, onDelete: (() -> Void)? = nil) {
-        self.name = name
-        self.amount = amount
-        self.onDelete = onDelete
-    }
     
     var body: some View {
         AppListItem(
@@ -253,8 +200,7 @@ struct SummaryPaymentItem: View {
                 Text(formatCurrency(amount))
                     .font(.system(size: 16, weight: .medium))
                     .foregroundColor(amount >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : .white)  // UPDATED: Better colors for glass background
-            },
-            onDelete: onDelete
+            }
         )
     }
 }
