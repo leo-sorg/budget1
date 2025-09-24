@@ -325,7 +325,7 @@ struct ManageView: View {
     // MARK: - Category Section with inline form and loading states
     @ViewBuilder private var categorySection: some View {
         VStack(spacing: 24) {
-            // Add/Edit form
+            // Add/Edit form (keep this part exactly the same)
             VStack(alignment: .leading, spacing: 16) {
                 HStack {
                     Text("Add Category")
@@ -340,7 +340,6 @@ struct ManageView: View {
                                 newCategoryEmoji = ""
                                 newCategoryIsIncome = false
                             } else {
-                                // Dismiss keyboard when canceling
                                 hideKeyboard()
                             }
                         }
@@ -349,6 +348,7 @@ struct ManageView: View {
                 }
                 
                 if showCategoryForm {
+                    // Keep all your existing form code here
                     VStack(spacing: 20) {
                         // Name field
                         VStack(alignment: .leading, spacing: 8) {
@@ -413,34 +413,33 @@ struct ManageView: View {
                             .fill(Color.white.opacity(0.05))
                     )
                 }
-            } // <-- this was the line with a stray ']' before; now fixed
+            }
             
-            // Category list with loading states
-            VStack(alignment: .leading, spacing: 16) {
-                Text("Category List")
-                    .font(.headline)
-                    .foregroundColor(.appText)
-                
-                if isLoadingCategories {
-                    // Loading state
-                    loadingView
-                } else if let error = categoriesError {
-                    // Error state
-                    errorView(message: error, retryAction: fetchCategories)
-                } else if categories.isEmpty {
-                    Text("No categories found. Add one above or pull to refresh.")
-                        .foregroundColor(.appText.opacity(0.6))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                } else {
-                    LazyVStack(spacing: 8) {
-                        ForEach(categories, id: \.remoteID) { category in
-                            APICategoryListItem(
-                                category: category,
-                                onDelete: {
-                                    // TODO: Implement API delete if needed
-                                    alertMessage = "Deleting from API not yet implemented"
-                                }
-                            )
+            // UPDATED: Use unified AppListItem instead of CategorySection
+            if isLoadingCategories {
+                loadingView
+            } else if let error = categoriesError {
+                errorView(message: error, retryAction: fetchCategories)
+            } else {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Category List")
+                        .font(.headline)
+                        .foregroundColor(.appText)
+                    
+                    if categories.isEmpty {
+                        Text("No categories found. Add one above or pull to refresh.")
+                            .foregroundColor(.appText.opacity(0.6))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    } else {
+                        VStack(spacing: 8) {
+                            ForEach(categories, id: \.remoteID) { category in
+                                APICategoryListItem(
+                                    category: category,
+                                    onDelete: {
+                                        alertMessage = "Deleting from API not yet implemented"
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -451,7 +450,7 @@ struct ManageView: View {
     // MARK: - Payment Section with inline form and loading states
     @ViewBuilder private var paymentSection: some View {
         VStack(spacing: 24) {
-            // Add/Edit form
+            // Add/Edit form (keep this part exactly the same)
             VStack(alignment: .leading, spacing: 16) {
                 HStack {
                     Text("Add Payment Type")
@@ -465,7 +464,6 @@ struct ManageView: View {
                                 newPayment = ""
                                 newPaymentEmoji = ""
                             } else {
-                                // Dismiss keyboard when canceling
                                 hideKeyboard()
                             }
                         }
@@ -474,6 +472,7 @@ struct ManageView: View {
                 }
                 
                 if showPaymentForm {
+                    // Keep all your existing form code here
                     VStack(spacing: 20) {
                         // Name field
                         VStack(alignment: .leading, spacing: 8) {
@@ -511,32 +510,31 @@ struct ManageView: View {
                 }
             }
             
-            // Payment list with loading states
-            VStack(alignment: .leading, spacing: 16) {
-                Text("Payment Type List")
-                    .font(.headline)
-                    .foregroundColor(.appText)
-                
-                if isLoadingPaymentMethods {
-                    // Loading state
-                    loadingView
-                } else if let error = paymentMethodsError {
-                    // Error state
-                    errorView(message: error, retryAction: fetchPaymentMethods)
-                } else if methods.isEmpty {
-                    Text("No payment methods found. Add one above or pull to refresh.")
-                        .foregroundColor(.appText.opacity(0.6))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                } else {
-                    LazyVStack(spacing: 8) {
-                        ForEach(methods, id: \.remoteID) { method in
-                            APIPaymentMethodListItem(
-                                paymentMethod: method,
-                                onDelete: {
-                                    // TODO: Implement API delete if needed
-                                    alertMessage = "Deleting from API not yet implemented"
-                                }
-                            )
+            // UPDATED: Use unified AppListItem instead of PaymentMethodSection
+            if isLoadingPaymentMethods {
+                loadingView
+            } else if let error = paymentMethodsError {
+                errorView(message: error, retryAction: fetchPaymentMethods)
+            } else {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Payment Type List")
+                        .font(.headline)
+                        .foregroundColor(.appText)
+                    
+                    if methods.isEmpty {
+                        Text("No payment methods found. Add one above or pull to refresh.")
+                            .foregroundColor(.appText.opacity(0.6))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    } else {
+                        VStack(spacing: 8) {
+                            ForEach(methods, id: \.remoteID) { method in
+                                APIPaymentMethodListItem(
+                                    paymentMethod: method,
+                                    onDelete: {
+                                        alertMessage = "Deleting from API not yet implemented"
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -544,7 +542,7 @@ struct ManageView: View {
         }
     }
 
-    // MARK: - Background section
+    // MARK: - Background section (unchanged)
     @ViewBuilder private var backgroundSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Background Options")
@@ -714,7 +712,7 @@ struct ManageView: View {
         .frame(maxWidth: .infinity, minHeight: 200)
     }
 
-    // MARK: - NEW ASYNC ADD FUNCTIONS
+    // MARK: - Async Add Functions (unchanged)
     @MainActor
     private func performAddCategory() async -> Bool {
         hideKeyboard()
@@ -722,7 +720,6 @@ struct ManageView: View {
         let emoji = trimmed(newCategoryEmoji)
         guard !name.isEmpty else { return false }
 
-        // Check if category already exists
         if categories.contains(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) {
             alertMessage = "A category named \"\(name)\" already exists."
             return false
@@ -769,7 +766,6 @@ struct ManageView: View {
         }
     }
     
-    // MARK: - Real API Add Functions
     @MainActor
     private func performRealAddCategory(name: String, emoji: String) async -> Bool {
         let next = (categories.map { $0.sortIndex }.max() ?? -1) + 1
@@ -832,7 +828,7 @@ struct ManageView: View {
         }
     }
     
-    // MARK: - Mock Data Functions
+    // MARK: - Mock Data Functions (unchanged)
     private func getMockCategories() -> [APICategory] {
         let mockJSON = """
         [
@@ -886,7 +882,7 @@ struct ManageView: View {
         try? await Task.sleep(nanoseconds: 800_000_000) // 0.8 seconds
     }
 
-    // MARK: - Helpers
+    // MARK: - Helper Functions (unchanged)
     private func loadSelection(_ item: PhotosPickerItem?) async {
         guard let item else { return }
         do {
@@ -924,87 +920,7 @@ struct ManageView: View {
     }
 }
 
-// MARK: - API List Item Components
-
-struct APICategoryListItem: View {
-    let category: APICategory
-    let onDelete: () -> Void
-    
-    var body: some View {
-        AppListItem(
-            content: {
-                HStack(spacing: 12) {
-                    // Emoji or neutral tag icon
-                    if isValidEmoji(category.emoji) {
-                        Text(category.emoji)
-                            .font(.system(size: 20))
-                    } else {
-                        Image(systemName: "tag.fill")
-                            .font(.system(size: 18))
-                            .foregroundColor(.white.opacity(0.6))
-                    }
-                    
-                    // Name
-                    Text(category.name)
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.white)
-                }
-            },
-            trailing: {
-                // Income/Expense tag
-                CategoryTypeTag(isIncome: category.isIncome)
-            },
-            onDelete: onDelete
-        )
-    }
-}
-
-struct APIPaymentMethodListItem: View {
-    let paymentMethod: APIPaymentMethod
-    let onDelete: () -> Void
-    
-    var body: some View {
-        AppListItem(
-            content: {
-                HStack(spacing: 12) {
-                    // Emoji or neutral credit card icon
-                    if isValidEmoji(paymentMethod.emoji) {
-                        Text(paymentMethod.emoji)
-                            .font(.system(size: 20))
-                    } else {
-                        Image(systemName: "creditcard.fill")
-                            .font(.system(size: 18))
-                            .foregroundColor(.white.opacity(0.6))
-                    }
-                    
-                    // Name
-                    Text(paymentMethod.name)
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.white)
-                }
-            },
-            trailing: {
-                EmptyView()
-            },
-            onDelete: onDelete
-        )
-    }
-}
-
-// MARK: - Emoji validation helper
-private func isValidEmoji(_ s: String) -> Bool {
-    guard !s.isEmpty else { return false }
-    let chars = Array(s)
-    if chars.count != 1 { return false }
-    if let scalar = s.unicodeScalars.first {
-        if CharacterSet.alphanumerics.contains(scalar) { return false }
-        if CharacterSet.punctuationCharacters.contains(scalar) { return false }
-        if CharacterSet.whitespacesAndNewlines.contains(scalar) { return false }
-    }
-    return true
-}
-
-// MARK: - Custom Color Square Component
+// MARK: - Helper Components (unchanged)
 struct ColorSquare: View {
     let color: Color
     let isSelected: Bool
@@ -1026,7 +942,6 @@ struct ColorSquare: View {
     }
 }
 
-// UIKit-based color view to bypass SwiftUI rendering issues (with fallback)
 #if canImport(UIKit)
 struct ColorBoxView: UIViewRepresentable {
     let color: Color
@@ -1051,7 +966,6 @@ struct ColorBoxView: View {
 }
 #endif
 
-// MARK: - Color Extension for Hex Support
 extension Color {
     init?(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)

@@ -26,8 +26,8 @@ struct SummaryView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header using reusable component
-            AppHeader(title: "RADIO")
+            // Header using reusable component - UPDATED: Changed title from "RADIO" to "SUMMARY"
+            AppHeader(title: "SUMMARY")
             
             // Month navigation chips (right-aligned, newest first)
             VStack(alignment: .leading, spacing: 12) {
@@ -572,6 +572,7 @@ struct SummaryView: View {
         }
     }
     
+    // UPDATED: Using unified AppListItem components
     @ViewBuilder private var byCategorySection: some View {
         VStack(alignment: .leading, spacing: 16) {
             if byCategory.isEmpty {
@@ -591,6 +592,7 @@ struct SummaryView: View {
         }
     }
     
+    // UPDATED: Using unified AppListItem components
     @ViewBuilder private var byPaymentSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             if byPayment.isEmpty {
@@ -610,6 +612,7 @@ struct SummaryView: View {
         }
     }
     
+    // UPDATED: Using unified AppListItem components
     @ViewBuilder private var allTransactionsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             if apiTransactions.isEmpty {
@@ -637,184 +640,8 @@ struct SummaryView: View {
     }
 }
 
-// MARK: - UPDATED API Transaction List Item with categoryEmoji support
-
-struct APITransactionListItem: View {
-    let transaction: APITransaction
-    
-    var body: some View {
-        AppListItem(
-            content: {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 8) {
-                        // UPDATED: Use categoryEmoji if available, fallback to colored minus icons
-                        categoryIconView
-                        
-                        Text(transaction.categoryName.isEmpty ? "Uncategorized" : transaction.categoryName)
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.white)
-                    }
-                    
-                    HStack(spacing: 8) {
-                        Text(formatDisplayDate(transaction.dateISO))
-                            .foregroundColor(Color.appText.opacity(0.6))
-                            .font(.caption)
-                        
-                        if !transaction.paymentMethod.isEmpty {
-                            Text("• \(transaction.paymentMethod)")
-                                .foregroundColor(Color.appText.opacity(0.6))
-                                .font(.caption)
-                        }
-                    }
-                }
-            },
-            trailing: {
-                Text(formatCurrency(Decimal(transaction.amount)))
-                    .font(.system(size: 16, weight: .regular))
-                    .foregroundColor(transaction.amount >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : .white)  // Light green for income, white for expenses
-            }
-        )
-    }
-    
-    // UPDATED: Category icon view with emoji support and fallback icons
-    @ViewBuilder private var categoryIconView: some View {
-        if !transaction.categoryEmoji.isEmpty && isValidEmoji(transaction.categoryEmoji) {
-            // Use the category emoji from the API
-            Text(transaction.categoryEmoji)
-                .font(.system(size: 20))
-        } else {
-            // Fallback for uncategorized/empty emoji: colored minus icon
-            if transaction.amount >= 0 {
-                // Income: light green plus or up arrow
-                Image(systemName: "plus.circle.fill")
-                    .font(.system(size: 20))
-                    .foregroundColor(Color(red: 0.5, green: 1.0, blue: 0.5)) // Light green
-            } else {
-                // Expense: light red minus
-                Image(systemName: "minus.circle.fill")
-                    .font(.system(size: 20))
-                    .foregroundColor(Color(red: 1.0, green: 0.5, blue: 0.5)) // Light red
-            }
-        }
-    }
-    
-    private func formatDisplayDate(_ dateString: String) -> String {
-        // Output formatter for DD/MM format
-        let outputFormatter = DateFormatter()
-        outputFormatter.dateFormat = "dd/MM"
-        
-        // Use ISO8601DateFormatter which handles various ISO formats automatically
-        let isoFormatter = ISO8601DateFormatter()
-        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        
-        // Try with fractional seconds first
-        if let date = isoFormatter.date(from: dateString) {
-            return outputFormatter.string(from: date)
-        }
-        
-        // Try without fractional seconds (for format like "2025-09-17T00:30:41-03:00")
-        isoFormatter.formatOptions = [.withInternetDateTime]
-        if let date = isoFormatter.date(from: dateString) {
-            return outputFormatter.string(from: date)
-        }
-        
-        // Try simple date format: "2025-08-16"
-        let simpleFormatter = DateFormatter()
-        simpleFormatter.dateFormat = "yyyy-MM-dd"
-        if let date = simpleFormatter.date(from: dateString) {
-            return outputFormatter.string(from: date)
-        }
-        
-        // If nothing works, try to extract just the date part
-        if dateString.count >= 10 {
-            let datePart = String(dateString.prefix(10))
-            if let date = simpleFormatter.date(from: datePart) {
-                return outputFormatter.string(from: date)
-            }
-        }
-        
-        // If all else fails, return the original string
-        return dateString
-    }
-    
-    private func formatCurrency(_ value: Decimal) -> String {
-        let f = NumberFormatter()
-        f.numberStyle = .currency
-        f.locale = Locale(identifier: "pt_BR")
-        return f.string(for: NSDecimalNumber(decimal: value)) ?? "R$ 0,00"
-    }
-}
-
-// MARK: - Helper function for emoji validation
-private func isValidEmoji(_ s: String) -> Bool {
-    guard !s.isEmpty else { return false }
-    let chars = Array(s)
-    if chars.count != 1 { return false }
-    if let scalar = s.unicodeScalars.first {
-        if CharacterSet.alphanumerics.contains(scalar) { return false }
-        if CharacterSet.punctuationCharacters.contains(scalar) { return false }
-        if CharacterSet.whitespacesAndNewlines.contains(scalar) { return false }
-    }
-    return true
-}
-
-// MARK: - Summary List Item Components
-
-struct SummaryCategoryItem: View {
-    let name: String
-    let amount: Decimal
-    
-    var body: some View {
-        AppListItem(
-            content: {
-                Text(name)
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.white)
-            },
-            trailing: {
-                Text(formatCurrency(amount))
-                    .font(.system(size: 16, weight: .regular))
-                    .foregroundColor(amount >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : .white)  // Light green for positive
-            }
-        )
-    }
-    
-    private func formatCurrency(_ value: Decimal) -> String {
-        let f = NumberFormatter()
-        f.numberStyle = .currency
-        f.locale = Locale(identifier: "pt_BR")
-        return f.string(for: NSDecimalNumber(decimal: value)) ?? "R$ 0,00"
-    }
-}
-
-struct SummaryPaymentItem: View {
-    let name: String
-    let amount: Decimal
-    
-    var body: some View {
-        AppListItem(
-            content: {
-                HStack(spacing: 8) {
-                    Image(systemName: "creditcard.fill")
-                        .font(.system(size: 16))
-                        .foregroundColor(.white.opacity(0.6))
-                    Text(name)
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.white)
-                }
-            },
-            trailing: {
-                Text(formatCurrency(amount))
-                    .font(.system(size: 16, weight: .regular))
-                    .foregroundColor(amount >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : .white)  // Light green for positive
-            }
-        )
-    }
-    
-    private func formatCurrency(_ value: Decimal) -> String {
-        let f = NumberFormatter()
-        f.numberStyle = .currency
-        f.locale = Locale(identifier: "pt_BR")
-        return f.string(for: NSDecimalNumber(decimal: value)) ?? "R$ 0,00"
-    }
-}
+// REMOVED: All duplicate components are now in AppListItem.swift
+// - APITransactionListItem
+// - SummaryCategoryItem
+// - SummaryPaymentItem
+// - isValidEmoji function

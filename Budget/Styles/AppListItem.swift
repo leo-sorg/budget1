@@ -1,16 +1,10 @@
 import SwiftUI
 
-// MARK: - Reusable List Item with Liquid glass background and swipe-to-delete
+// MARK: - Unified List Item Component (Used Everywhere)
 struct AppListItem<Content: View, TrailingContent: View>: View {
     let content: Content
     let trailingContent: TrailingContent
     let onDelete: (() -> Void)?
-    
-    @State private var offset: CGFloat = 0
-    @State private var isSwiped = false
-    @State private var screenWidth: CGFloat = 0
-    
-    private let revealWidth: CGFloat = 88
     
     init(
         @ViewBuilder content: () -> Content,
@@ -23,169 +17,27 @@ struct AppListItem<Content: View, TrailingContent: View>: View {
     }
     
     var body: some View {
-        ZStack(alignment: .trailing) {
-            // Delete action area revealed on swipe — glass system visuals
-            if onDelete != nil && (offset < 0 || isSwiped) {
-                HStack {
-                    Spacer()
-                    Button(role: .destructive) {
-                        withAnimation(.easeOut(duration: 0.25)) {
-                            offset = -screenWidth
-                        }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-                            onDelete?()
-                        }
-                    } label: {
-                        Label("Delete", systemImage: "trash.fill")
-                            .labelStyle(.iconOnly)
-                            .font(.system(size: 18, weight: .semibold))
-                            .frame(width: revealWidth)
-                            .frame(maxHeight: .infinity)
-                    }
-                    .buttonStyle(.plain)
-                    .tint(.red)
-                }
-                .glassEffect(.regular, in: .rect(cornerRadius: 12))
-                .transition(.opacity)
-            }
-            
-            // Main content — Liquid glass per item
-            HStack(spacing: 12) {
-                content
-                Spacer()
-                trailingContent
-            }
-            .foregroundStyle(.primary)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
-            .offset(x: offset)
-            .modifier(SwipeToDeleteModifier(
-                onDelete: onDelete,
-                offset: $offset,
-                isSwiped: $isSwiped,
-                revealWidth: revealWidth
-            ))
-            .onTapGesture {
-                if isSwiped {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                        offset = 0
-                        isSwiped = false
-                    }
-                }
-            }
-            .accessibilityActions {
-                if onDelete != nil {
-                    Button("Delete", role: .destructive) {
-                        onDelete?()
-                    }
-                }
-            }
-        }
-        .background {
-            // Use GeometryReader just for getting screen width, without constraining layout
-            GeometryReader { geometry in
-                Color.clear
-                    .onAppear {
-                        screenWidth = geometry.size.width
-                    }
-                    .onChange(of: geometry.size.width) { oldValue, newValue in
-                        screenWidth = newValue
-                    }
-            }
-        }
-    }
-}
-
-// MARK: - Swipe to Delete Modifier (system-like behavior)
-private struct SwipeToDeleteModifier: ViewModifier {
-    let onDelete: (() -> Void)?
-    @Binding var offset: CGFloat
-    @Binding var isSwiped: Bool
-    let revealWidth: CGFloat
-    
-    // Internal gesture state
-    @State private var swipeLocked: Bool = false
-    @State private var startedOnThisRow: Bool = false
-    @State private var initialTranslation: CGSize = .zero
-    
-    func body(content: Content) -> some View {
-        guard onDelete != nil else { return AnyView(content) }
-        
-        let drag = DragGesture(minimumDistance: 10, coordinateSpace: .local)
-            .onChanged { value in
-                if !startedOnThisRow {
-                    startedOnThisRow = true
-                    initialTranslation = value.translation
-                }
-                
-                let dx = value.translation.width
-                let dy = value.translation.height
-                
-                if !swipeLocked {
-                    let horizontalDelta = abs(dx - initialTranslation.width)
-                    let verticalDelta = abs(dy - initialTranslation.height)
-                    
-                    if horizontalDelta > 8 && horizontalDelta > verticalDelta * 0.6 {
-                        swipeLocked = true
-                    } else {
-                        if verticalDelta > horizontalDelta {
-                            withAnimation(.spring(response: 0.2, dampingFraction: 0.9)) {
-                                if !isSwiped { offset = 0 }
-                            }
-                        }
-                        return
-                    }
-                }
-                
-                if dx < 0 {
-                    offset = max(-revealWidth, dx)
-                } else if isSwiped {
-                    offset = min(0, -revealWidth + dx)
-                } else {
-                    offset = 0
-                }
-            }
-            .onEnded { _ in
-                defer {
-                    swipeLocked = false
-                    startedOnThisRow = false
-                    initialTranslation = .zero
-                }
-                
-                guard swipeLocked else {
-                    withAnimation(.spring(response: 0.2, dampingFraction: 0.9)) {
-                        if !isSwiped { offset = 0 }
-                    }
-                    return
-                }
-                
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                    let threshold: CGFloat = -(revealWidth * 0.5)
-                    if offset < threshold {
-                        offset = -revealWidth
-                        isSwiped = true
-                    } else {
-                        offset = 0
-                        isSwiped = false
-                    }
-                }
-            }
-        
-        return AnyView(
+        HStack(spacing: 12) {
             content
-                .highPriorityGesture(drag, including: .all)
-                .simultaneousGesture(
-                    TapGesture().onEnded {
-                        if isSwiped {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                offset = 0
-                                isSwiped = false
-                            }
-                        }
-                    }
-                )
-        )
+            
+            Spacer()
+            
+            trailingContent
+            
+            // Simple delete button (only visible if onDelete is provided)
+            if let onDelete = onDelete {
+                Button(action: onDelete) {
+                    Image(systemName: "minus.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(.red.opacity(0.7))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background(Color(.systemGray6))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 }
 
@@ -201,76 +53,34 @@ extension AppListItem where TrailingContent == EmptyView {
     }
 }
 
-// MARK: - Glass Card (Apple Liquid Glass)
-struct GlassCard<Content: View>: View {
-    let content: Content
+// MARK: - Category List Items (Used in Both ManageView and SummaryView)
+struct APICategoryListItem: View {
+    let category: APICategory
+    let onDelete: (() -> Void)?
     
-    init(@ViewBuilder content: () -> Content) {
-        self.content = content()
+    init(category: APICategory, onDelete: (() -> Void)? = nil) {
+        self.category = category
+        self.onDelete = onDelete
     }
-    
-    var body: some View {
-        content
-            .padding(20)
-            .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 16))
-    }
-}
-
-// MARK: - Glass Card Row (Apple Liquid Glass)
-struct GlassCardRow: View {
-    let label: String
-    let value: String
-    let valueColor: Color
-    var isEmphasized: Bool = false
-    
-    init(label: String, value: String, valueColor: Color = .white, isEmphasized: Bool = false) {
-        self.label = label
-        self.value = value
-        self.valueColor = valueColor
-        self.isEmphasized = isEmphasized
-    }
-    
-    var body: some View {
-        HStack {
-            Text(label)
-                .font(.system(size: 16, weight: isEmphasized ? .semibold : .regular))
-                .foregroundColor(.white.opacity(isEmphasized ? 1.0 : 0.8))
-            
-            Spacer()
-            
-            Text(value)
-                .font(.system(size: 16, weight: isEmphasized ? .semibold : .medium))
-                .foregroundColor(valueColor)
-        }
-    }
-}
-
-// MARK: - Income/Expense Tag (system colors)
-struct CategoryTypeTag: View {
-    let isIncome: Bool
-    
-    var body: some View {
-        Text(isIncome ? "Income" : "Expense")
-            .font(.system(size: 12, weight: .semibold))
-            .foregroundStyle(isIncome ? .green : .red)
-    }
-}
-
-// MARK: - Category List Item
-struct CategoryListItem: View {
-    let category: Category
-    let onDelete: () -> Void
     
     var body: some View {
         AppListItem(
             content: {
                 HStack(spacing: 12) {
-                    Text(category.emoji ?? "🏷️")
-                        .font(.system(size: 20))
-                        .foregroundStyle(.primary)
+                    // Category emoji or fallback icon
+                    if isValidEmoji(category.emoji) {
+                        Text(category.emoji)
+                            .font(.system(size: 20))
+                    } else {
+                        Image(systemName: "tag.fill")
+                            .font(.system(size: 18))
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    // Category name
                     Text(category.name)
                         .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(.primary)
+                        .foregroundColor(.primary)
                 }
             },
             trailing: {
@@ -281,28 +91,34 @@ struct CategoryListItem: View {
     }
 }
 
-// MARK: - Payment Method List Item
-struct PaymentMethodListItem: View {
-    let paymentMethod: PaymentMethod
-    let onDelete: () -> Void
+// MARK: - Payment Method List Items (Used in Both ManageView and SummaryView)
+struct APIPaymentMethodListItem: View {
+    let paymentMethod: APIPaymentMethod
+    let onDelete: (() -> Void)?
+    
+    init(paymentMethod: APIPaymentMethod, onDelete: (() -> Void)? = nil) {
+        self.paymentMethod = paymentMethod
+        self.onDelete = onDelete
+    }
     
     var body: some View {
         AppListItem(
             content: {
                 HStack(spacing: 12) {
-                    if let emoji = paymentMethod.emoji, !emoji.isEmpty {
-                        Text(emoji)
+                    // Payment method emoji or fallback icon
+                    if isValidEmoji(paymentMethod.emoji) {
+                        Text(paymentMethod.emoji)
                             .font(.system(size: 20))
-                            .foregroundStyle(.primary)
                     } else {
                         Image(systemName: "creditcard.fill")
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundStyle(.secondary)
+                            .font(.system(size: 18))
+                            .foregroundColor(.secondary)
                     }
                     
+                    // Payment method name
                     Text(paymentMethod.name)
                         .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(.primary)
+                        .foregroundColor(.primary)
                 }
             },
             trailing: {
@@ -313,53 +129,240 @@ struct PaymentMethodListItem: View {
     }
 }
 
-// MARK: - List Section with Liquid Glass container and system colors
-struct AppListSection<Items: RandomAccessCollection, ItemContent: View>: View where Items.Element: Identifiable {
-    let title: String
-    let emptyMessage: String
-    let items: Items
-    let addButtonAction: () -> Void
-    let itemContent: (Items.Element) -> ItemContent
+// MARK: - Transaction List Item (Used in SummaryView)
+struct APITransactionListItem: View {
+    let transaction: APITransaction
+    let onDelete: (() -> Void)?
     
-    init(
-        title: String,
-        emptyMessage: String,
-        items: Items,
-        onAdd: @escaping () -> Void,
-        @ViewBuilder itemContent: @escaping (Items.Element) -> ItemContent
-    ) {
-        self.title = title
-        self.emptyMessage = emptyMessage
-        self.items = items
-        self.addButtonAction = onAdd
-        self.itemContent = itemContent
+    init(transaction: APITransaction, onDelete: (() -> Void)? = nil) {
+        self.transaction = transaction
+        self.onDelete = onDelete
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            VStack(spacing: 16) {
-                HStack {
-                    Text(title)
-                        .font(.headline)
-                        .foregroundStyle(.primary)
-                    Spacer()
-                    Button("Add", action: addButtonAction)
-                        .buttonStyle(AppSmallButtonStyle())
-                }
-                
-                if items.isEmpty {
-                    Text(emptyMessage)
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                } else {
-                    VStack(spacing: 8) {
-                        ForEach(items) { item in
-                            itemContent(item)
+        AppListItem(
+            content: {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 8) {
+                        // Category icon with emoji support and fallback icons
+                        categoryIconView
+                        
+                        Text(transaction.categoryName.isEmpty ? "Uncategorized" : transaction.categoryName)
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.primary)
+                    }
+                    
+                    HStack(spacing: 8) {
+                        Text(formatDisplayDate(transaction.dateISO))
+                            .foregroundColor(.secondary)
+                            .font(.caption)
+                        
+                        if !transaction.paymentMethod.isEmpty {
+                            Text("• \(transaction.paymentMethod)")
+                                .foregroundColor(.secondary)
+                                .font(.caption)
                         }
                     }
-                    .padding(12)
                 }
+            },
+            trailing: {
+                Text(formatCurrency(Decimal(transaction.amount)))
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(transaction.amount >= 0 ? .green : .primary)
+            },
+            onDelete: onDelete
+        )
+    }
+    
+    // Category icon view with emoji support and fallback icons
+    @ViewBuilder private var categoryIconView: some View {
+        if !transaction.categoryEmoji.isEmpty && isValidEmoji(transaction.categoryEmoji) {
+            // Use the category emoji from the API
+            Text(transaction.categoryEmoji)
+                .font(.system(size: 20))
+        } else {
+            // Fallback for uncategorized/empty emoji: colored icons
+            if transaction.amount >= 0 {
+                // Income: green plus
+                Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 20))
+                    .foregroundColor(.green)
+            } else {
+                // Expense: red minus
+                Image(systemName: "minus.circle.fill")
+                    .font(.system(size: 20))
+                    .foregroundColor(.red)
             }
         }
+    }
+}
+
+// MARK: - Summary List Items (Used in SummaryView for category/payment summaries)
+struct SummaryCategoryItem: View {
+    let name: String
+    let amount: Decimal
+    let onDelete: (() -> Void)?
+    
+    init(name: String, amount: Decimal, onDelete: (() -> Void)? = nil) {
+        self.name = name
+        self.amount = amount
+        self.onDelete = onDelete
+    }
+    
+    var body: some View {
+        AppListItem(
+            content: {
+                Text(name)
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(.primary)
+            },
+            trailing: {
+                Text(formatCurrency(amount))
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(amount >= 0 ? .green : .primary)
+            },
+            onDelete: onDelete
+        )
+    }
+}
+
+struct SummaryPaymentItem: View {
+    let name: String
+    let amount: Decimal
+    let onDelete: (() -> Void)?
+    
+    init(name: String, amount: Decimal, onDelete: (() -> Void)? = nil) {
+        self.name = name
+        self.amount = amount
+        self.onDelete = onDelete
+    }
+    
+    var body: some View {
+        AppListItem(
+            content: {
+                HStack(spacing: 8) {
+                    Image(systemName: "creditcard.fill")
+                        .font(.system(size: 16))
+                        .foregroundColor(.secondary)
+                    Text(name)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.primary)
+                }
+            },
+            trailing: {
+                Text(formatCurrency(amount))
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(amount >= 0 ? .green : .primary)
+            },
+            onDelete: onDelete
+        )
+    }
+}
+
+// MARK: - Glass Card Components (for Summary View totals)
+struct GlassCard<Content: View>: View {
+    let content: Content
+    
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+    
+    var body: some View {
+        content
+            .padding(20)
+            .background(Color(.systemGray6))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+}
+
+struct GlassCardRow: View {
+    let label: String
+    let value: String
+    let valueColor: Color
+    var isEmphasized: Bool = false
+    
+    init(label: String, value: String, valueColor: Color = .primary, isEmphasized: Bool = false) {
+        self.label = label
+        self.value = value
+        self.valueColor = valueColor
+        self.isEmphasized = isEmphasized
+    }
+    
+    var body: some View {
+        HStack {
+            Text(label)
+                .font(.system(size: 16, weight: isEmphasized ? .semibold : .regular))
+                .foregroundColor(isEmphasized ? .primary : .secondary)
+            
+            Spacer()
+            
+            Text(value)
+                .font(.system(size: 16, weight: isEmphasized ? .semibold : .medium))
+                .foregroundColor(valueColor)
+        }
+    }
+}
+
+// MARK: - Income/Expense Tag Component
+struct CategoryTypeTag: View {
+    let isIncome: Bool
+    
+    var body: some View {
+        Text(isIncome ? "Income" : "Expense")
+            .font(.caption.weight(.medium))
+            .foregroundColor(isIncome ? .green : .red)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(
+                Capsule()
+                    .fill(isIncome ? Color.green.opacity(0.15) : Color.red.opacity(0.15))
+            )
+    }
+}
+
+// MARK: - Shared Helper Functions
+private func formatCurrency(_ value: Decimal) -> String {
+    let formatter = NumberFormatter()
+    formatter.numberStyle = .currency
+    formatter.locale = Locale(identifier: "pt_BR")
+    return formatter.string(for: NSDecimalNumber(decimal: value)) ?? "R$ 0,00"
+}
+
+private func formatDisplayDate(_ dateString: String) -> String {
+    let outputFormatter = DateFormatter()
+    outputFormatter.dateFormat = "dd/MM"
+    
+    let isoFormatter = ISO8601DateFormatter()
+    isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    
+    if let date = isoFormatter.date(from: dateString) {
+        return outputFormatter.string(from: date)
+    }
+    
+    isoFormatter.formatOptions = [.withInternetDateTime]
+    if let date = isoFormatter.date(from: dateString) {
+        return outputFormatter.string(from: date)
+    }
+    
+    let simpleFormatter = DateFormatter()
+    simpleFormatter.dateFormat = "yyyy-MM-dd"
+    if let date = simpleFormatter.date(from: dateString) {
+        return outputFormatter.string(from: date)
+    }
+    
+    if dateString.count >= 10 {
+        let datePart = String(dateString.prefix(10))
+        if let date = simpleFormatter.date(from: datePart) {
+            return outputFormatter.string(from: date)
+        }
+    }
+    
+    return dateString
+}
+
+private func isValidEmoji(_ string: String) -> Bool {
+    guard !string.isEmpty else { return false }
+    return string.unicodeScalars.allSatisfy { scalar in
+        scalar.properties.isEmoji
     }
 }
