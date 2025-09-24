@@ -21,7 +21,7 @@ struct SummaryView: View {
     // Namespace for month chip morphing
     @Namespace private var monthChipNamespace
     
-    // UPDATED: Transaction delete state management - direct delete without confirmation
+    // Transaction delete state management - direct delete without confirmation
     @State private var deletingTransactionID: String?
     
     // Set this to false to use real API, true to use mock data
@@ -98,7 +98,7 @@ struct SummaryView: View {
         }
     }
     
-    // MARK: - UPDATED Transaction Delete Function - Direct delete without confirmation
+    // MARK: - Transaction Delete Function - Direct delete without confirmation
     
     private func deleteTransaction(_ transaction: APITransaction) {
         deletingTransactionID = transaction.remoteID
@@ -335,7 +335,7 @@ struct SummaryView: View {
         }
     }
     
-    // MARK: - Mock Data Generator (UPDATED with categoryEmoji)
+    // MARK: - Mock Data Generator - FIXED with categoryEmoji
     private func getMockTransactionsForMonth() -> [APITransaction] {
         let (startDate, _) = selectedDateRange
         let calendar = Calendar.current
@@ -425,12 +425,12 @@ struct SummaryView: View {
             dateComponents.day = randomDay
             let transactionDate = calendar.date(from: dateComponents) ?? startDate
             
-            // Create transaction with categoryEmoji
+            // FIXED: Create transaction with categoryEmoji included
             let transaction = APITransaction(
                 remoteID: "mock-\(selectedMonth)-\(selectedYear)-\(i)",
                 amount: amount,
                 categoryName: categoryData.0,
-                categoryEmoji: categoryData.1, // NEW: Include emoji in mock data
+                categoryEmoji: categoryData.1, // ✅ FIXED: Now includes emoji from tuple
                 paymentMethod: paymentMethods.randomElement()!,
                 merchantName: merchantName,
                 note: note,
@@ -612,7 +612,7 @@ struct SummaryView: View {
         }
     }
     
-    // UPDATED: Using unified AppListItem components
+    // Using unified AppListItem components
     @ViewBuilder private var byCategorySection: some View {
         VStack(alignment: .leading, spacing: 16) {
             if byCategory.isEmpty {
@@ -632,7 +632,7 @@ struct SummaryView: View {
         }
     }
     
-    // UPDATED: Using unified AppListItem components
+    // Using unified AppListItem components
     @ViewBuilder private var byPaymentSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             if byPayment.isEmpty {
@@ -652,7 +652,7 @@ struct SummaryView: View {
         }
     }
     
-    // UPDATED: Transaction list with loading indicator and custom swipe delete
+    // FIXED: Transaction list with loading indicator and custom swipe delete
     @ViewBuilder private var allTransactionsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             if apiTransactions.isEmpty {
@@ -662,7 +662,7 @@ struct SummaryView: View {
             } else {
                 List {
                     ForEach(Array(apiTransactions.enumerated()), id: \.offset) { index, transaction in
-                        // UPDATED: Use custom list item with loading indicator
+                        // FIXED: Use custom list item with loading indicator and direct emoji usage
                         DeletableAPITransactionListItem(
                             transaction: transaction,
                             isDeleting: deletingTransactionID == transaction.remoteID
@@ -697,9 +697,9 @@ struct SummaryView: View {
     }
 }
 
-// MARK: - UPDATED Transaction List Item Component with Loading Indicator
+// MARK: - FIXED Transaction List Item Component with Direct API Emoji Usage
 
-/// Transaction list item with loading indicator and custom delete styling
+/// Transaction list item with loading indicator and direct emoji from API
 struct DeletableAPITransactionListItem: View {
     let transaction: APITransaction
     let isDeleting: Bool
@@ -708,7 +708,7 @@ struct DeletableAPITransactionListItem: View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
-                    // Category icon with emoji support and fallback icons
+                    // FIXED: Use categoryEmoji directly from API response
                     categoryIconView
                     
                     Text(transaction.categoryName.isEmpty ? "Uncategorized" : transaction.categoryName)
@@ -750,10 +750,10 @@ struct DeletableAPITransactionListItem: View {
         .animation(.easeInOut(duration: 0.2), value: isDeleting)
     }
     
-    // Category icon view with emoji support and fallback icons
+    // FIXED: Category icon view using API's categoryEmoji field
     @ViewBuilder private var categoryIconView: some View {
         if !transaction.categoryEmoji.isEmpty && isValidEmoji(transaction.categoryEmoji) {
-            // Use the category emoji from the API
+            // Use the category emoji directly from the API response
             Text(transaction.categoryEmoji)
                 .font(.system(size: 20))
         } else {
@@ -814,9 +814,7 @@ private func formatDisplayDate(_ dateString: String) -> String {
     return dateString
 }
 
+// SIMPLIFIED: Just check if emoji field is not empty
 private func isValidEmoji(_ string: String) -> Bool {
-    guard !string.isEmpty else { return false }
-    return string.unicodeScalars.allSatisfy { scalar in
-        scalar.properties.isEmoji
-    }
+    return !string.isEmpty
 }

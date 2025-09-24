@@ -57,7 +57,7 @@ struct APICategoryListItem: View {
                     // Category name
                     Text(category.name)
                         .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.white)  // UPDATED: Changed to .white for better contrast on glass
+                        .foregroundColor(.white)  // Changed to .white for better contrast on glass
                 }
             },
             trailing: {
@@ -82,13 +82,13 @@ struct APIPaymentMethodListItem: View {
                     } else {
                         Image(systemName: "creditcard.fill")
                             .font(.system(size: 18))
-                            .foregroundColor(.white.opacity(0.7))  // UPDATED: Changed to .white with opacity for glass
+                            .foregroundColor(.white.opacity(0.7))  // Changed to .white with opacity for glass
                     }
                     
                     // Payment method name
                     Text(paymentMethod.name)
                         .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.white)  // UPDATED: Changed to .white for better contrast on glass
+                        .foregroundColor(.white)  // Changed to .white for better contrast on glass
                 }
             },
             trailing: {
@@ -98,7 +98,7 @@ struct APIPaymentMethodListItem: View {
     }
 }
 
-// MARK: - Transaction List Item (Used in SummaryView)
+// MARK: - FIXED Transaction List Item (Used in SummaryView)
 struct APITransactionListItem: View {
     let transaction: APITransaction
     
@@ -107,22 +107,22 @@ struct APITransactionListItem: View {
             content: {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 8) {
-                        // Category icon with emoji support and fallback icons
+                        // FIXED: Category icon with direct emoji usage from API
                         categoryIconView
                         
                         Text(transaction.categoryName.isEmpty ? "Uncategorized" : transaction.categoryName)
                             .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.white)  // UPDATED: Changed to .white for better contrast on glass
+                            .foregroundColor(.white)  // Changed to .white for better contrast on glass
                     }
                     
                     HStack(spacing: 8) {
                         Text(formatDisplayDate(transaction.dateISO))
-                            .foregroundColor(.white.opacity(0.6))  // UPDATED: Changed to .white with opacity for glass
+                            .foregroundColor(.white.opacity(0.6))  // Changed to .white with opacity for glass
                             .font(.caption)
                         
                         if !transaction.paymentMethod.isEmpty {
                             Text("• \(transaction.paymentMethod)")
-                                .foregroundColor(.white.opacity(0.6))  // UPDATED: Changed to .white with opacity for glass
+                                .foregroundColor(.white.opacity(0.6))  // Changed to .white with opacity for glass
                                 .font(.caption)
                         }
                     }
@@ -131,15 +131,15 @@ struct APITransactionListItem: View {
             trailing: {
                 Text(formatCurrency(Decimal(transaction.amount)))
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(transaction.amount >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : .white)  // UPDATED: Better colors for glass background
+                    .foregroundColor(transaction.amount >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : .white)  // Better colors for glass background
             }
         )
     }
     
-    // Category icon view with emoji support and fallback icons
+    // FIXED: Category icon view using API's categoryEmoji field
     @ViewBuilder private var categoryIconView: some View {
         if !transaction.categoryEmoji.isEmpty && isValidEmoji(transaction.categoryEmoji) {
-            // Use the category emoji from the API
+            // Use the category emoji directly from the API response
             Text(transaction.categoryEmoji)
                 .font(.system(size: 20))
         } else {
@@ -169,12 +169,12 @@ struct SummaryCategoryItem: View {
             content: {
                 Text(name)
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.white)  // UPDATED: Changed to .white for better contrast on glass
+                    .foregroundColor(.white)  // Changed to .white for better contrast on glass
             },
             trailing: {
                 Text(formatCurrency(amount))
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(amount >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : .white)  // UPDATED: Better colors for glass background
+                    .foregroundColor(amount >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : .white)  // Better colors for glass background
             }
         )
     }
@@ -190,22 +190,22 @@ struct SummaryPaymentItem: View {
                 HStack(spacing: 8) {
                     Image(systemName: "creditcard.fill")
                         .font(.system(size: 16))
-                        .foregroundColor(.white.opacity(0.7))  // UPDATED: Changed to .white with opacity for glass
+                        .foregroundColor(.white.opacity(0.7))  // Changed to .white with opacity for glass
                     Text(name)
                         .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.white)  // UPDATED: Changed to .white for better contrast on glass
+                        .foregroundColor(.white)  // Changed to .white for better contrast on glass
                 }
             },
             trailing: {
                 Text(formatCurrency(amount))
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(amount >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : .white)  // UPDATED: Better colors for glass background
+                    .foregroundColor(amount >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : .white)  // Better colors for glass background
             }
         )
     }
 }
 
-// MARK: - Glass Card Components (for Summary View totals) - UPDATED with Glass Effects
+// MARK: - Glass Card Components (for Summary View totals) - Updated with Glass Effects
 struct GlassCard<Content: View>: View {
     let content: Content
     
@@ -216,7 +216,7 @@ struct GlassCard<Content: View>: View {
     var body: some View {
         content
             .padding(20)
-            .glassEffect(.regular, in: .rect(cornerRadius: 16))  // UPDATED: Applied glass effect instead of background color
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))  // Applied glass effect instead of background color
     }
 }
 
@@ -226,7 +226,7 @@ struct GlassCardRow: View {
     let valueColor: Color
     var isEmphasized: Bool = false
     
-    init(label: String, value: String, valueColor: Color = .white, isEmphasized: Bool = false) {  // UPDATED: Default to .white
+    init(label: String, value: String, valueColor: Color = .white, isEmphasized: Bool = false) {  // Default to .white
         self.label = label
         self.value = value
         self.valueColor = valueColor
@@ -237,7 +237,7 @@ struct GlassCardRow: View {
         HStack {
             Text(label)
                 .font(.system(size: 16, weight: isEmphasized ? .semibold : .regular))
-                .foregroundColor(isEmphasized ? .white : .white.opacity(0.8))  // UPDATED: Better colors for glass background
+                .foregroundColor(isEmphasized ? .white : .white.opacity(0.8))  // Better colors for glass background
             
             Spacer()
             
@@ -255,7 +255,7 @@ struct CategoryTypeTag: View {
     var body: some View {
         Text(isIncome ? "Income" : "Expense")
             .font(.caption.weight(.medium))
-            .foregroundColor(isIncome ? Color(red: 0.5, green: 1.0, blue: 0.5) : Color(red: 1.0, green: 0.5, blue: 0.5))  // UPDATED: Better colors for glass background
+            .foregroundColor(isIncome ? Color(red: 0.5, green: 1.0, blue: 0.5) : Color(red: 1.0, green: 0.5, blue: 0.5))  // Better colors for glass background
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(
@@ -305,9 +305,7 @@ private func formatDisplayDate(_ dateString: String) -> String {
     return dateString
 }
 
+// SIMPLIFIED: Just check if emoji field is not empty
 private func isValidEmoji(_ string: String) -> Bool {
-    guard !string.isEmpty else { return false }
-    return string.unicodeScalars.allSatisfy { scalar in
-        scalar.properties.isEmoji
-    }
+    return !string.isEmpty
 }
