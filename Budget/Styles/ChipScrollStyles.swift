@@ -30,7 +30,7 @@ struct PaymentChipView: View {
         .background {
             if isSelected {
                 Capsule()
-                    .glassEffect(.regular.tint(Color.black.opacity(0.9)).interactive())
+                    .glassEffect(.clear.tint(Color.black.opacity(0.9)))
                     .matchedGeometryEffect(id: "selectedChip", in: namespace)
             } else {
                 Capsule()
@@ -103,7 +103,7 @@ struct APIPaymentChipView: View {
         .background {
             if isSelected {
                 Capsule()
-                    .glassEffect(.regular.tint(Color.black.opacity(0.9)).interactive())
+                    .glassEffect(.regular.tint(Color.black.opacity(0.6)).interactive())
                     .matchedGeometryEffect(id: "selectedChip", in: namespace)
             } else {
                 Capsule()
