@@ -32,8 +32,14 @@ struct UncategorizedTransactionStack: View {
                     ) {
                         // Only show category picker if we haven't swiped significantly
                         if !hasSwipedSignificantly {
+                            print("🎯 Opening category picker for transaction: \(transaction.remoteID)")
+                            print("🎯 Categories available: \(categories.count)")
+                            // FIX: Set selectedTransaction IMMEDIATELY when tapped
                             selectedTransaction = transaction
-                            showCategoryPicker = true
+                            // Small delay to ensure state is set before showing sheet
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                showCategoryPicker = true
+                            }
                         }
                     }
                     .scaleEffect(cardScale(for: stackIndex))
@@ -81,22 +87,30 @@ struct UncategorizedTransactionStack: View {
         .onAppear {
             // Initialize the card stack
             cardStack = transactions
+            print("🚀 UncategorizedTransactionStack appeared with \(transactions.count) transactions and \(categories.count) categories")
         }
         .sheet(isPresented: $showCategoryPicker) {
-            if let transaction = selectedTransaction {
-                CategoryPickerSheet(
+            // FIX: Always pass the first transaction if selectedTransaction is nil
+            let transactionToShow = selectedTransaction ?? cardStack.first
+            
+            if let transaction = transactionToShow {
+                BeautifulCategoryPickerSheet(
                     transaction: transaction,
-                    categories: categories,
-                    onCategorize: { category in
+                    availableCategories: categories,
+                    onSelectCategory: { category in
+                        print("✅ User selected category: \(category.name)")
+                        // TODO: Call API to update transaction category
+                        // SHEETS.updateTransactionCategory(remoteID: transaction.remoteID, categoryName: category.name) { response in
+                        //     // Handle response
+                        // }
+                        
                         onCategorizeTransaction(transaction, category)
-                        moveTopCardToBack()
-                    },
-                    onDismiss: {
                         showCategoryPicker = false
                         selectedTransaction = nil
+                        moveTopCardToBack()
                     }
                 )
-                .presentationDetents([.medium])
+                .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
             }
         }
@@ -136,6 +150,161 @@ struct UncategorizedTransactionStack: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             hasSwipedSignificantly = false
         }
+    }
+}
+
+// MARK: - Beautiful Category Picker Sheet (REVERTED + COLOR FIXES)
+struct BeautifulCategoryPickerSheet: View {
+    let transaction: APITransaction
+    let availableCategories: [APICategory]
+    let onSelectCategory: (APICategory) -> Void
+    
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Handle bar
+            RoundedRectangle(cornerRadius: 2.5)
+                .fill(Color.secondary.opacity(0.3))
+                .frame(width: 36, height: 5)
+                .padding(.top, 8)
+            
+            // Header with transaction info
+            headerSection
+            
+            // Categories section
+            categoriesSection
+            
+            Spacer()
+        }
+        .background(Color(.systemBackground))
+        .ignoresSafeArea(.container, edges: .bottom)  // IGNORE safe area at bottom to prevent cutoff
+        .onAppear {
+            print("🔍 BeautifulCategoryPickerSheet opened")
+            print("🔍 Available categories count: \(availableCategories.count)")
+        }
+    }
+    
+    // MARK: - Header Section (SIMPLIFIED - NO TRANSACTION INFO)
+    @ViewBuilder private var headerSection: some View {
+        VStack(spacing: 24) {
+            // Just some top padding - no title, no transaction card
+            Spacer()
+                .frame(height: 16)
+        }
+    }
+    
+    // MARK: - Categories Section (FIXED SCROLLING)
+    @ViewBuilder private var categoriesSection: some View {
+        VStack(spacing: 16) {
+            if availableCategories.isEmpty {
+                // Empty state
+                VStack(spacing: 16) {
+                    Image(systemName: "folder.badge.questionmark")
+                        .font(.system(size: 48))
+                        .foregroundColor(.secondary)
+                    
+                    Text("No Categories Available")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    
+                    Text("Add categories in the Manage tab first")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding()
+            } else {
+                // Categories grid - REMOVED maxHeight to allow full scrolling
+                ScrollView(.vertical, showsIndicators: false) {
+                    LazyVGrid(columns: [
+                        GridItem(.flexible(), spacing: 12),
+                        GridItem(.flexible(), spacing: 12)
+                    ], spacing: 16) {
+                        ForEach(availableCategories, id: \.remoteID) { category in
+                            CategoryCard(category: category) {
+                                print("📝 Selected category: \(category.name)")
+                                
+                                // Haptic feedback
+                                let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+                                impactFeedback.impactOccurred()
+                                
+                                // Call the selection handler
+                                onSelectCategory(category)
+                                
+                                // Close the sheet
+                                dismiss()
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 40)  // INCREASED bottom padding to prevent cutoff
+                }
+                // REMOVED: .frame(maxHeight: 300) - this was cutting off the categories
+            }
+        }
+    }
+}
+
+// MARK: - Beautiful Category Card (WITH FIXED COLORS)
+struct CategoryCard: View {
+    let category: APICategory
+    let onTap: () -> Void
+    
+    @State private var isPressed = false
+    
+    var body: some View {
+        Button(action: onTap) {
+            VStack(spacing: 12) {
+                // Icon/Emoji
+                ZStack {
+                    Circle()
+                        .fill(category.isIncome ? Color(red: 0.5, green: 1.0, blue: 0.5).opacity(0.1) : Color(red: 1.0, green: 0.5, blue: 0.5).opacity(0.1))  // FIXED: Same colors as manage view
+                        .frame(width: 50, height: 50)
+                    
+                    if !category.emoji.isEmpty {
+                        Text(category.emoji)
+                            .font(.title2)
+                    } else {
+                        Image(systemName: category.isIncome ? "plus.circle.fill" : "tag.fill")
+                            .font(.title3)
+                            .foregroundColor(category.isIncome ? Color(red: 0.5, green: 1.0, blue: 0.5) : Color(red: 1.0, green: 0.5, blue: 0.5))  // FIXED: Same colors as manage view
+                    }
+                }
+                
+                // Name (COLORED BASED ON TYPE WITH BACKGROUND)
+                Text(category.name)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundColor(category.isIncome ? Color(red: 0.5, green: 1.0, blue: 0.5) : Color(red: 1.0, green: 0.5, blue: 0.5))  // SAME COLORS: green for income, red for expense
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 4)
+                    .background(
+                        Capsule()
+                            .fill(category.isIncome ? Color(red: 0.5, green: 1.0, blue: 0.5).opacity(0.15) : Color(red: 1.0, green: 0.5, blue: 0.5).opacity(0.15))  // SAME BACKGROUND as the old badge
+                    )
+            }
+            .frame(height: 100)  // REDUCED height since we removed the badge
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)  // REVERTED: Back to original padding
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(.systemBackground))
+                    .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)  // REVERTED: Back to original shadow
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                    )
+            )
+            .scaleEffect(isPressed ? 0.95 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: isPressed)
+        }
+        .buttonStyle(.plain)
+        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
+            isPressed = pressing
+        }, perform: {})
     }
 }
 
@@ -244,169 +413,6 @@ struct TransactionCard: View {
     }
 }
 
-// MARK: - Category Picker Sheet
-struct CategoryPickerSheet: View {
-    let transaction: APITransaction
-    let categories: [APICategory]
-    let onCategorize: (APICategory) -> Void
-    let onDismiss: () -> Void
-    
-    @Namespace private var categoryNamespace
-    @State private var selectedCategoryID: String?
-    
-    var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            VStack(spacing: 16) {
-                // Handle bar
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(Color(.systemGray3))
-                    .frame(width: 36, height: 4)
-                    .padding(.top, 8)
-                
-                // Title and transaction info
-                VStack(spacing: 12) {
-                    Text("Categorize Transaction")
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                    
-                    // Transaction preview
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(formatCurrency(Decimal(transaction.amount)))
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(transaction.amount >= 0 ? .green : .primary)
-                            
-                            if !transaction.merchantName.isEmpty {
-                                Text(transaction.merchantName)
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        
-                        Spacer()
-                        
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text(formatDisplayDate(transaction.dateISO))
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            
-                            Text(formatDisplayTime(transaction.dateISO))
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 12)
-                    .background(Color(.systemGray6))
-                    .cornerRadius(8)
-                }
-                .padding(.horizontal, 20)
-            }
-            
-            Divider()
-                .padding(.vertical, 8)
-            
-            // Categories
-            ScrollView(.vertical, showsIndicators: false) {
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 2), spacing: 12) {
-                    ForEach(categories, id: \.remoteID) { category in
-                        CategoryPickerCard(
-                            category: category,
-                            isSelected: selectedCategoryID == category.remoteID,
-                            onTap: {
-                                selectedCategoryID = category.remoteID
-                            },
-                            namespace: categoryNamespace
-                        )
-                    }
-                }
-                .padding(.horizontal, 20)
-            }
-            
-            // Action buttons
-            VStack(spacing: 12) {
-                Button("Categorize") {
-                    if let categoryID = selectedCategoryID,
-                       let category = categories.first(where: { $0.remoteID == categoryID }) {
-                        onCategorize(category)
-                    }
-                }
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(selectedCategoryID != nil ? Color.blue : Color.gray)
-                .cornerRadius(12)
-                .disabled(selectedCategoryID == nil)
-                
-                Button("Cancel") {
-                    onDismiss()
-                }
-                .font(.system(size: 16))
-                .foregroundColor(.blue)
-            }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 20)
-        }
-        .background(Color(.systemBackground))
-    }
-}
-
-// MARK: - Category Picker Card
-struct CategoryPickerCard: View {
-    let category: APICategory
-    let isSelected: Bool
-    let onTap: () -> Void
-    let namespace: Namespace.ID
-    
-    var body: some View {
-        Button(action: onTap) {
-            VStack(spacing: 8) {
-                // Emoji or icon
-                if isValidEmoji(category.emoji) {
-                    Text(category.emoji)
-                        .font(.system(size: 24))
-                } else {
-                    Image(systemName: "tag.fill")
-                        .font(.system(size: 20))
-                        .foregroundColor(.blue)
-                }
-                
-                // Category name
-                Text(category.name)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.primary)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                
-                // Type indicator
-                Text(category.isIncome ? "Income" : "Expense")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-            }
-            .frame(height: 80)
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, 8)
-            .background {
-                if isSelected {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.blue.opacity(0.1))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.blue, lineWidth: 2)
-                        )
-                        .matchedGeometryEffect(id: "selectedCategory", in: namespace)
-                } else {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color(.systemGray6))
-                }
-            }
-        }
-        .buttonStyle(.plain)
-    }
-}
-
 // MARK: - Helper Functions
 private func formatCurrency(_ value: Decimal) -> String {
     let formatter = NumberFormatter()
@@ -447,7 +453,6 @@ private func formatDisplayDate(_ dateString: String) -> String {
     return dateString
 }
 
-// NEW: Function to extract and format time from dateISO string
 private func formatDisplayTime(_ dateString: String) -> String {
     let timeFormatter = DateFormatter()
     timeFormatter.dateFormat = "HH:mm"
