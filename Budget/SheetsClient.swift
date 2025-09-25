@@ -595,8 +595,8 @@ struct APIResponse: Codable {
     let data: [APITransaction]
 }
 
-// UPDATED: Added categoryEmoji field
-struct APITransaction: Codable {
+// UPDATED: Added categoryEmoji field and Equatable conformance
+struct APITransaction: Codable, Equatable {
     let remoteID: String
     let amount: Double
     let categoryName: String
@@ -639,6 +639,11 @@ struct APITransaction: Codable {
         self.note = note
         self.dateISO = dateISO
         self.transactionType = transactionType
+    }
+    
+    // MARK: - Equatable implementation
+    static func == (lhs: APITransaction, rhs: APITransaction) -> Bool {
+        return lhs.remoteID == rhs.remoteID // Compare by unique ID
     }
 }
 

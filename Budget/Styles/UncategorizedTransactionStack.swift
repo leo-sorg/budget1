@@ -8,6 +8,7 @@ struct UncategorizedTransactionStack: View {
     let onDismissStack: () -> Void
     
     @State private var cardStack: [APITransaction] = []
+    @State private var transactionsToRemove: Set<String> = []
     @State private var dragOffset: CGSize = .zero
     @State private var showCategoryPicker = false
     @State private var selectedTransaction: APITransaction?
@@ -89,6 +90,29 @@ struct UncategorizedTransactionStack: View {
             cardStack = transactions
             print("🚀 UncategorizedTransactionStack appeared with \(transactions.count) transactions and \(categories.count) categories")
         }
+        .onChange(of: transactions) { _, newTransactions in
+            // Update card stack when transactions change from parent
+            let newTransactionIDs = Set(newTransactions.map { $0.remoteID })
+            let removedTransactionIDs = Set(cardStack.map { $0.remoteID }).subtracting(newTransactionIDs)
+            
+            print("🔄 Transactions changed. Removed IDs: \(removedTransactionIDs)")
+            
+            // Remove cards that are no longer in the transactions array
+            if !removedTransactionIDs.isEmpty {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                    cardStack.removeAll { removedTransactionIDs.contains($0.remoteID) }
+                }
+            }
+            
+            // Add any new transactions that might have been added
+            let currentIDs = Set(cardStack.map { $0.remoteID })
+            let newCards = newTransactions.filter { !currentIDs.contains($0.remoteID) }
+            if !newCards.isEmpty {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                    cardStack.append(contentsOf: newCards)
+                }
+            }
+        }
         .sheet(isPresented: $showCategoryPicker) {
             // FIX: Always pass the first transaction if selectedTransaction is nil
             let transactionToShow = selectedTransaction ?? cardStack.first
@@ -99,21 +123,27 @@ struct UncategorizedTransactionStack: View {
                     availableCategories: categories,
                     onSelectCategory: { category in
                         print("✅ User selected category: \(category.name)")
-                        // TODO: Call API to update transaction category
-                        // SHEETS.updateTransactionCategory(remoteID: transaction.remoteID, categoryName: category.name) { response in
-                        //     // Handle response
-                        // }
-                        
-                        onCategorizeTransaction(transaction, category)
-                        showCategoryPicker = false
-                        selectedTransaction = nil
-                        moveTopCardToBack()
+                        handleCategorySelection(transaction: transaction, category: category)
                     }
                 )
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
             }
         }
+    }
+    
+    // MARK: - UPDATED: Handle Category Selection with API Call
+    private func handleCategorySelection(transaction: APITransaction, category: APICategory) {
+        // Clean category name - remove spaces and emojis at the end
+        let cleanCategoryName = category.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        print("🎯 handleCategorySelection: \(transaction.remoteID) -> \(cleanCategoryName)")
+        
+        // Call the parent's callback - the parent will handle the API call and then update the transactions array
+        onCategorizeTransaction(transaction, category)
+        
+        // Reset selection
+        selectedTransaction = nil
     }
     
     // MARK: - Helper Functions
@@ -151,15 +181,27 @@ struct UncategorizedTransactionStack: View {
             hasSwipedSignificantly = false
         }
     }
+    
+    // MARK: - Public method to remove transaction from stack
+    func removeTransaction(with remoteID: String) {
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+            cardStack.removeAll { $0.remoteID == remoteID }
+        }
+    }
 }
 
-// MARK: - Beautiful Category Picker Sheet (REVERTED + COLOR FIXES)
+// MARK: - UPDATED: Enhanced Category Picker Sheet with Loading States
 struct BeautifulCategoryPickerSheet: View {
     let transaction: APITransaction
     let availableCategories: [APICategory]
     let onSelectCategory: (APICategory) -> Void
     
     @Environment(\.dismiss) private var dismiss
+    @State private var isLoading = false
+    @State private var showSuccess = false
+    @State private var showError = false
+    @State private var errorMessage = ""
+    @State private var selectedCategoryForAPI: APICategory?
     
     var body: some View {
         VStack(spacing: 0) {
@@ -172,13 +214,33 @@ struct BeautifulCategoryPickerSheet: View {
             // Header with transaction info
             headerSection
             
-            // Categories section
-            categoriesSection
+            // Loading/Success/Error overlay or categories section
+            ZStack {
+                // Categories section (hidden during loading/success/error)
+                categoriesSection
+                    .opacity(isLoading || showSuccess || showError ? 0.3 : 1.0)
+                    .disabled(isLoading || showSuccess || showError)
+                
+                // Loading overlay
+                if isLoading {
+                    loadingOverlay
+                }
+                
+                // Success overlay
+                if showSuccess {
+                    successOverlay
+                }
+                
+                // Error overlay
+                if showError {
+                    errorOverlay
+                }
+            }
             
             Spacer()
         }
         .background(Color(.systemBackground))
-        .ignoresSafeArea(.container, edges: .bottom)  // IGNORE safe area at bottom to prevent cutoff
+        .ignoresSafeArea(.container, edges: .bottom)
         .onAppear {
             print("🔍 BeautifulCategoryPickerSheet opened")
             print("🔍 Available categories count: \(availableCategories.count)")
@@ -224,17 +286,7 @@ struct BeautifulCategoryPickerSheet: View {
                     ], spacing: 16) {
                         ForEach(availableCategories, id: \.remoteID) { category in
                             CategoryCard(category: category) {
-                                print("📝 Selected category: \(category.name)")
-                                
-                                // Haptic feedback
-                                let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
-                                impactFeedback.impactOccurred()
-                                
-                                // Call the selection handler
-                                onSelectCategory(category)
-                                
-                                // Close the sheet
-                                dismiss()
+                                handleCategoryTap(category)
                             }
                         }
                     }
@@ -242,6 +294,142 @@ struct BeautifulCategoryPickerSheet: View {
                     .padding(.bottom, 40)  // INCREASED bottom padding to prevent cutoff
                 }
                 // REMOVED: .frame(maxHeight: 300) - this was cutting off the categories
+            }
+        }
+    }
+    
+    // MARK: - Loading Overlay
+    @ViewBuilder private var loadingOverlay: some View {
+        VStack(spacing: 20) {
+            ProgressView()
+                .progressViewStyle(CircularProgressViewStyle(tint: .blue))
+                .scaleEffect(1.5)
+            
+            Text("Updating category...")
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(.primary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.systemBackground).opacity(0.9))
+    }
+    
+    // MARK: - Success Overlay
+    @ViewBuilder private var successOverlay: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 50))
+                .foregroundColor(.green)
+                .scaleEffect(showSuccess ? 1.0 : 0.5)
+                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: showSuccess)
+            
+            Text("Category updated!")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(.primary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.systemBackground).opacity(0.9))
+    }
+    
+    // MARK: - Error Overlay
+    @ViewBuilder private var errorOverlay: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 50))
+                .foregroundColor(.red)
+                .scaleEffect(showError ? 1.0 : 0.5)
+                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: showError)
+            
+            Text("Failed to update")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(.primary)
+            
+            if !errorMessage.isEmpty {
+                Text(errorMessage)
+                    .font(.system(size: 14))
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+            }
+            
+            Button("Try Again") {
+                if let category = selectedCategoryForAPI {
+                    handleCategoryTap(category)
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 10)
+            .background(Color.blue)
+            .foregroundColor(.white)
+            .cornerRadius(8)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.systemBackground).opacity(0.9))
+    }
+    
+    // MARK: - UPDATED: Handle Category Tap with API Call
+    private func handleCategoryTap(_ category: APICategory) {
+        selectedCategoryForAPI = category
+        
+        // Show loading state
+        withAnimation(.easeInOut(duration: 0.3)) {
+            isLoading = true
+            showError = false
+            showSuccess = false
+        }
+        
+        // Haptic feedback
+        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+        impactFeedback.impactOccurred()
+        
+        // Clean category name - remove extra spaces and emojis at the end
+        let cleanCategoryName = category.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        print("📝 Making API call to update transaction \(transaction.remoteID) with category: '\(cleanCategoryName)'")
+        
+        // Call the edit API
+        SHEETS.editTransactionCategory(
+            remoteID: transaction.remoteID,
+            categoryName: cleanCategoryName
+        ) { response in
+            DispatchQueue.main.async {
+                // Hide loading
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    self.isLoading = false
+                }
+                
+                if response.status == 200 {
+                    print("✅ API call successful - showing success state")
+                    
+                    // Show success
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        self.showSuccess = true
+                    }
+                    
+                    // Success haptic feedback
+                    let successFeedback = UINotificationFeedbackGenerator()
+                    successFeedback.notificationOccurred(.success)
+                    
+                    // Call the parent callback
+                    self.onSelectCategory(category)
+                    
+                    // Dismiss sheet after showing success briefly
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                        self.dismiss()
+                    }
+                    
+                } else {
+                    print("❌ API call failed with status \(response.status): \(response.body)")
+                    
+                    // Show error
+                    self.errorMessage = "Server error: \(response.body)"
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        self.showError = true
+                    }
+                    
+                    // Error haptic feedback
+                    let errorFeedback = UINotificationFeedbackGenerator()
+                    errorFeedback.notificationOccurred(.error)
+                }
             }
         }
     }

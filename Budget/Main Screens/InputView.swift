@@ -262,41 +262,27 @@ struct InputView: View {
         }
     }
     
-    // UPDATED: Function to handle categorizing a transaction (now using edit API)
+    // UPDATED: Function to handle categorizing a transaction (remove card from stack immediately)
     private func categorizeTransaction(_ transaction: APITransaction, category: APICategory) {
-        if !useMockData {
-            // Use the new edit API to update the transaction category
-            let cleanCategoryName = category.name.trimmingCharacters(in: .whitespacesAndNewlines)
-            
-            SHEETS.editTransactionCategory(
-                remoteID: transaction.remoteID,
-                categoryName: cleanCategoryName
-            ) { response in
-                DispatchQueue.main.async {
-                    if response.status == 200 {
-                        // Remove from uncategorized list
-                        self.uncategorizedTransactions.removeAll { $0.remoteID == transaction.remoteID }
-                        if self.uncategorizedTransactions.isEmpty {
-                            withAnimation(.easeInOut(duration: 0.4)) {
-                                self.showUncategorizedStack = false
-                            }
-                        }
-                    } else {
-                        // Handle error
-                        self.alertMessage = "Failed to categorize transaction: \(response.body)"
-                    }
-                }
+        print("🎯 categorizeTransaction called for transaction: \(transaction.remoteID)")
+        print("🎯 Selected category: \(category.name)")
+        
+        // The API call is now handled in the BeautifulCategoryPickerSheet
+        // This function is called AFTER the API call succeeds
+        // So we can immediately remove the transaction from the local stack
+        
+        // Remove from uncategorized list immediately - this will trigger onChange in the card stack
+        self.uncategorizedTransactions.removeAll { $0.remoteID == transaction.remoteID }
+        
+        print("🗑️ Removed transaction \(transaction.remoteID) from uncategorized list")
+        print("📊 Remaining uncategorized transactions: \(self.uncategorizedTransactions.count)")
+        
+        // Hide the stack if no more uncategorized transactions
+        if self.uncategorizedTransactions.isEmpty {
+            withAnimation(.easeInOut(duration: 0.4)) {
+                self.showUncategorizedStack = false
             }
-        } else {
-            // Mock mode - just remove from list after delay
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                self.uncategorizedTransactions.removeAll { $0.remoteID == transaction.remoteID }
-                if self.uncategorizedTransactions.isEmpty {
-                    withAnimation(.easeInOut(duration: 0.4)) {
-                        self.showUncategorizedStack = false
-                    }
-                }
-            }
+            print("👋 Hiding uncategorized transaction stack - no more transactions")
         }
     }
     
