@@ -55,69 +55,93 @@ struct SheetsClient {
         postJSON(payload, completion: completion)
     }
 
-    // MARK: - UPDATE Methods
+    // MARK: - EDIT Methods (NEW)
+    
+    /// Edit a transaction by remoteID - all fields except remoteID are optional
+    func editTransaction(
+        remoteID: String,
+        amount: Decimal? = nil,
+        categoryName: String? = nil,
+        paymentMethod: String? = nil,
+        merchantName: String? = nil,
+        note: String? = nil,
+        dateISO: String? = nil,
+        transactionType: String? = nil,
+        completion: @escaping (Response) -> Void = { _ in }
+    ) {
+        var payload: [String: Any] = [
+            "type": "editTransaction",
+            "remoteID": remoteID
+        ]
+        
+        // Only include fields that are provided
+        if let amount = amount {
+            payload["amount"] = (amount as NSDecimalNumber).doubleValue
+        }
+        if let categoryName = categoryName {
+            payload["categoryName"] = categoryName.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        if let paymentMethod = paymentMethod {
+            payload["paymentMethod"] = paymentMethod.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        if let merchantName = merchantName {
+            payload["merchantName"] = merchantName.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        if let note = note {
+            payload["note"] = note.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        if let dateISO = dateISO {
+            payload["dateISO"] = dateISO
+        }
+        if let transactionType = transactionType {
+            payload["transactionType"] = transactionType
+        }
+        
+        postJSON(payload, completion: completion)
+    }
+    
+    /// Convenience method to edit only the category name
+    func editTransactionCategory(remoteID: String, categoryName: String, completion: @escaping (Response) -> Void = { _ in }) {
+        editTransaction(
+            remoteID: remoteID,
+            categoryName: categoryName.trimmingCharacters(in: .whitespacesAndNewlines),
+            completion: completion
+        )
+    }
+
+    // MARK: - UPDATE Methods (Legacy - kept for compatibility)
     
     /// Update transaction category by remoteID
     func updateTransactionCategory(remoteID: String, categoryName: String, completion: @escaping (Response) -> Void = { _ in }) {
-        let payload: [String: Any] = [
-            "type": "updateTransactionCategory",
-            "remoteID": remoteID,
-            "categoryName": categoryName
-        ]
-        postJSON(payload, completion: completion)
+        // Use the new edit API
+        editTransactionCategory(remoteID: remoteID, categoryName: categoryName, completion: completion)
     }
     
     /// Update transaction payment method by remoteID
     func updateTransactionPaymentMethod(remoteID: String, paymentMethod: String, completion: @escaping (Response) -> Void = { _ in }) {
-        let payload: [String: Any] = [
-            "type": "updateTransactionPaymentMethod",
-            "remoteID": remoteID,
-            "paymentMethod": paymentMethod
-        ]
-        postJSON(payload, completion: completion)
+        editTransaction(remoteID: remoteID, paymentMethod: paymentMethod, completion: completion)
     }
     
     /// Update transaction note by remoteID
     func updateTransactionNote(remoteID: String, note: String, completion: @escaping (Response) -> Void = { _ in }) {
-        let payload: [String: Any] = [
-            "type": "updateTransactionNote",
-            "remoteID": remoteID,
-            "note": note
-        ]
-        postJSON(payload, completion: completion)
+        editTransaction(remoteID: remoteID, note: note, completion: completion)
     }
     
     /// Update transaction amount by remoteID
     func updateTransactionAmount(remoteID: String, amount: Decimal, completion: @escaping (Response) -> Void = { _ in }) {
-        let payload: [String: Any] = [
-            "type": "updateTransactionAmount",
-            "remoteID": remoteID,
-            "amount": (amount as NSDecimalNumber).doubleValue
-        ]
-        postJSON(payload, completion: completion)
+        editTransaction(remoteID: remoteID, amount: amount, completion: completion)
     }
     
     /// Update multiple transaction fields at once
     func updateTransaction(remoteID: String, categoryName: String? = nil, paymentMethod: String? = nil, note: String? = nil, amount: Decimal? = nil, completion: @escaping (Response) -> Void = { _ in }) {
-        var payload: [String: Any] = [
-            "type": "updateTransaction",
-            "remoteID": remoteID
-        ]
-        
-        if let categoryName = categoryName {
-            payload["categoryName"] = categoryName
-        }
-        if let paymentMethod = paymentMethod {
-            payload["paymentMethod"] = paymentMethod
-        }
-        if let note = note {
-            payload["note"] = note
-        }
-        if let amount = amount {
-            payload["amount"] = (amount as NSDecimalNumber).doubleValue
-        }
-        
-        postJSON(payload, completion: completion)
+        editTransaction(
+            remoteID: remoteID,
+            amount: amount,
+            categoryName: categoryName,
+            paymentMethod: paymentMethod,
+            note: note,
+            completion: completion
+        )
     }
 
     // MARK: - DELETE Methods
@@ -149,7 +173,7 @@ struct SheetsClient {
         postJSON(payload, completion: completion)
     }
 
-    // MARK: - GET Methods
+    // MARK: - GET Methods (unchanged)
     
     func getTransactions(startDate: Date, endDate: Date, limit: Int = 300,
                         completion: @escaping (Result<APIResponse, Error>) -> Void) {
@@ -182,7 +206,6 @@ struct SheetsClient {
         }
     }
 
-    /// Get uncategorized transactions (transactions with empty categoryName)
     /// Get uncategorized transactions (transactions with empty categoryName)
     func getUncategorizedTransactions(completion: @escaping (Result<APIResponse, Error>) -> Void) {
         print("🔗 SheetsClient.getUncategorizedTransactions called")
@@ -236,6 +259,7 @@ struct SheetsClient {
             }
         }
     }
+
     /// Get transactions by category name
     func getTransactionsByCategory(categoryName: String, limit: Int = 300, completion: @escaping (Result<APIResponse, Error>) -> Void) {
         var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)!
