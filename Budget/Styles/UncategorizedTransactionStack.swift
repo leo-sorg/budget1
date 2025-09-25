@@ -13,6 +13,8 @@ struct UncategorizedTransactionStack: View {
     @State private var showCategoryPicker = false
     @State private var selectedTransaction: APITransaction?
     @State private var hasSwipedSignificantly = false
+    @State private var successfulCategoryFromSheet: APICategory? // Store successful category from sheet
+    @State private var cardBeingRemoved: String? // Track which card is being animated out
     
     private let cardHeight: CGFloat = 140
     private let maxVisibleCards = 3
@@ -29,13 +31,13 @@ struct UncategorizedTransactionStack: View {
                         isTopCard: isTopCard,
                         stackIndex: stackIndex,
                         dragOffset: isTopCard ? dragOffset : .zero,
-                        hasSwipedSignificantly: $hasSwipedSignificantly
+                        hasSwipedSignificantly: $hasSwipedSignificantly,
+                        isBeingRemoved: cardBeingRemoved == transaction.remoteID
                     ) {
                         // Only show category picker if we haven't swiped significantly
                         if !hasSwipedSignificantly {
                             print("🎯 Opening category picker for transaction: \(transaction.remoteID)")
                             print("🎯 Categories available: \(categories.count)")
-                            // FIX: Set selectedTransaction IMMEDIATELY when tapped
                             selectedTransaction = transaction
                             // Small delay to ensure state is set before showing sheet
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
@@ -113,8 +115,16 @@ struct UncategorizedTransactionStack: View {
                 }
             }
         }
-        .sheet(isPresented: $showCategoryPicker) {
-            // FIX: Always pass the first transaction if selectedTransaction is nil
+        .sheet(isPresented: $showCategoryPicker, onDismiss: {
+            // Handle successful categorization AFTER sheet is fully dismissed
+            if let transaction = selectedTransaction, let successfulCategory = successfulCategoryFromSheet {
+                print("🎉 Sheet dismissed - now animating card removal")
+                animateCardRemovalAndCallParent(transaction: transaction, category: successfulCategory)
+                // Clear the successful category
+                successfulCategoryFromSheet = nil
+            }
+        }) {
+            // Always pass the first transaction if selectedTransaction is nil
             let transactionToShow = selectedTransaction ?? cardStack.first
             
             if let transaction = transactionToShow {
@@ -123,7 +133,11 @@ struct UncategorizedTransactionStack: View {
                     availableCategories: categories,
                     onSelectCategory: { category in
                         print("✅ User selected category: \(category.name)")
-                        handleCategorySelection(transaction: transaction, category: category)
+                    },
+                    onSuccessfulCategorization: { transaction, category in
+                        // Store the successful categorization for when sheet dismisses
+                        print("📝 Storing successful categorization for when sheet dismisses")
+                        successfulCategoryFromSheet = category
                     }
                 )
                 .presentationDetents([.medium, .large])
@@ -132,7 +146,38 @@ struct UncategorizedTransactionStack: View {
         }
     }
     
-    // MARK: - UPDATED: Handle Category Selection with API Call
+    // MARK: - Animate Card Removal with Diagonal Swipe Effect
+    private func animateCardRemovalAndCallParent(transaction: APITransaction, category: APICategory) {
+        print("🎬 Starting diagonal swipe animation for card: \(transaction.remoteID)")
+        
+        // Mark this card as being removed to trigger the diagonal swipe animation
+        withAnimation(.easeInOut(duration: 0.5)) {
+            cardBeingRemoved = transaction.remoteID
+        }
+        
+        // After the animation completes, remove the card and call parent callback
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            // Remove the card from our local stack first with animation
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                if let index = self.cardStack.firstIndex(where: { $0.remoteID == transaction.remoteID }) {
+                    self.cardStack.remove(at: index)
+                }
+            }
+            
+            // Reset the animation state
+            self.cardBeingRemoved = nil
+            
+            // Call the parent callback to handle the actual removal from the data source
+            // This happens after our local animation to prevent double-animation conflicts
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self.handleCategorySelection(transaction: transaction, category: category)
+            }
+            
+            print("✅ Card animation completed and parent callback called")
+        }
+    }
+    
+    // MARK: - Handle Category Selection with API Call
     private func handleCategorySelection(transaction: APITransaction, category: APICategory) {
         // Clean category name - remove spaces and emojis at the end
         let cleanCategoryName = category.name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -190,11 +235,12 @@ struct UncategorizedTransactionStack: View {
     }
 }
 
-// MARK: - UPDATED: Enhanced Category Picker Sheet with Loading States
+// MARK: - Enhanced Category Picker Sheet with Better UX Flow
 struct BeautifulCategoryPickerSheet: View {
     let transaction: APITransaction
     let availableCategories: [APICategory]
     let onSelectCategory: (APICategory) -> Void
+    let onSuccessfulCategorization: (APITransaction, APICategory) -> Void
     
     @Environment(\.dismiss) private var dismiss
     @State private var isLoading = false
@@ -202,6 +248,7 @@ struct BeautifulCategoryPickerSheet: View {
     @State private var showError = false
     @State private var errorMessage = ""
     @State private var selectedCategoryForAPI: APICategory?
+    @State private var successfulCategory: APICategory?
     
     var body: some View {
         VStack(spacing: 0) {
@@ -291,9 +338,8 @@ struct BeautifulCategoryPickerSheet: View {
                         }
                     }
                     .padding(.horizontal, 20)
-                    .padding(.bottom, 40)  // INCREASED bottom padding to prevent cutoff
+                    .padding(.bottom, 40)
                 }
-                // REMOVED: .frame(maxHeight: 300) - this was cutting off the categories
             }
         }
     }
@@ -366,7 +412,7 @@ struct BeautifulCategoryPickerSheet: View {
         .background(Color(.systemBackground).opacity(0.9))
     }
     
-    // MARK: - UPDATED: Handle Category Tap with API Call
+    // MARK: - Handle Category Tap with Delayed Parent Callback
     private func handleCategoryTap(_ category: APICategory) {
         selectedCategoryForAPI = category
         
@@ -400,6 +446,9 @@ struct BeautifulCategoryPickerSheet: View {
                 if response.status == 200 {
                     print("✅ API call successful - showing success state")
                     
+                    // Store the successful category and trigger callback
+                    self.successfulCategory = category
+                    
                     // Show success
                     withAnimation(.easeInOut(duration: 0.3)) {
                         self.showSuccess = true
@@ -409,11 +458,11 @@ struct BeautifulCategoryPickerSheet: View {
                     let successFeedback = UINotificationFeedbackGenerator()
                     successFeedback.notificationOccurred(.success)
                     
-                    // Call the parent callback
-                    self.onSelectCategory(category)
-                    
-                    // Dismiss sheet after showing success briefly
+                    // Call parent callback and then dismiss after delay
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                        if let category = self.successfulCategory {
+                            self.onSuccessfulCategorization(self.transaction, category)
+                        }
                         self.dismiss()
                     }
                     
@@ -435,7 +484,7 @@ struct BeautifulCategoryPickerSheet: View {
     }
 }
 
-// MARK: - Beautiful Category Card (WITH FIXED COLORS)
+// MARK: - Beautiful Category Card
 struct CategoryCard: View {
     let category: APICategory
     let onTap: () -> Void
@@ -448,7 +497,7 @@ struct CategoryCard: View {
                 // Icon/Emoji
                 ZStack {
                     Circle()
-                        .fill(category.isIncome ? Color(red: 0.5, green: 1.0, blue: 0.5).opacity(0.1) : Color(red: 1.0, green: 0.5, blue: 0.5).opacity(0.1))  // FIXED: Same colors as manage view
+                        .fill(category.isIncome ? Color(red: 0.5, green: 1.0, blue: 0.5).opacity(0.1) : Color(red: 1.0, green: 0.5, blue: 0.5).opacity(0.1))
                         .frame(width: 50, height: 50)
                     
                     if !category.emoji.isEmpty {
@@ -457,30 +506,30 @@ struct CategoryCard: View {
                     } else {
                         Image(systemName: category.isIncome ? "plus.circle.fill" : "tag.fill")
                             .font(.title3)
-                            .foregroundColor(category.isIncome ? Color(red: 0.5, green: 1.0, blue: 0.5) : Color(red: 1.0, green: 0.5, blue: 0.5))  // FIXED: Same colors as manage view
+                            .foregroundColor(category.isIncome ? Color(red: 0.5, green: 1.0, blue: 0.5) : Color(red: 1.0, green: 0.5, blue: 0.5))
                     }
                 }
                 
                 // Name (COLORED BASED ON TYPE WITH BACKGROUND)
                 Text(category.name)
                     .font(.subheadline.weight(.medium))
-                    .foregroundColor(category.isIncome ? Color(red: 0.5, green: 1.0, blue: 0.5) : Color(red: 1.0, green: 0.5, blue: 0.5))  // SAME COLORS: green for income, red for expense
+                    .foregroundColor(category.isIncome ? Color(red: 0.5, green: 1.0, blue: 0.5) : Color(red: 1.0, green: 0.5, blue: 0.5))
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 4)
                     .background(
                         Capsule()
-                            .fill(category.isIncome ? Color(red: 0.5, green: 1.0, blue: 0.5).opacity(0.15) : Color(red: 1.0, green: 0.5, blue: 0.5).opacity(0.15))  // SAME BACKGROUND as the old badge
+                            .fill(category.isIncome ? Color(red: 0.5, green: 1.0, blue: 0.5).opacity(0.15) : Color(red: 1.0, green: 0.5, blue: 0.5).opacity(0.15))
                     )
             }
-            .frame(height: 100)  // REDUCED height since we removed the badge
+            .frame(height: 100)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)  // REVERTED: Back to original padding
+            .padding(.vertical, 16)
             .background(
                 RoundedRectangle(cornerRadius: 16)
                     .fill(Color(.systemBackground))
-                    .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)  // REVERTED: Back to original shadow
+                    .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
                             .stroke(Color.gray.opacity(0.2), lineWidth: 1)
@@ -496,13 +545,14 @@ struct CategoryCard: View {
     }
 }
 
-// MARK: - Transaction Card Component (Updated - Harmonious Layout)
+// MARK: - Transaction Card Component (Updated - With Removal Animation)
 struct TransactionCard: View {
     let transaction: APITransaction
     let isTopCard: Bool
     let stackIndex: Int
     let dragOffset: CGSize
     @Binding var hasSwipedSignificantly: Bool
+    let isBeingRemoved: Bool // Whether this card is being animated out
     let onTap: () -> Void
     
     var body: some View {
@@ -587,9 +637,15 @@ struct TransactionCard: View {
             in: .rect(cornerRadius: 14)
         )
         .contentShape(Rectangle())
-        .offset(dragOffset)
+        .offset(
+            x: isBeingRemoved ? -UIScreen.main.bounds.width * 0.8 : dragOffset.width,
+            y: isBeingRemoved ? -UIScreen.main.bounds.height * 0.3 : dragOffset.height
+        ) // Animate card diagonally up-left when being removed (about 30 degrees)
+        .opacity(isBeingRemoved ? 0.0 : 1.0) // Fade out while sliding
+        .scaleEffect(isBeingRemoved ? 0.8 : 1.0) // Slightly shrink while disappearing
+        .rotationEffect(.degrees(isBeingRemoved ? -15 : 0)) // Add slight rotation for more natural feel
         .onTapGesture {
-            if !hasSwipedSignificantly {
+            if !hasSwipedSignificantly && !isBeingRemoved {
                 onTap()
             }
         }
