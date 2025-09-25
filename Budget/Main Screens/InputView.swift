@@ -13,11 +13,11 @@ struct InputView: View {
     
     // UPDATED: Changed from banner to full card stack implementation
     @State private var uncategorizedTransactions: [APITransaction] = []
-    @State private var showUncategorizedStack = false
     
-    // API loading states
+    // API loading states - UPDATED: Added uncategorized loading state
     @State private var isLoadingCategories = false
     @State private var isLoadingPaymentMethods = false
+    @State private var isLoadingUncategorized = false // NEW: Track uncategorized loading
     @State private var categoriesError: String?
     @State private var paymentMethodsError: String?
     @State private var isFirstLoad = true
@@ -53,6 +53,12 @@ struct InputView: View {
         return apiPaymentMethods.first { $0.remoteID == id }
     }
 
+    // MARK: - SIMPLIFIED: Show Logic for Uncategorized Stack
+    private var shouldShowUncategorizedStack: Bool {
+        // Simply show if we have uncategorized transactions and not loading them
+        return !isLoadingUncategorized && !uncategorizedTransactions.isEmpty
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Date at the top
@@ -60,27 +66,22 @@ struct InputView: View {
             
             ScrollView {
                 VStack(spacing: 0) {
-                    // UPDATED: Only show card stack if we have both transactions AND categories
-                    if showUncategorizedStack && !uncategorizedTransactions.isEmpty && !apiCategories.isEmpty {
+                    // UPDATED: Show card stack based on loading states and data availability
+                    if shouldShowUncategorizedStack {
                         UncategorizedTransactionStack(
                             transactions: uncategorizedTransactions,
-                            categories: apiCategories, // Make sure categories are loaded
+                            categories: apiCategories,
                             onCategorizeTransaction: { transaction, category in
                                 categorizeTransaction(transaction, category: category)
                             },
                             onDismissStack: {
                                 withAnimation(.easeInOut(duration: 0.4)) {
-                                    showUncategorizedStack = false
+                                    uncategorizedTransactions = []
                                 }
                             }
                         )
                         .padding(.top, -30)
                         .padding(.bottom, 8)
-                        // DEBUG: Print categories count
-                        .onAppear {
-                            print("🔍 UncategorizedTransactionStack: categories count = \(apiCategories.count)")
-                            print("🔍 Categories: \(apiCategories.map { "\($0.name) (\($0.remoteID))" })")
-                        }
                     }
                     
                     // Content sections with custom spacing
@@ -131,12 +132,12 @@ struct InputView: View {
         }
         .overlay(alignment: .top) { toastOverlay }
         .animation(.default, value: showSavedToast)
-        .animation(.easeInOut(duration: 0.4), value: showUncategorizedStack)
+        .animation(.easeInOut(duration: 0.4), value: uncategorizedTransactions.count)
         .refreshable {
-            await refreshAPIData()
+            await refreshAPIDataWithFullReload()
         }
         .onAppear {
-            loadAPIData()
+            loadAPIDataForFirstTime()
         }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notification in
             if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
@@ -165,210 +166,67 @@ struct InputView: View {
         }
     }
     
-    // MARK: - UPDATED: Uncategorized Transactions Functions (now with full transaction data)
+    // MARK: - API Data Loading Functions
     
-    private func fetchUncategorizedTransactions() {
-        if useMockData {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                let mockTransactions = self.getMockUncategorizedTransactions()
-                self.updateUncategorizedTransactions(mockTransactions)
-            }
-        } else {
-            fetchRealAPIUncategorizedTransactions()
-        }
-    }
-    
-    private func fetchUncategorizedTransactionsQuietly() {
-        if useMockData {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                let mockTransactions = self.getMockUncategorizedTransactions()
-                self.updateUncategorizedTransactions(mockTransactions)
-            }
-        } else {
-            SHEETS.getUncategorizedTransactions { result in
-                DispatchQueue.main.async {
-                    switch result {
-                    case .success(let response):
-                        if response.success {
-                            self.updateUncategorizedTransactions(response.data)
-                        } else {
-                            self.updateUncategorizedTransactions([])
-                        }
-                    case .failure(_):
-                        self.updateUncategorizedTransactions([])
-                    }
-                }
-            }
-        }
-    }
-    
-    private func fetchRealAPIUncategorizedTransactions() {
-        SHEETS.getUncategorizedTransactions { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let response):
-                    if response.success {
-                        self.updateUncategorizedTransactions(response.data)
-                    } else {
-                        self.updateUncategorizedTransactions([])
-                    }
-                case .failure(_):
-                    self.updateUncategorizedTransactions([])
-                }
-            }
-        }
-    }
-    
-    @MainActor
-    private func refreshUncategorizedTransactions() async {
-        if useMockData {
-            try? await Task.sleep(nanoseconds: 300_000_000)
-            let mockTransactions = getMockUncategorizedTransactions()
-            self.updateUncategorizedTransactions(mockTransactions)
-        } else {
-            await withCheckedContinuation { continuation in
-                SHEETS.getUncategorizedTransactions { result in
-                    DispatchQueue.main.async {
-                        switch result {
-                        case .success(let response):
-                            if response.success {
-                                self.updateUncategorizedTransactions(response.data)
-                            } else {
-                                self.updateUncategorizedTransactions([])
-                            }
-                        case .failure(_):
-                            self.updateUncategorizedTransactions([])
-                        }
-                        continuation.resume()
-                    }
-                }
-            }
-        }
-    }
-    
-    // UPDATED: Now works with full transaction array and checks for categories
-    private func updateUncategorizedTransactions(_ transactions: [APITransaction]) {
-        // Only show the stack if we have both transactions AND categories loaded
-        let shouldShow = !transactions.isEmpty && !apiCategories.isEmpty
-        
-        print("🔍 updateUncategorizedTransactions:")
-        print("   - Transactions count: \(transactions.count)")
-        print("   - Categories count: \(apiCategories.count)")
-        print("   - Should show stack: \(shouldShow)")
-        
-        withAnimation(.easeInOut(duration: 0.4)) {
-            self.uncategorizedTransactions = transactions
-            self.showUncategorizedStack = shouldShow
-        }
-    }
-    
-    // UPDATED: Function to handle categorizing a transaction (remove card from stack immediately)
-    private func categorizeTransaction(_ transaction: APITransaction, category: APICategory) {
-        print("🎯 categorizeTransaction called for transaction: \(transaction.remoteID)")
-        print("🎯 Selected category: \(category.name)")
-        
-        // The API call is now handled in the BeautifulCategoryPickerSheet
-        // This function is called AFTER the API call succeeds
-        // So we can immediately remove the transaction from the local stack
-        
-        // Remove from uncategorized list immediately - this will trigger onChange in the card stack
-        self.uncategorizedTransactions.removeAll { $0.remoteID == transaction.remoteID }
-        
-        print("🗑️ Removed transaction \(transaction.remoteID) from uncategorized list")
-        print("📊 Remaining uncategorized transactions: \(self.uncategorizedTransactions.count)")
-        
-        // Hide the stack if no more uncategorized transactions
-        if self.uncategorizedTransactions.isEmpty {
-            withAnimation(.easeInOut(duration: 0.4)) {
-                self.showUncategorizedStack = false
-            }
-            print("👋 Hiding uncategorized transaction stack - no more transactions")
-        }
-    }
-    
-    // NEW: Mock data for testing card stack
-    private func getMockUncategorizedTransactions() -> [APITransaction] {
-        return [
-            APITransaction(
-                remoteID: "uncat-1",
-                amount: -45.50,
-                categoryName: "",
-                categoryEmoji: "",
-                paymentMethod: "Credit Card",
-                merchantName: "Supermarket ABC",
-                note: "Weekly groceries",
-                dateISO: "2025-01-15",
-                transactionType: "expense"
-            ),
-            APITransaction(
-                remoteID: "uncat-2",
-                amount: -12.90,
-                categoryName: "",
-                categoryEmoji: "",
-                paymentMethod: "Pix",
-                merchantName: "Coffee Shop",
-                note: "",
-                dateISO: "2025-01-14",
-                transactionType: "expense"
-            ),
-            APITransaction(
-                remoteID: "uncat-3",
-                amount: -89.00,
-                categoryName: "",
-                categoryEmoji: "",
-                paymentMethod: "Debit Card",
-                merchantName: "Gas Station",
-                note: "Fuel",
-                dateISO: "2025-01-13",
-                transactionType: "expense"
-            ),
-            APITransaction(
-                remoteID: "uncat-4",
-                amount: 250.00,
-                categoryName: "",
-                categoryEmoji: "",
-                paymentMethod: "Bank Transfer",
-                merchantName: "Freelance Client",
-                note: "Project payment",
-                dateISO: "2025-01-12",
-                transactionType: "income"
-            )
-        ]
-    }
-    
-    // MARK: - API Data Loading Functions (UPDATED to include uncategorized check)
-    
-    private func loadAPIData() {
+    // Called when app first opens - show loading states
+    private func loadAPIDataForFirstTime() {
         if isFirstLoad {
-            // First time loading - use skeleton loading
-            fetchCategories()
-            fetchPaymentMethods()
-            fetchUncategorizedTransactions()
+            print("🚀 First load - showing loading states")
+            // First time loading - use skeleton loading for chips and load uncategorized
+            fetchCategoriesWithLoading()
+            fetchPaymentMethodsWithLoading()
+            fetchUncategorizedWithLoading()
             isFirstLoad = false
         } else {
-            // Subsequent loads - no loading feedback
-            fetchCategoriesQuietly()
-            fetchPaymentMethodsQuietly()
-            fetchUncategorizedTransactionsQuietly()
+            print("🔄 Not first load - background refresh")
+            // Subsequent loads - no loading feedback, background refresh
+            loadAPIDataInBackground()
         }
     }
     
+    // Called when tab switching back - background refresh without loading states
+    private func loadAPIDataInBackground() {
+        print("🔄 Background refresh - no loading states")
+        fetchCategoriesQuietly()
+        fetchPaymentMethodsQuietly()
+        fetchUncategorizedQuietly()
+    }
+    
+    // Called on pull-to-refresh - full reload with loading states like first time
     @MainActor
-    private func refreshAPIData() async {
+    private func refreshAPIDataWithFullReload() async {
+        print("🔄 Pull-to-refresh - full reload with loading states")
+        // Reset all data and show loading states like first app open
+        
+        // Clear current data and show loading states like first app open
+        withAnimation(.easeInOut(duration: 0.3)) {
+            apiCategories = []
+            apiPaymentMethods = []
+            uncategorizedTransactions = []
+            isLoadingCategories = true
+            isLoadingPaymentMethods = true
+            isLoadingUncategorized = true
+            categoriesError = nil
+            paymentMethodsError = nil
+        }
+        
+        // Load all data with loading states
         await withTaskGroup(of: Void.self) { group in
             group.addTask {
-                await refreshCategories()
+                await self.refreshCategoriesWithLoading()
             }
             group.addTask {
-                await refreshPaymentMethods()
+                await self.refreshPaymentMethodsWithLoading()
             }
             group.addTask {
-                await refreshUncategorizedTransactions()
+                await self.refreshUncategorizedWithLoading()
             }
         }
     }
     
-    private func fetchCategories() {
+    // MARK: - Categories Functions
+    
+    private func fetchCategoriesWithLoading() {
         isLoadingCategories = true
         categoriesError = nil
         
@@ -380,21 +238,6 @@ struct InputView: View {
             }
         } else {
             fetchRealAPICategories()
-        }
-    }
-    
-    private func fetchPaymentMethods() {
-        isLoadingPaymentMethods = true
-        paymentMethodsError = nil
-        
-        if useMockData {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                self.isLoadingPaymentMethods = false
-                self.apiPaymentMethods = self.getMockPaymentMethods()
-                self.autoSelectFirstPaymentMethod()
-            }
-        } else {
-            fetchRealAPIPaymentMethods()
         }
     }
     
@@ -426,6 +269,80 @@ struct InputView: View {
         }
     }
     
+    private func fetchRealAPICategories() {
+        SHEETS.getCategories { result in
+            DispatchQueue.main.async {
+                self.isLoadingCategories = false
+                
+                switch result {
+                case .success(let response):
+                    if response.success {
+                        self.apiCategories = response.data.sorted { $0.sortIndex < $1.sortIndex }
+                        self.categoriesError = nil
+                        self.autoSelectFirstCategory()
+                    } else {
+                        self.categoriesError = response.message
+                    }
+                    
+                case .failure(let error):
+                    self.categoriesError = error.localizedDescription
+                }
+            }
+        }
+    }
+    
+    @MainActor
+    private func refreshCategoriesWithLoading() async {
+        if useMockData {
+            try? await Task.sleep(nanoseconds: 500_000_000)
+            self.isLoadingCategories = false
+            self.apiCategories = self.getMockCategories()
+            self.categoriesError = nil
+            self.autoSelectFirstCategory()
+        } else {
+            await withCheckedContinuation { continuation in
+                SHEETS.getCategories { result in
+                    DispatchQueue.main.async {
+                        self.isLoadingCategories = false
+                        
+                        switch result {
+                        case .success(let response):
+                            if response.success {
+                                self.apiCategories = response.data.sorted { $0.sortIndex < $1.sortIndex }
+                                self.categoriesError = nil
+                                self.autoSelectFirstCategory()
+                            } else {
+                                self.categoriesError = response.message
+                            }
+                            
+                        case .failure(let error):
+                            self.categoriesError = error.localizedDescription
+                        }
+                        
+                        continuation.resume()
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Payment Methods Functions
+    
+    private func fetchPaymentMethodsWithLoading() {
+        isLoadingPaymentMethods = true
+        paymentMethodsError = nil
+        
+        if useMockData {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.isLoadingPaymentMethods = false
+                self.apiPaymentMethods = self.getMockPaymentMethods()
+                self.autoSelectFirstPaymentMethod()
+            }
+        } else {
+            fetchRealAPIPaymentMethods()
+        }
+    }
+    
     private func fetchPaymentMethodsQuietly() {
         // No loading state updates - silent background fetch
         if useMockData {
@@ -454,30 +371,6 @@ struct InputView: View {
         }
     }
     
-    // MARK: - Real API Functions
-    
-    private func fetchRealAPICategories() {
-        SHEETS.getCategories { result in
-            DispatchQueue.main.async {
-                self.isLoadingCategories = false
-                
-                switch result {
-                case .success(let response):
-                    if response.success {
-                        self.apiCategories = response.data.sorted { $0.sortIndex < $1.sortIndex }
-                        self.categoriesError = nil
-                        self.autoSelectFirstCategory()
-                    } else {
-                        self.categoriesError = response.message
-                    }
-                    
-                case .failure(let error):
-                    self.categoriesError = error.localizedDescription
-                }
-            }
-        }
-    }
-    
     private func fetchRealAPIPaymentMethods() {
         SHEETS.getPaymentMethods { result in
             DispatchQueue.main.async {
@@ -500,53 +393,26 @@ struct InputView: View {
         }
     }
     
-    // MARK: - Pull to Refresh Functions (UPDATED to include uncategorized)
-    
     @MainActor
-    private func refreshCategories() async {
+    private func refreshPaymentMethodsWithLoading() async {
         if useMockData {
             try? await Task.sleep(nanoseconds: 500_000_000)
-            self.apiCategories = self.getMockCategories()
-            self.categoriesError = nil
-        } else {
-            await withCheckedContinuation { continuation in
-                SHEETS.getCategories { result in
-                    DispatchQueue.main.async {
-                        switch result {
-                        case .success(let response):
-                            if response.success {
-                                self.apiCategories = response.data.sorted { $0.sortIndex < $1.sortIndex }
-                                self.categoriesError = nil
-                            } else {
-                                self.categoriesError = response.message
-                            }
-                            
-                        case .failure(let error):
-                            self.categoriesError = error.localizedDescription
-                        }
-                        
-                        continuation.resume()
-                    }
-                }
-            }
-        }
-    }
-    
-    @MainActor
-    private func refreshPaymentMethods() async {
-        if useMockData {
-            try? await Task.sleep(nanoseconds: 500_000_000)
+            self.isLoadingPaymentMethods = false
             self.apiPaymentMethods = self.getMockPaymentMethods()
             self.paymentMethodsError = nil
+            self.autoSelectFirstPaymentMethod()
         } else {
             await withCheckedContinuation { continuation in
                 SHEETS.getPaymentMethods { result in
                     DispatchQueue.main.async {
+                        self.isLoadingPaymentMethods = false
+                        
                         switch result {
                         case .success(let response):
                             if response.success {
                                 self.apiPaymentMethods = response.data.sorted { $0.sortIndex < $1.sortIndex }
                                 self.paymentMethodsError = nil
+                                self.autoSelectFirstPaymentMethod()
                             } else {
                                 self.paymentMethodsError = response.message
                             }
@@ -562,23 +428,124 @@ struct InputView: View {
         }
     }
     
+    // MARK: - Uncategorized Transactions Functions
+    
+    private func fetchUncategorizedWithLoading() {
+        isLoadingUncategorized = true
+        
+        if useMockData {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                self.isLoadingUncategorized = false
+                let mockTransactions = self.getMockUncategorizedTransactions()
+                self.uncategorizedTransactions = mockTransactions
+            }
+        } else {
+            fetchRealAPIUncategorizedTransactions()
+        }
+    }
+    
+    private func fetchUncategorizedQuietly() {
+        // No loading state - background refresh
+        if useMockData {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                let mockTransactions = self.getMockUncategorizedTransactions()
+                self.uncategorizedTransactions = mockTransactions
+            }
+        } else {
+            SHEETS.getUncategorizedTransactions { result in
+                DispatchQueue.main.async {
+                    switch result {
+                    case .success(let response):
+                        if response.success {
+                            self.uncategorizedTransactions = response.data
+                        } else {
+                            self.uncategorizedTransactions = []
+                        }
+                    case .failure(_):
+                        self.uncategorizedTransactions = []
+                    }
+                }
+            }
+        }
+    }
+    
+    private func fetchRealAPIUncategorizedTransactions() {
+        SHEETS.getUncategorizedTransactions { result in
+            DispatchQueue.main.async {
+                self.isLoadingUncategorized = false
+                
+                switch result {
+                case .success(let response):
+                    if response.success {
+                        self.uncategorizedTransactions = response.data
+                    } else {
+                        self.uncategorizedTransactions = []
+                    }
+                case .failure(_):
+                    self.uncategorizedTransactions = []
+                }
+            }
+        }
+    }
+    
+    @MainActor
+    private func refreshUncategorizedWithLoading() async {
+        if useMockData {
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            self.isLoadingUncategorized = false
+            let mockTransactions = getMockUncategorizedTransactions()
+            self.uncategorizedTransactions = mockTransactions
+        } else {
+            await withCheckedContinuation { continuation in
+                SHEETS.getUncategorizedTransactions { result in
+                    DispatchQueue.main.async {
+                        self.isLoadingUncategorized = false
+                        
+                        switch result {
+                        case .success(let response):
+                            if response.success {
+                                self.uncategorizedTransactions = response.data
+                            } else {
+                                self.uncategorizedTransactions = []
+                            }
+                        case .failure(_):
+                            self.uncategorizedTransactions = []
+                        }
+                        continuation.resume()
+                    }
+                }
+            }
+        }
+    }
+    
     // MARK: - Auto-selection helpers
     
     private func autoSelectFirstCategory() {
         if selectedCategoryID == nil && !apiCategories.isEmpty {
             selectedCategoryID = apiCategories.first?.remoteID
         }
-        
-        // UPDATED: When categories are loaded, recheck if we should show uncategorized stack
-        if !apiCategories.isEmpty && !uncategorizedTransactions.isEmpty && !showUncategorizedStack {
-            print("🔍 Categories loaded - rechecking uncategorized stack display")
-            updateUncategorizedTransactions(uncategorizedTransactions)
-        }
     }
     
     private func autoSelectFirstPaymentMethod() {
         if selectedMethodID == nil && !apiPaymentMethods.isEmpty {
             selectedMethodID = apiPaymentMethods.first?.remoteID
+        }
+    }
+    
+    // MARK: - Categorize Transaction Function
+    private func categorizeTransaction(_ transaction: APITransaction, category: APICategory) {
+        print("🎯 categorizeTransaction called for transaction: \(transaction.remoteID)")
+        print("🎯 Selected category: \(category.name)")
+        
+        // Remove from uncategorized list immediately
+        self.uncategorizedTransactions.removeAll { $0.remoteID == transaction.remoteID }
+        
+        print("🗑️ Removed transaction \(transaction.remoteID) from uncategorized list")
+        print("📊 Remaining uncategorized transactions: \(self.uncategorizedTransactions.count)")
+        
+        // That's it! No automatic refresh - cards only update on tab switch or pull-to-refresh
+        if self.uncategorizedTransactions.isEmpty {
+            print("👋 No more uncategorized transactions - stack will hide")
         }
     }
     
@@ -686,6 +653,56 @@ struct InputView: View {
         return methods
     }
     
+    // Mock data for testing card stack
+    private func getMockUncategorizedTransactions() -> [APITransaction] {
+        return [
+            APITransaction(
+                remoteID: "uncat-1",
+                amount: -45.50,
+                categoryName: "",
+                categoryEmoji: "",
+                paymentMethod: "Credit Card",
+                merchantName: "Supermarket ABC",
+                note: "Weekly groceries",
+                dateISO: "2025-01-15",
+                transactionType: "expense"
+            ),
+            APITransaction(
+                remoteID: "uncat-2",
+                amount: -12.90,
+                categoryName: "",
+                categoryEmoji: "",
+                paymentMethod: "Pix",
+                merchantName: "Coffee Shop",
+                note: "",
+                dateISO: "2025-01-14",
+                transactionType: "expense"
+            ),
+            APITransaction(
+                remoteID: "uncat-3",
+                amount: -89.00,
+                categoryName: "",
+                categoryEmoji: "",
+                paymentMethod: "Debit Card",
+                merchantName: "Gas Station",
+                note: "Fuel",
+                dateISO: "2025-01-13",
+                transactionType: "expense"
+            ),
+            APITransaction(
+                remoteID: "uncat-4",
+                amount: 250.00,
+                categoryName: "",
+                categoryEmoji: "",
+                paymentMethod: "Bank Transfer",
+                merchantName: "Freelance Client",
+                note: "Project payment",
+                dateISO: "2025-01-12",
+                transactionType: "income"
+            )
+        ]
+    }
+    
     // MARK: - Helper function
     private func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
@@ -753,8 +770,9 @@ struct InputView: View {
                         .font(.caption)
                     
                     Button("Retry") {
-                        fetchCategories()
-                        fetchPaymentMethods()
+                        fetchCategoriesWithLoading()
+                        fetchPaymentMethodsWithLoading()
+                        fetchUncategorizedWithLoading()
                     }
                     .appSmallButtonStyle()
                 }
@@ -800,8 +818,9 @@ struct InputView: View {
                         .font(.caption)
                     
                     Button("Retry") {
-                        fetchCategories()
-                        fetchPaymentMethods()
+                        fetchCategoriesWithLoading()
+                        fetchPaymentMethodsWithLoading()
+                        fetchUncategorizedWithLoading()
                     }
                     .appSmallButtonStyle()
                 }
@@ -921,7 +940,7 @@ struct InputView: View {
         )
     }
     
-    // MARK: - Save Function (UPDATED to refresh uncategorized transactions after save)
+    // MARK: - Save Function
     @MainActor
     private func performSave() async -> Bool {
         guard let amount = amountDecimal else { return false }
@@ -966,11 +985,6 @@ struct InputView: View {
             autoSelectFirstPaymentMethod()
             
             dismissKeyboard()
-            
-            // UPDATED: Refresh uncategorized transactions after saving
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                self.fetchUncategorizedTransactionsQuietly()
-            }
             
             return true
         } catch {
@@ -1144,12 +1158,5 @@ struct InputViewCalendarView: View {
         }
         
         return days
-    }
-}
-
-// Use the InputViewCalendarView instead of CalendarView
-extension InputView {
-    var CalendarView: (Binding<Date>) -> InputViewCalendarView {
-        return InputViewCalendarView.init
     }
 }
