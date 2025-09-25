@@ -633,7 +633,7 @@ struct TransactionCard: View {
         .glassEffect(
             isTopCard ?
             .regular.tint(Color.black.opacity(0.6)).interactive() :
-            .regular.interactive(),
+            .regular.tint(Color.white.opacity(0.1)).interactive(),
             in: .rect(cornerRadius: 14)
         )
         .contentShape(Rectangle())

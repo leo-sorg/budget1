@@ -113,7 +113,6 @@ struct APIPaymentChipView: View {
     }
 }
 
-/// API-based category chip button (for InputView)
 struct APICategoryChipView: View {
     let category: APICategory
     let isSelected: Bool
@@ -142,12 +141,34 @@ struct APICategoryChipView: View {
         .background {
             if isSelected {
                 Capsule()
-                    .glassEffect(.regular.tint(Color.black.opacity(0.9)).interactive())
+                    .glassEffect(.regular.tint(selectedTintColor).interactive())
                     .matchedGeometryEffect(id: "selectedChip", in: namespace)
             } else {
                 Capsule()
-                .glassEffect(.regular.interactive())
+                    .glassEffect(.regular.tint(unselectedTintColor).interactive())
             }
+        }
+    }
+    
+    // MARK: - Tint Colors Based on Category Type and Selection State
+    
+    private var selectedTintColor: Color {
+        if category.isIncome {
+            // Green tint with 0.6 opacity for selected income categories
+            return Color(red: 0.1, green: 0.5, blue: 0.1).opacity(0.6)
+        } else {
+            // Red tint with 0.6 opacity for selected expense categories
+            return Color(red: 0.5, green: 0.1, blue: 0.1).opacity(0.6)
+        }
+    }
+    
+    private var unselectedTintColor: Color {
+        if category.isIncome {
+            // Green tint with 0.3 opacity for unselected income categories
+            return Color(red: 0.5, green: 1.0, blue: 0.5).opacity(0.2)
+        } else {
+            // Red tint with 0.3 opacity for unselected expense categories
+            return Color(red: 1.0, green: 0.5, blue: 0.5).opacity(0.2)
         }
     }
 }

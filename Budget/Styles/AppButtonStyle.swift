@@ -33,7 +33,7 @@ final class ButtonStateManager: ObservableObject, @MainActor Equatable {
     }
 }
 
-// MARK: - App Button Style (Plain with conditional glass effect)
+// MARK: - App Button Style (Fixed - Clickable everywhere)
 struct AppButtonStyle: ButtonStyle {
     let isDisabled: Bool
     
@@ -42,24 +42,22 @@ struct AppButtonStyle: ButtonStyle {
     }
     
     func makeBody(configuration: Configuration) -> some View {
-        ZStack {
-            // Background layer
-            if !isDisabled {
-                Capsule()
-                    .glassEffect(.regular)
+        configuration.label
+            .font(.system(size: 16, weight: isDisabled ? .medium : .semibold))
+            .foregroundStyle(isDisabled ? Color(white: 0.9) : .white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 20)
+            .contentShape(Rectangle()) // ✅ This makes the entire area clickable
+            .background {
+                if !isDisabled {
+                    Capsule()
+                        .glassEffect(.regular)
+                }
             }
-            
-            // Content layer
-            configuration.label
-                .font(.system(size: 16, weight: isDisabled ? .medium : .semibold))
-                .foregroundStyle(isDisabled ? Color(white: 0.9) : .white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 20)
-        }
     }
 }
 
-// MARK: - Small Button Style (Plain with glass effect regular)
+// MARK: - Small Button Style (Fixed - Clickable everywhere)
 struct AppSmallButtonStyle: ButtonStyle {
     let isDisabled: Bool
     
@@ -71,8 +69,9 @@ struct AppSmallButtonStyle: ButtonStyle {
         configuration.label
             .font(.system(size: 14, weight: isDisabled ? .medium : .semibold))
             .foregroundStyle(isDisabled ? Color(white: 0.9) : .white)
-            .padding(.horizontal, 12)  // <-- Change this value
+            .padding(.horizontal, 12)
             .padding(.vertical, 6)
+            .contentShape(Rectangle()) // ✅ This makes the entire area clickable
             .background {
                 Capsule()
                     .glassEffect(isDisabled ? .regular.interactive() : .regular.interactive())
@@ -91,7 +90,7 @@ extension View {
     }
 }
 
-// MARK: - Enhanced Button with Loading States
+// MARK: - Enhanced Button with Loading States (Fixed - Clickable everywhere)
 struct EnhancedButton: View {
     let title: String
     let action: () async -> Bool
@@ -148,6 +147,7 @@ struct EnhancedButton: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 20)
+            .contentShape(Rectangle()) // ✅ This makes the entire area clickable
         }
         .buttonStyle(.plain)
         .background {
