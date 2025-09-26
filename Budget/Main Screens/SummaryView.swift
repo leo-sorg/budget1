@@ -558,7 +558,20 @@ struct SummaryView: View {
         return dict.sorted { $0.value > $1.value }
             .reduce(into: [:]) { $0[$1.key] = $1.value }
     }
-    private var byCategoryKeys: [String] { Array(byCategory.keys) }
+    private var byCategoryKeys: [String] {
+        byCategory.sorted { first, second in
+            if first.value > 0 && second.value > 0 {
+                // Both positive: biggest first
+                return first.value > second.value
+            } else if first.value < 0 && second.value < 0 {
+                // Both negative: smallest first (biggest absolute value)
+                return first.value < second.value
+            } else {
+                // One positive, one negative: positive first
+                return first.value > second.value
+            }
+        }.map { $0.key }
+    }
 
     private var byPayment: [String: Decimal] {
         var dict: [String: Decimal] = [:]
