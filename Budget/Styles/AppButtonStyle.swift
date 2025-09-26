@@ -51,7 +51,7 @@ struct AppButtonStyle: ButtonStyle {
             .background {
                 if !isDisabled {
                     Capsule()
-                        .glassEffect(.regular)
+                        .fill(.thinMaterial)
                 }
             }
     }
@@ -73,8 +73,13 @@ struct AppSmallButtonStyle: ButtonStyle {
             .padding(.vertical, 6)
             .contentShape(Rectangle()) // ✅ This makes the entire area clickable
             .background {
-                Capsule()
-                    .glassEffect(isDisabled ? .regular.interactive() : .regular.interactive())
+                if isDisabled {
+                    Capsule()
+                        .fill(.thinMaterial)
+                } else {
+                    Capsule()
+                        .glassEffect(.regular.interactive())
+                }
             }
     }
 }
@@ -151,9 +156,14 @@ struct EnhancedButton: View {
         }
         .buttonStyle(.plain)
         .background {
-            Capsule()
-                .glassEffect((isDisabled && !stateManager.isLoading && !stateManager.showSuccess) ? .regular : .regular.tint(Color.white.opacity(0.3)).interactive())
-        }
+                    if isDisabled && !stateManager.isLoading && !stateManager.showSuccess {
+                        Capsule()
+                            .fill(.thinMaterial)
+                    } else {
+                        Capsule()
+                            .glassEffect(.regular.interactive())
+                    }
+                }
         .disabled(isDisabled)
         .animation(.easeInOut(duration: 0.2), value: stateManager.isLoading)
         .animation(.easeInOut(duration: 0.2), value: stateManager.showSuccess)

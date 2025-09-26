@@ -154,7 +154,7 @@ struct SummaryView: View {
                     }
                 }
                 .font(.system(size: 16, weight: selectedSegment == 0 ? .semibold : .medium))
-                .foregroundStyle(selectedSegment == 0 ? .white : Color(white: 0.9))
+                .foregroundStyle(selectedSegment == 0 ? .white : Color(white: 0.7))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
                 .background {
@@ -172,7 +172,7 @@ struct SummaryView: View {
                     }
                 }
                 .font(.system(size: 16, weight: selectedSegment == 1 ? .semibold : .regular))
-                .foregroundStyle(selectedSegment == 1 ? .white : Color(white: 0.9))
+                .foregroundStyle(selectedSegment == 1 ? .white : Color(white: 0.7))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
                 .background {
@@ -190,7 +190,7 @@ struct SummaryView: View {
                     }
                 }
                 .font(.system(size: 16, weight: selectedSegment == 2 ? .semibold : .medium))
-                .foregroundStyle(selectedSegment == 2 ? .white : Color(white: 0.9))
+                .foregroundStyle(selectedSegment == 2 ? .white : Color(white: 0.7))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
                 .background {

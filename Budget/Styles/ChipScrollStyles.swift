@@ -21,7 +21,7 @@ struct PaymentChipView: View {
                 
                 Text(paymentMethod.name)
                     .font(.system(size: 16, weight: isSelected ? .semibold : .medium))
-                    .foregroundStyle(isSelected ? .white : Color(white: 0.9))
+                    .foregroundStyle(isSelected ? .white : Color(white: 0.7))
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
@@ -56,7 +56,7 @@ struct CategoryChipView: View {
                 
                 Text(category.name)
                     .font(.system(size: 16, weight: isSelected ? .semibold : .medium))
-                    .foregroundStyle(isSelected ? .white : Color(white: 0.9))
+                    .foregroundStyle(isSelected ? .white : Color(white: 0.7))
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
@@ -94,7 +94,7 @@ struct APIPaymentChipView: View {
                 
                 Text(paymentMethod.name)
                     .font(.system(size: 16, weight: isSelected ? .semibold : .medium))
-                    .foregroundStyle(isSelected ? .white : Color(white: 0.9))
+                    .foregroundStyle(isSelected ? .white : Color(white: 0.7))
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
@@ -132,7 +132,7 @@ struct APICategoryChipView: View {
                 
                 Text(category.name)
                     .font(.system(size: 16, weight: isSelected ? .semibold : .medium))
-                    .foregroundStyle(isSelected ? .white : Color(white: 0.9))
+                    .foregroundStyle(isSelected ? .white : Color(white: 0.7))
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
@@ -145,7 +145,11 @@ struct APICategoryChipView: View {
                     .matchedGeometryEffect(id: "selectedChip", in: namespace)
             } else {
                 Capsule()
-                    .glassEffect(.regular.tint(unselectedTintColor).interactive())
+                    .fill(unselectedTintColor)
+                    .background(
+                        Capsule()
+                            .fill(.thinMaterial)
+                    )
             }
         }
     }
@@ -164,11 +168,11 @@ struct APICategoryChipView: View {
     
     private var unselectedTintColor: Color {
         if category.isIncome {
-            // Green tint with 0.3 opacity for unselected income categories
-            return Color(red: 0.5, green: 1.0, blue: 0.5).opacity(0.2)
+            // Green tint with 0.2 opacity for unselected income categories
+            return Color(red: 0.5, green: 1.0, blue: 0.5).opacity(0.1)
         } else {
-            // Red tint with 0.3 opacity for unselected expense categories
-            return Color(red: 1.0, green: 0.5, blue: 0.5).opacity(0.2)
+            // Red tint with 0.2 opacity for unselected expense categories
+            return Color(red: 1.0, green: 0.5, blue: 0.5).opacity(0.1)
         }
     }
 }
@@ -186,7 +190,7 @@ struct MonthChipView: View {
             HStack(spacing: 6) {
                 Text(monthYearString)
                     .font(.system(size: 16, weight: isSelected ? .semibold : .medium))
-                    .foregroundStyle(isSelected ? .white : Color(white: 0.9))
+                    .foregroundStyle(isSelected ? .white : Color(white: 0.7))
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
@@ -233,7 +237,7 @@ struct ManageSectionChip: View {
             HStack(spacing: 6) {
                 Text(section.rawValue)
                     .font(.system(size: 16, weight: isSelected ? .semibold : .medium))
-                    .foregroundStyle(isSelected ? .white : Color(white: 0.9))
+                    .foregroundStyle(isSelected ? .white : Color(white: 0.7))
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
@@ -263,7 +267,7 @@ struct LiquidGlassChip: View {
         Button(action: onTap) {
                 Text(title)
                     .font(.system(size: 16, weight: isSelected ? .semibold : .medium))
-                    .foregroundStyle(isSelected ? .white : Color(white: 0.9))
+                    .foregroundStyle(isSelected ? .white : Color(white: 0.7))
             
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
