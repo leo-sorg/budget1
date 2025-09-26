@@ -727,7 +727,7 @@ struct SummaryView: View {
     }
 }
 
-// MARK: - UPDATED Transaction List Item Component with Merchant Name/Note Priority
+// MARK: - UPDATED Transaction List Item Component with Proper Merchant/Note Priority
 
 /// Transaction list item with loading indicator and direct emoji from API
 struct DeletableAPITransactionListItem: View {
@@ -751,13 +751,9 @@ struct DeletableAPITransactionListItem: View {
                         .foregroundColor(.white.opacity(0.6))
                         .font(.caption)
                     
-                    // UPDATED: Show merchantName or note instead of payment method
-                    if !transaction.merchantName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        Text("• \(transaction.merchantName)")
-                            .foregroundColor(.white.opacity(0.6))
-                            .font(.caption)
-                    } else if !transaction.note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        Text("• \(transaction.note)")
+                    // FIXED: Proper merchant name/note priority logic
+                    if let secondaryText = getSecondaryText() {
+                        Text("• \(secondaryText)")
                             .foregroundColor(.white.opacity(0.6))
                             .font(.caption)
                             .lineLimit(1)
@@ -784,6 +780,58 @@ struct DeletableAPITransactionListItem: View {
         .glassEffect(.regular, in: .rect(cornerRadius: 10))
         .opacity(isDeleting ? 0.6 : 1.0)
         .animation(.easeInOut(duration: 0.2), value: isDeleting)
+    }
+    
+    // MARK: - Helper Functions
+    
+    /// Returns the secondary text to display: merchant name (priority) or note, or nil if both are empty
+    private func getSecondaryText() -> String? {
+        // Clean and normalize merchant name - handle weird formatting
+        let rawMerchant = transaction.merchantName
+        let rawNote = transaction.note
+        let cleanedMerchant = cleanText(rawMerchant)
+        let cleanedNote = cleanText(rawNote)
+        
+        // Debug logging
+        print("🔍 Transaction \(transaction.remoteID):")
+        print("   Raw merchant: '\(rawMerchant)' (length: \(rawMerchant.count))")
+        print("   Cleaned merchant: '\(cleanedMerchant)' (length: \(cleanedMerchant.count), isEmpty: \(cleanedMerchant.isEmpty))")
+        print("   Raw note: '\(rawNote)' (length: \(rawNote.count))")
+        print("   Cleaned note: '\(cleanedNote)' (length: \(cleanedNote.count), isEmpty: \(cleanedNote.isEmpty))")
+        
+        // Priority: merchant name first, then note, then nil
+        if !cleanedMerchant.isEmpty {
+            let result = truncateText(cleanedMerchant, maxLength: 30)
+            print("   ✅ Using merchant: '\(result)'")
+            return result
+        } else if !cleanedNote.isEmpty {
+            let result = truncateText(cleanedNote, maxLength: 30)
+            print("   ⚠️ Using note (merchant empty): '\(result)'")
+            return result
+        } else {
+            print("   ❌ Both empty, returning nil")
+            return nil
+        }
+    }
+    
+    /// Cleans text by removing excessive whitespace, newlines, and special characters
+    private func cleanText(_ text: String) -> String {
+        return text
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "\n", with: " ")
+            .replacingOccurrences(of: "\r", with: " ")
+            .replacingOccurrences(of: "\t", with: " ")
+            .replacingOccurrences(of: "  ", with: " ") // Replace double spaces with single
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
+    /// Truncates text to specified length and adds ellipsis if needed
+    private func truncateText(_ text: String, maxLength: Int) -> String {
+        if text.count <= maxLength {
+            return text
+        } else {
+            return String(text.prefix(maxLength - 1)) + "…"
+        }
     }
     
     // FIXED: Category icon view using API's categoryEmoji field
