@@ -529,7 +529,7 @@ struct ManageView: View {
                         .listStyle(.plain)
                         .scrollContentBackground(.hidden)
                         .scrollDisabled(true)
-                        .frame(height: CGFloat(max(1, categories.count)) * 50)
+                        .frame(height: CGFloat(max(1, categories.count)) * 61)
                     }
                 }
             }
