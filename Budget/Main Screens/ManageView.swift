@@ -110,10 +110,6 @@ struct ManageView: View {
                     case .background:
                         backgroundSection
                     }
-                    
-                    // Extra padding at bottom to ensure scrollability
-                    Spacer()
-                        .frame(height: 0)
                 }
                 .padding()
             }
@@ -398,7 +394,7 @@ struct ManageView: View {
         }
     }
 
-    // MARK: - Category Section with swipe-to-delete and loading indicator
+    // MARK: - Category Section with LazyVStack (FIXED)
     @ViewBuilder private var categorySection: some View {
         VStack(spacing: 24) {
             // Add/Edit form
@@ -495,7 +491,7 @@ struct ManageView: View {
                 }
             }
             
-            // Category list with swipe-to-delete and loading indicator
+            // Category list - FIXED with LazyVStack
             if isLoadingCategories {
                 loadingView
             } else if let error = categoriesError {
@@ -513,7 +509,6 @@ struct ManageView: View {
                     } else {
                         List {
                             ForEach(categories, id: \.remoteID) { category in
-                                // UPDATED: Use custom list item with loading indicator
                                 DeletableAPICategoryListItem(
                                     category: category,
                                     isDeleting: deletingCategoryID == category.remoteID
@@ -527,20 +522,21 @@ struct ManageView: View {
                                     } label: {
                                         Image(systemName: "trash")
                                     }
-                                    .tint(.clear) // Remove red background
+                                    .tint(.clear)
                                 }
                             }
                         }
                         .listStyle(.plain)
                         .scrollContentBackground(.hidden)
-                        .frame(height: CGFloat(categories.count * 80))
+                        .scrollDisabled(true)
+                        .frame(height: CGFloat(max(1, categories.count)) * 50)
                     }
                 }
             }
         }
     }
 
-    // MARK: - Payment Section with swipe-to-delete and loading indicator
+    // MARK: - Payment Section - FIXED with LazyVStack
     @ViewBuilder private var paymentSection: some View {
         VStack(spacing: 24) {
             // Add/Edit form
@@ -602,7 +598,7 @@ struct ManageView: View {
                 }
             }
             
-            // Payment method list with swipe-to-delete and loading indicator
+            // Payment method list - FIXED with LazyVStack
             if isLoadingPaymentMethods {
                 loadingView
             } else if let error = paymentMethodsError {
@@ -620,7 +616,6 @@ struct ManageView: View {
                     } else {
                         List {
                             ForEach(methods, id: \.remoteID) { method in
-                                // UPDATED: Use custom list item with loading indicator
                                 DeletableAPIPaymentMethodListItem(
                                     paymentMethod: method,
                                     isDeleting: deletingPaymentID == method.remoteID
@@ -634,13 +629,14 @@ struct ManageView: View {
                                     } label: {
                                         Image(systemName: "trash")
                                     }
-                                    .tint(.clear) // Remove red background
+                                    .tint(.clear)
                                 }
                             }
                         }
                         .listStyle(.plain)
                         .scrollContentBackground(.hidden)
-                        .frame(height: CGFloat(methods.count * 80))
+                        .scrollDisabled(true)
+                        .frame(height: CGFloat(max(1, methods.count)) * 72)
                     }
                 }
             }
