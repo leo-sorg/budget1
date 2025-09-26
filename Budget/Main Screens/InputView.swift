@@ -118,7 +118,7 @@ struct InputView: View {
                     
                         // Extra padding at bottom
                         Spacer()
-                            .frame(height: 300)
+                            .frame(height: 0)
                     }
                 }
                 .padding()

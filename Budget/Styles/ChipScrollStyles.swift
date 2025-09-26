@@ -34,7 +34,7 @@ struct PaymentChipView: View {
                     .matchedGeometryEffect(id: "selectedChip", in: namespace)
             } else {
                 Capsule()
-                .glassEffect(.regular.interactive())
+                .fill(.thinMaterial)
             }
         }
     }
@@ -103,11 +103,11 @@ struct APIPaymentChipView: View {
         .background {
             if isSelected {
                 Capsule()
-                    .glassEffect(.regular.tint(Color.black.opacity(0.6)).interactive())
+                    .glassEffect(.regular.interactive())
                     .matchedGeometryEffect(id: "selectedChip", in: namespace)
             } else {
                 Capsule()
-                .glassEffect(.regular.interactive())
+                .fill(.thinMaterial)
             }
         }
     }
@@ -195,11 +195,11 @@ struct MonthChipView: View {
         .background {
             if isSelected {
                 Capsule()
-                    .glassEffect(.regular.tint(Color.black.opacity(0.5)).interactive())
+                    .glassEffect(.regular.interactive())
                     .matchedGeometryEffect(id: "selectedChip", in: namespace)
             } else {
                 Capsule()
-                .glassEffect(.regular.interactive())
+                .fill(.thinMaterial)
             }
         }
     }
@@ -242,11 +242,11 @@ struct ManageSectionChip: View {
         .background {
             if isSelected {
                 Capsule()
-                    .glassEffect(.regular.tint(Color.black.opacity(0.9)).interactive())
+                    .glassEffect(.regular.interactive())
                     .matchedGeometryEffect(id: "selectedChip", in: namespace)
             } else {
                 Capsule()
-                .glassEffect(.regular.interactive())
+                .fill(.thinMaterial)
             }
         }
     }
@@ -272,11 +272,11 @@ struct LiquidGlassChip: View {
         .background {
             if isSelected {
                 Capsule()
-                    .glassEffect(.regular.tint(Color.black.opacity(0.9)).interactive())
+                    .glassEffect(.regular.interactive())
                     .matchedGeometryEffect(id: "selectedChip", in: namespace)
             } else {
                 Capsule()
-                    .glassEffect(.regular.interactive())  // ✅ Add .interactive() here too
+                .fill(.thinMaterial)
             }
         }
     }

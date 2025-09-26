@@ -87,7 +87,7 @@ struct SummaryView: View {
                     
                     // Extra padding at bottom for tab bar
                     Spacer()
-                        .frame(height: 100)
+                        .frame(height: 0)
                 }
                 .padding()
             }
@@ -160,7 +160,7 @@ struct SummaryView: View {
                 .background {
                     if selectedSegment == 0 {
                         RoundedRectangle(cornerRadius: 22)
-                            .glassEffect(.regular.tint(Color.black.opacity(0.5)).interactive())
+                            .glassEffect(.regular.interactive())
                             .matchedGeometryEffect(id: "selectedSegment", in: segmentedControlNamespace)
                     }
                 }
@@ -178,7 +178,7 @@ struct SummaryView: View {
                 .background {
                     if selectedSegment == 1 {
                         RoundedRectangle(cornerRadius: 22)
-                            .glassEffect(.regular.tint(Color.black.opacity(0.5)).interactive())
+                            .glassEffect(.regular.interactive())
                             .matchedGeometryEffect(id: "selectedSegment", in: segmentedControlNamespace)
                     }
                 }
@@ -196,7 +196,7 @@ struct SummaryView: View {
                 .background {
                     if selectedSegment == 2 {
                         RoundedRectangle(cornerRadius: 22)
-                            .glassEffect(.regular.tint(Color.black.opacity(0.5)).interactive())
+                            .glassEffect(.regular.interactive())
                             .matchedGeometryEffect(id: "selectedSegment", in: segmentedControlNamespace)
                     }
                 }
@@ -204,7 +204,7 @@ struct SummaryView: View {
             .padding(4)
             .background {
                 RoundedRectangle(cornerRadius: 22)
-                    .glassEffect(.regular, in: .rect(cornerRadius: 22))
+                    .fill(.thinMaterial)  // Changed from .glassEffect(.regular, in: .rect(cornerRadius: 22))
             }
         }
     }

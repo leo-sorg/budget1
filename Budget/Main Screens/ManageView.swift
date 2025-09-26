@@ -113,7 +113,7 @@ struct ManageView: View {
                     
                     // Extra padding at bottom to ensure scrollability
                     Spacer()
-                        .frame(height: 150)
+                        .frame(height: 0)
                 }
                 .padding()
             }
