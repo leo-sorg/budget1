@@ -1,4 +1,7 @@
+// This is the complete updated AppListItem.swift file - replace the existing file with this content
+
 import SwiftUI
+import SwiftData
 
 // MARK: - Unified List Item Component (Updated - No Delete Button)
 struct AppListItem<Content: View, TrailingContent: View>: View {
@@ -120,10 +123,16 @@ struct APITransactionListItem: View {
                             .foregroundColor(.white.opacity(0.6))  // Changed to .white with opacity for glass
                             .font(.caption)
                         
-                        if !transaction.paymentMethod.isEmpty {
-                            Text("• \(transaction.paymentMethod)")
-                                .foregroundColor(.white.opacity(0.6))  // Changed to .white with opacity for glass
+                        // UPDATED: Show merchantName or note instead of payment method
+                        if !transaction.merchantName.isEmpty {
+                            Text("• \(transaction.merchantName)")
+                                .foregroundColor(.white.opacity(0.6))
                                 .font(.caption)
+                        } else if !transaction.note.isEmpty {
+                            Text("• \(transaction.note)")
+                                .foregroundColor(.white.opacity(0.6))
+                                .font(.caption)
+                                .lineLimit(1)
                         }
                     }
                 }
@@ -177,6 +186,62 @@ struct SummaryCategoryItem: View {
                     .foregroundColor(amount >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : .white)  // Better colors for glass background
             }
         )
+    }
+}
+
+// MARK: - NEW Summary Category Item with Emoji Support
+struct SummaryCategoryItemWithEmoji: View {
+    let name: String
+    let emoji: String
+    let amount: Decimal
+    
+    var body: some View {
+        AppListItem(
+            content: {
+                HStack(spacing: 12) {
+                    // Category emoji or fallback icon
+                    categoryIconView
+                    
+                    // Category name
+                    Text(name)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.white)
+                }
+            },
+            trailing: {
+                Text(formatCurrency(amount))
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(amount >= 0 ? Color(red: 0.5, green: 1.0, blue: 0.5) : .white)
+            }
+        )
+    }
+    
+    @ViewBuilder private var categoryIconView: some View {
+        if !emoji.isEmpty && isValidEmoji(emoji) {
+            // Use the category emoji
+            Text(emoji)
+                .font(.system(size: 20))
+        } else {
+            // Fallback for uncategorized/empty emoji
+            if name == "Uncategorized" {
+                if amount >= 0 {
+                    // Uncategorized income: light green plus
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(Color(red: 0.5, green: 1.0, blue: 0.5))
+                } else {
+                    // Uncategorized expense: light red minus
+                    Image(systemName: "minus.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(Color(red: 1.0, green: 0.5, blue: 0.5))
+                }
+            } else {
+                // Regular category without emoji: generic tag icon
+                Image(systemName: "tag.fill")
+                    .font(.system(size: 18))
+                    .foregroundColor(.secondary)
+            }
+        }
     }
 }
 

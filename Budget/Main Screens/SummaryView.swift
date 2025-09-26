@@ -1,6 +1,13 @@
 import SwiftUI
 import SwiftData
 
+// MARK: - Category Summary Model
+struct CategorySummary {
+    let name: String
+    let emoji: String
+    let amount: Decimal
+}
+
 struct SummaryView: View {
     @Environment(\.modelContext) private var context
     @EnvironmentObject private var bgStore: BackgroundImageStore
@@ -529,7 +536,7 @@ struct SummaryView: View {
         return formatter.string(from: date)
     }
     
-    // MARK: - Computed Properties (now using API data)
+    // MARK: - Computed Properties (now using API data with emojis)
     
     private var totalIncome: Decimal {
         apiTransactions.reduce(0) { result, transaction in
@@ -547,30 +554,39 @@ struct SummaryView: View {
 
     private var netTotal: Decimal { totalIncome + totalExpenses }
 
-    private var byCategory: [String: Decimal] {
-        var dict: [String: Decimal] = [:]
+    // UPDATED: New computed property with emoji support
+    private var categorySummaries: [CategorySummary] {
+        var summaryDict: [String: (amount: Decimal, emoji: String)] = [:]
+        
         for transaction in apiTransactions {
             let name = transaction.categoryName.isEmpty ? "Uncategorized" : transaction.categoryName
+            let emoji = transaction.categoryName.isEmpty ? "" : transaction.categoryEmoji
             let amount = Decimal(transaction.amount)
-            dict[name, default: 0] += amount
+            
+            if let existing = summaryDict[name] {
+                summaryDict[name] = (amount: existing.amount + amount, emoji: emoji.isEmpty ? existing.emoji : emoji)
+            } else {
+                summaryDict[name] = (amount: amount, emoji: emoji)
+            }
         }
-        // Sort high → low
-        return dict.sorted { $0.value > $1.value }
-            .reduce(into: [:]) { $0[$1.key] = $1.value }
-    }
-    private var byCategoryKeys: [String] {
-        byCategory.sorted { first, second in
-            if first.value > 0 && second.value > 0 {
+        
+        // Convert to CategorySummary objects and sort
+        let summaries = summaryDict.map { key, value in
+            CategorySummary(name: key, emoji: value.emoji, amount: value.amount)
+        }
+        
+        return summaries.sorted { first, second in
+            if first.amount > 0 && second.amount > 0 {
                 // Both positive: biggest first
-                return first.value > second.value
-            } else if first.value < 0 && second.value < 0 {
+                return first.amount > second.amount
+            } else if first.amount < 0 && second.amount < 0 {
                 // Both negative: smallest first (biggest absolute value)
-                return first.value < second.value
+                return first.amount < second.amount
             } else {
                 // One positive, one negative: positive first
-                return first.value > second.value
+                return first.amount > second.amount
             }
-        }.map { $0.key }
+        }
     }
 
     private var byPayment: [String: Decimal] {
@@ -625,19 +641,20 @@ struct SummaryView: View {
         }
     }
     
-    // Using unified AppListItem components
+    // UPDATED: Using new categorySummaries with emoji support
     @ViewBuilder private var byCategorySection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            if byCategory.isEmpty {
+            if categorySummaries.isEmpty {
                 Text("No data for this month")
                     .foregroundColor(.appText.opacity(0.6))
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else {
                 VStack(spacing: 8) {
-                    ForEach(byCategoryKeys, id: \.self) { key in
-                        SummaryCategoryItem(
-                            name: key,
-                            amount: byCategory[key] ?? 0
+                    ForEach(Array(categorySummaries.enumerated()), id: \.offset) { index, categorySummary in
+                        SummaryCategoryItemWithEmoji(
+                            name: categorySummary.name,
+                            emoji: categorySummary.emoji,
+                            amount: categorySummary.amount
                         )
                     }
                 }
@@ -710,7 +727,7 @@ struct SummaryView: View {
     }
 }
 
-// MARK: - FIXED Transaction List Item Component with Direct API Emoji Usage
+// MARK: - UPDATED Transaction List Item Component with Merchant Name/Note Priority
 
 /// Transaction list item with loading indicator and direct emoji from API
 struct DeletableAPITransactionListItem: View {
@@ -734,10 +751,16 @@ struct DeletableAPITransactionListItem: View {
                         .foregroundColor(.white.opacity(0.6))
                         .font(.caption)
                     
-                    if !transaction.paymentMethod.isEmpty {
-                        Text("• \(transaction.paymentMethod)")
+                    // UPDATED: Show merchantName or note instead of payment method
+                    if !transaction.merchantName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        Text("• \(transaction.merchantName)")
                             .foregroundColor(.white.opacity(0.6))
                             .font(.caption)
+                    } else if !transaction.note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        Text("• \(transaction.note)")
+                            .foregroundColor(.white.opacity(0.6))
+                            .font(.caption)
+                            .lineLimit(1)
                     }
                 }
             }

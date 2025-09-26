@@ -23,12 +23,14 @@ struct TransactionListItem: View {
                             .foregroundColor(Color.appText.opacity(0.6))
                             .font(.caption)
                         
+                        // UPDATED: Show payment method as secondary info since we don't have merchantName/note for local transactions
                         if let pm = transaction.paymentMethod?.name {
                             Text("• \(pm)")
                                 .foregroundColor(Color.appText.opacity(0.6))
                                 .font(.caption)
                         }
                         
+                        // Show note if available (for local transactions)
                         if let note = transaction.note, !note.isEmpty {
                             Text("• \(note)")
                                 .foregroundColor(Color.appText.opacity(0.6))
