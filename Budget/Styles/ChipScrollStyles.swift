@@ -377,7 +377,88 @@ struct ChipScrollContainerRTL<Content: View>: View {
     }
 }
 
-/// Double row chip container
+/// Triple row chip container - UPDATED from DoubleRowChipContainer
+struct TripleRowChipContainer<FirstRowContent: View, SecondRowContent: View, ThirdRowContent: View>: View {
+    let spacing: CGFloat
+    let firstRowContent: FirstRowContent
+    let secondRowContent: SecondRowContent?
+    let thirdRowContent: ThirdRowContent?
+    let firstRowNamespace: Namespace.ID
+    let secondRowNamespace: Namespace.ID?
+    let thirdRowNamespace: Namespace.ID?
+    
+    init(
+        spacing: CGFloat = 8,
+        firstRowNamespace: Namespace.ID,
+        secondRowNamespace: Namespace.ID? = nil,
+        thirdRowNamespace: Namespace.ID? = nil,
+        @ViewBuilder firstRow: () -> FirstRowContent,
+        @ViewBuilder secondRow: () -> SecondRowContent? = { nil },
+        @ViewBuilder thirdRow: () -> ThirdRowContent? = { nil }
+    ) {
+        self.spacing = spacing
+        self.firstRowNamespace = firstRowNamespace
+        self.secondRowNamespace = secondRowNamespace
+        self.thirdRowNamespace = thirdRowNamespace
+        self.firstRowContent = firstRow()
+        self.secondRowContent = secondRow()
+        self.thirdRowContent = thirdRow()
+    }
+    
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 8) {
+                // First row
+                ChipGroup {
+                    HStack(spacing: spacing) {
+                        firstRowContent
+                        Spacer()
+                    }
+                    .padding(.horizontal, 8)
+                }
+                
+                // Second row
+                if let secondRowContent = secondRowContent {
+                    ChipGroup {
+                        HStack(spacing: spacing) {
+                            secondRowContent
+                            Spacer()
+                        }
+                        .padding(.horizontal, 8)
+                    }
+                }
+                
+                // Third row
+                if let thirdRowContent = thirdRowContent {
+                    ChipGroup {
+                        HStack(spacing: spacing) {
+                            thirdRowContent
+                            Spacer()
+                        }
+                        .padding(.horizontal, 8)
+                    }
+                }
+            }
+            .padding(.vertical, 4)
+        }
+        .scrollClipDisabled()
+        .scrollBounceBehavior(.basedOnSize)
+        .frame(height: calculateHeight())
+    }
+    
+    private func calculateHeight() -> CGFloat {
+        var height: CGFloat = 50 // Base height for first row
+        if secondRowContent != nil {
+            height += 58 // Add height for second row (50 + 8 spacing)
+        }
+        if thirdRowContent != nil {
+            height += 58 // Add height for third row (50 + 8 spacing)
+        }
+        return height
+    }
+}
+
+// MARK: - Keep DoubleRowChipContainer for backward compatibility
 struct DoubleRowChipContainer<FirstRowContent: View, SecondRowContent: View>: View {
     let spacing: CGFloat
     let firstRowContent: FirstRowContent
@@ -446,6 +527,28 @@ struct SingleRowChipScrollRightModifier<ChipContent: View>: ViewModifier {
     }
 }
 
+struct TripleRowChipScrollModifier<FirstRowContent: View, SecondRowContent: View, ThirdRowContent: View>: ViewModifier {
+    let firstRowChips: FirstRowContent
+    let secondRowChips: SecondRowContent?
+    let thirdRowChips: ThirdRowContent?
+    let firstRowNamespace: Namespace.ID
+    let secondRowNamespace: Namespace.ID?
+    let thirdRowNamespace: Namespace.ID?
+    
+    func body(content: Content) -> some View {
+        content.overlay(
+            TripleRowChipContainer(
+                firstRowNamespace: firstRowNamespace,
+                secondRowNamespace: secondRowNamespace,
+                thirdRowNamespace: thirdRowNamespace,
+                firstRow: { firstRowChips },
+                secondRow: { secondRowChips },
+                thirdRow: { thirdRowChips }
+            )
+        )
+    }
+}
+
 struct DoubleRowChipScrollModifier<FirstRowContent: View, SecondRowContent: View>: ViewModifier {
     let firstRowChips: FirstRowContent
     let secondRowChips: SecondRowContent?
@@ -477,7 +580,26 @@ extension View {
         self.modifier(SingleRowChipScrollRightModifier(chips: chips()))
     }
     
-    /// Add double row chip scroll behavior
+    /// Add triple row chip scroll behavior - NEW
+    func tripleRowChipScroll<FirstRowContent: View, SecondRowContent: View, ThirdRowContent: View>(
+        firstRowNamespace: Namespace.ID,
+        secondRowNamespace: Namespace.ID? = nil,
+        thirdRowNamespace: Namespace.ID? = nil,
+        @ViewBuilder firstRow: () -> FirstRowContent,
+        @ViewBuilder secondRow: () -> SecondRowContent? = { nil },
+        @ViewBuilder thirdRow: () -> ThirdRowContent? = { nil }
+    ) -> some View {
+        self.modifier(TripleRowChipScrollModifier(
+            firstRowChips: firstRow(),
+            secondRowChips: secondRow(),
+            thirdRowChips: thirdRow(),
+            firstRowNamespace: firstRowNamespace,
+            secondRowNamespace: secondRowNamespace,
+            thirdRowNamespace: thirdRowNamespace
+        ))
+    }
+    
+    /// Add double row chip scroll behavior - KEPT for backward compatibility
     func doubleRowChipScroll<FirstRowContent: View, SecondRowContent: View>(
         firstRowNamespace: Namespace.ID,
         secondRowNamespace: Namespace.ID? = nil,

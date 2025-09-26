@@ -802,7 +802,6 @@ struct InputView: View {
         }
     }
     
-    // MARK: - Category Section
     @ViewBuilder private var categorySection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Category")
@@ -830,11 +829,11 @@ struct InputView: View {
                     .font(.caption)
             } else {
                 Color.clear
-                    .frame(height: apiCategories.count > 1 ? 100 : 50)
-                    .doubleRowChipScroll(
+                    .frame(height: apiCategories.count > 2 ? 158 : (apiCategories.count > 1 ? 108 : 58)) // Dynamic height based on rows needed
+                    .tripleRowChipScroll(
                         firstRowNamespace: categoryChipNamespace,
                         firstRow: {
-                            ForEach(Array(stride(from: 0, to: apiCategories.count, by: 2)), id: \.self) { index in
+                            ForEach(Array(stride(from: 0, to: apiCategories.count, by: 3)), id: \.self) { index in
                                 APICategoryChipView(
                                     category: apiCategories[index],
                                     isSelected: selectedCategoryID == apiCategories[index].remoteID,
@@ -850,7 +849,26 @@ struct InputView: View {
                         },
                         secondRow: {
                             if apiCategories.count > 1 {
-                                ForEach(Array(stride(from: 1, to: apiCategories.count, by: 2)), id: \.self) { index in
+                                ForEach(Array(stride(from: 1, to: apiCategories.count, by: 3)), id: \.self) { index in
+                                    APICategoryChipView(
+                                        category: apiCategories[index],
+                                        isSelected: selectedCategoryID == apiCategories[index].remoteID,
+                                        onTap: {
+                                            withAnimation(.easeInOut(duration: 0.2)) {
+                                                selectedCategoryID = apiCategories[index].remoteID
+                                            }
+                                            dismissKeyboard()
+                                        },
+                                        namespace: categoryChipNamespace
+                                    )
+                                }
+                            } else {
+                                EmptyView()
+                            }
+                        },
+                        thirdRow: {
+                            if apiCategories.count > 2 {
+                                ForEach(Array(stride(from: 2, to: apiCategories.count, by: 3)), id: \.self) { index in
                                     APICategoryChipView(
                                         category: apiCategories[index],
                                         isSelected: selectedCategoryID == apiCategories[index].remoteID,
@@ -886,8 +904,8 @@ struct InputView: View {
     
     @ViewBuilder private var categoriesSkeleton: some View {
         Color.clear
-            .frame(height: 100)
-            .doubleRowChipScroll(
+            .frame(height: 158) // Fixed height for 3 rows
+            .tripleRowChipScroll(
                 firstRowNamespace: categoryChipNamespace,
                 firstRow: {
                     ForEach(0..<4, id: \.self) { _ in
@@ -896,6 +914,11 @@ struct InputView: View {
                 },
                 secondRow: {
                     ForEach(0..<5, id: \.self) { _ in
+                        SkeletonChip()
+                    }
+                },
+                thirdRow: {
+                    ForEach(0..<3, id: \.self) { _ in
                         SkeletonChip()
                     }
                 }
